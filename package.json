@@ -4,6 +4,7 @@
   "description": "\"chanyue-cms\"",
   "main": "app.js",
   "scripts": {
+    "build":"vue-cli-serve",
     "start:dev": "nodemon app.js",
     "start:prd": "node app.js",
     "clear": "node timer.js",
