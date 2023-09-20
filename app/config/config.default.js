@@ -9,7 +9,7 @@ config.appRoot = path.join(__dirname, "../");
 
 // cookie sign key
 config.keys = "chanyue-cms_202301032044";
-config.port = "112233";
+config.port = "0";
 
 // add mysql config
 config.mysql = {
