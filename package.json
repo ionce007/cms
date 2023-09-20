@@ -4,8 +4,8 @@
   "description": "\"chanyue-cms\"",
   "main": "app.js",
   "scripts": {
-    "dev": "nodemon app.js",
-    "build": "run-p type-check build-only",
+    "start:dev": "nodemon app.js",
+    "start:prod": "node app.js",
     "clear": "node timer.js",
     "prd": "pm2 start pm2.json"
   },
