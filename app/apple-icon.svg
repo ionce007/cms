@@ -1,0 +1,41 @@
+<!-- app/apple-icon.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#16213e;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="line" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#22c55e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4ade80;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 白色圆角背景 -->
+  <rect width="100" height="100" rx="25" fill="white"/>
+  
+  <!-- 内层背景 -->
+  <rect x="8" y="8" width="84" height="84" rx="18" fill="url(#bg)"/>
+  
+  <!-- 走势线 -->
+  <polyline 
+    points="18,72 33,60 43,63 53,45 63,50 73,28 83,15" 
+    fill="none" 
+    stroke="url(#line)" 
+    stroke-width="3" 
+    stroke-linecap="round" 
+    stroke-linejoin="round"
+  />
+  
+  <!-- 数据点 -->
+  <circle cx="18" cy="72" r="2" fill="#22c55e"/>
+  <circle cx="33" cy="60" r="2" fill="#22c55e"/>
+  <circle cx="43" cy="63" r="2" fill="#22c55e"/>
+  <circle cx="53" cy="45" r="2" fill="#22c55e"/>
+  <circle cx="63" cy="50" r="2" fill="#22c55e"/>
+  <circle cx="73" cy="28" r="2" fill="#22c55e"/>
+  <circle cx="83" cy="15" r="3" fill="#22c55e" stroke="#1a1a2e" stroke-width="1"/>
+  
+  <!-- 上涨箭头 -->
+  <polygon points="74,12 80,9 81,18" fill="#22c55e" stroke="#1a1a2e" stroke-width="0.8"/>
+</svg>
