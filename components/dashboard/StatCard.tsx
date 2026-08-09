@@ -1,3 +1,4 @@
+// components/dashboard/StatCard.tsx
 import { StatCardProps } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -36,11 +37,11 @@ export default function StatCard({ stat, index = 0 }: StatCardProps) {
                 <div className="text-2xl font-bold text-gray-800 tracking-tight">{stat.value}</div>
             </div>
 
-            {/* 迷你趋势图 */}
-            {stat.trend && (
+            {/* 迷你趋势图 - 修复 undefined 问题 */}
+            {stat.trend && stat.trend.length > 0 && (
                 <div className="mt-3 flex items-end space-x-1 h-8">
                     {stat.trend.map((value, i) => {
-                        const maxValue = Math.max(...stat.trend);
+                        const maxValue = Math.max(...stat.trend!);  // 添加 ! 断言
                         const height = (value / maxValue) * 100;
                         return (
                             <div

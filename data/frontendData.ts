@@ -1,5 +1,6 @@
 // data/frontendData.ts
-import { FrontendArticle, Category, PopularPost, SiteInfo, Tag } from '@/types/frontend';
+
+import { FrontendArticle, Category, Tag, PopularPost, SiteInfo } from '@/types/frontend';
 
 export const siteInfo: SiteInfo = {
     name: 'TechBlog',
@@ -35,8 +36,14 @@ export const tags: Tag[] = [
     { id: 8, name: 'GraphQL', slug: 'graphql', count: 12 },
     { id: 9, name: 'CSS', slug: 'css', count: 30 },
     { id: 10, name: 'JavaScript', slug: 'javascript', count: 42 },
+    { id: 11, name: 'Vue.js', slug: 'vuejs', count: 22 },
+    { id: 12, name: 'Angular', slug: 'angular', count: 18 },
+    { id: 13, name: 'MongoDB', slug: 'mongodb', count: 16 },
+    { id: 14, name: 'PostgreSQL', slug: 'postgresql', count: 14 },
+    { id: 15, name: 'Redis', slug: 'redis', count: 11 },
 ];
 
+// 注意：每个文章对象都添加了 categorySlug 字段
 export const articles: FrontendArticle[] = [
     {
         id: 1,
@@ -48,6 +55,7 @@ export const articles: FrontendArticle[] = [
             avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop',
         },
         category: '前端开发',
+        categorySlug: 'frontend',  // 添加此字段
         tags: ['React', '前端开发', 'JavaScript'],
         publishDate: '2026-08-08',
         readTime: 8,
@@ -66,6 +74,7 @@ export const articles: FrontendArticle[] = [
             avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=40&h=40&fit=crop',
         },
         category: '前端开发',
+        categorySlug: 'frontend',  // 添加此字段
         tags: ['Next.js', 'SSR', 'React'],
         publishDate: '2026-08-07',
         readTime: 12,
@@ -83,6 +92,7 @@ export const articles: FrontendArticle[] = [
             avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop',
         },
         category: '前端开发',
+        categorySlug: 'frontend',  // 添加此字段
         tags: ['TypeScript', '类型系统', '编程'],
         publishDate: '2026-08-06',
         readTime: 15,
@@ -100,6 +110,7 @@ export const articles: FrontendArticle[] = [
             avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop',
         },
         category: '后端开发',
+        categorySlug: 'backend',  // 添加此字段
         tags: ['Python', '异步编程', '后端'],
         publishDate: '2026-08-05',
         readTime: 10,
@@ -117,6 +128,7 @@ export const articles: FrontendArticle[] = [
             avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=40&h=40&fit=crop',
         },
         category: 'DevOps',
+        categorySlug: 'devops',  // 添加此字段
         tags: ['Docker', '容器化', 'DevOps'],
         publishDate: '2026-08-04',
         readTime: 7,
@@ -134,6 +146,7 @@ export const articles: FrontendArticle[] = [
             avatar: 'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=40&h=40&fit=crop',
         },
         category: '云计算',
+        categorySlug: 'cloud',  // 添加此字段
         tags: ['Kubernetes', '监控', '云原生'],
         publishDate: '2026-08-03',
         readTime: 11,
