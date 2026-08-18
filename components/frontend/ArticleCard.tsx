@@ -7,6 +7,7 @@ interface ArticleCardProps {
     index?: number;
 }
 
+
 export default function ArticleCard({ article, index = 0 }: ArticleCardProps) {
     return (
         <article
