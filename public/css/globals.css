@@ -78,3 +78,217 @@ body {
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
+
+/* HTML 文章内容样式 */
+.article-html-content {
+    line-height: 1.8;
+    color: #374151;
+}
+
+.article-html-content h1 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.article-html-content h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.article-html-content h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.article-html-content p {
+    margin-bottom: 1rem;
+}
+
+.article-html-content a {
+    color: #2563eb;
+    text-decoration: underline;
+}
+
+.article-html-content a:hover {
+    color: #1d4ed8;
+}
+
+.article-html-content ul {
+    list-style: disc;
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.article-html-content ol {
+    list-style: decimal;
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.article-html-content blockquote {
+    border-left: 4px solid #93c5fd;
+    padding-left: 1rem;
+    font-style: italic;
+    color: #6b7280;
+    margin: 1rem 0;
+}
+
+.article-html-content pre {
+    background-color: #1f2937;
+    color: #f3f4f6;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+}
+
+.article-html-content code {
+    background-color: #f3f4f6;
+    color: #dc2626;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.article-html-content pre code {
+    background-color: transparent;
+    color: inherit;
+    padding: 0;
+}
+
+.article-html-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+}
+
+.article-html-content th,
+.article-html-content td {
+    border: 1px solid #e5e7eb;
+    padding: 0.5rem 1rem;
+    text-align: left;
+}
+
+.article-html-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+}
+
+.article-html-content strong {
+    font-weight: 600;
+    color: #111827;
+}
+
+.article-html-content em {
+    font-style: italic;
+}
+
+.article-html-content hr {
+    border: none;
+    border-top: 1px solid #e5e7eb;
+    margin: 2rem 0;
+}
+
+/* Markdown 内容样式 */
+.article-markdown-content {
+    line-height: 1.8;
+    color: #374151;
+    word-wrap: break-word;
+}
+
+.article-markdown-content>*:first-child {
+    margin-top: 0;
+}
+
+.article-markdown-content>*:last-child {
+    margin-bottom: 0;
+}
+
+/* HTML 内容样式 */
+.article-html-content {
+    line-height: 1.8;
+    color: #374151;
+    word-wrap: break-word;
+}
+
+.article-html-content h1 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.article-html-content h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.article-html-content h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.article-html-content p {
+    margin-bottom: 1rem;
+}
+
+.article-html-content pre {
+    background-color: #1f2937;
+    color: #f3f4f6;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+}
+
+.article-html-content code {
+    background-color: #f3f4f6;
+    color: #dc2626;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.article-html-content pre code {
+    background-color: transparent;
+    color: inherit;
+    padding: 0;
+}
+
+.article-html-content ul {
+    list-style: disc;
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.article-html-content ol {
+    list-style: decimal;
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.article-html-content blockquote {
+    border-left: 4px solid #93c5fd;
+    padding-left: 1rem;
+    font-style: italic;
+    color: #6b7280;
+    margin: 1rem 0;
+}

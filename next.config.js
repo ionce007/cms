@@ -1,7 +1,20 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     images: {
-        domains: ['images.unsplash.com'],
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: 'example.com',
+                port: '', // 可选，默认空
+                pathname: '/images/**', // 可选，限制路径
+            },
+            {
+                protocol: 'https',
+                hostname: 'images.unsplash.com',
+                port: '',
+                pathname: '/**',
+            }
+        ]
     },
     experimental: {
         optimizePackageImports: ['@heroicons/react'],

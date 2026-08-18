@@ -67,7 +67,7 @@ export default function HeroSection({ article }: HeroSectionProps) {
                     {/* CTA 按钮 */}
                     <div className="mt-8 animate-slide-up">
                         <a
-                            href={`/article/${article.id}`}
+                            href={`/articles/${article.id}`}
                             className="inline-flex items-center space-x-2 px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-500 transition-colors shadow-lg hover:shadow-xl"
                         >
                             <span>阅读全文</span>

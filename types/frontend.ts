@@ -68,3 +68,25 @@ export interface ArticleFilters {
     sort: 'latest' | 'popular' | 'oldest';
     search: string;
 }
+
+export interface Comment {
+  id: number;
+  articleId: number;
+  author: {
+    name: string;
+    avatar: string;
+  };
+  content: string;
+  date: string;
+  likes: number;
+  replies?: Comment[];
+}
+
+export interface ArticleDetail extends FrontendArticle {
+  content: string;
+  tableOfContents: {
+    id: string;
+    title: string;
+  }[];
+  comments: Comment[];
+}

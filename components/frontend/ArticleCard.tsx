@@ -17,7 +17,7 @@ export default function ArticleCard({ article, index = 0 }: ArticleCardProps) {
             style={{ animationDelay: `${index * 100}ms` }}
         >
             {/* 封面图 */}
-            <a href={`/article/${article.id}`} className="block relative overflow-hidden aspect-video">
+            <a href={`/articles/${article.id}`} className="block relative overflow-hidden aspect-video">
                 <img
                     src={article.coverImage}
                     alt={article.title}
@@ -54,7 +54,7 @@ export default function ArticleCard({ article, index = 0 }: ArticleCardProps) {
 
                 {/* 标题 */}
                 <h3 className="text-lg font-semibold text-gray-800 mb-2 group-hover:text-primary-600 transition-colors line-clamp-2">
-                    <a href={`/article/${article.id}`}>
+                    <a href={`/articles/${article.id}`}>
                         {article.title}
                     </a>
                 </h3>

@@ -28,7 +28,7 @@ app.get("/sync-db", async (req, res) => {
     res.json(ret);
 });
 
-app.get('/article-last', controllers.Article.test);
+app.get('/articles', controllers.Article.getArticles);
 
 // 导出处理函数
 export default app;

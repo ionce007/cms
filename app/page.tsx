@@ -5,10 +5,11 @@ import HeroSection from '@/components/frontend/HeroSection';
 import ArticleList from '@/components/frontend/ArticleList';
 import Sidebar from '@/components/frontend/Sidebar';
 import { articles } from '@/data/frontendData';
+import { allArticles } from '@/data/articlesData'; 
 
 export default function FrontendHome() {
-    const featuredArticle = articles.find(a => a.featured);
-    const recentArticles = articles.slice(0, 6);
+    const featuredArticle = allArticles.find(a => a.featured);
+    const recentArticles = allArticles.slice(0, 6);
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">

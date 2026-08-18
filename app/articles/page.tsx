@@ -8,7 +8,7 @@ import ArticleCard from '@/components/frontend/ArticleCard';
 import Sidebar from '@/components/frontend/Sidebar';
 import ArticleFilters from '@/components/frontend/ArticleFilters';
 import Pagination from '@/components/frontend/Pagination';
-import { allArticles, categories, tags } from '@/data/articlesData';
+import { allArticles , categories, tags } from '@/data/articlesData';
 import { ArticleFilters as FilterType } from '@/types/frontend';
 
 const ITEMS_PER_PAGE = 6;

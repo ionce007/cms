@@ -79,7 +79,7 @@ export default function Sidebar() {
                     {popularPosts.map((post, index) => (
                         <a
                             key={post.id}
-                            href={`/article/${post.id}`}
+                            href={`/articles/${post.id}`}  // 确保链接正确
                             className="flex items-start space-x-3 group"
                         >
                             <span className={cn(
