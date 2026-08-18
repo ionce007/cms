@@ -61,7 +61,7 @@ export const articles: FrontendArticle[] = [
         readTime: 8,
         views: 1234,
         likes: 89,
-        comments: 23,
+        //comments: 23,
         featured: true,
     },
     {
@@ -80,7 +80,7 @@ export const articles: FrontendArticle[] = [
         readTime: 12,
         views: 892,
         likes: 67,
-        comments: 15,
+        //comments: 15,
     },
     {
         id: 3,
@@ -98,7 +98,7 @@ export const articles: FrontendArticle[] = [
         readTime: 15,
         views: 567,
         likes: 45,
-        comments: 8,
+        //comments: 8,
     },
     {
         id: 4,
@@ -116,7 +116,7 @@ export const articles: FrontendArticle[] = [
         readTime: 10,
         views: 723,
         likes: 56,
-        comments: 12,
+        //comments: 12,
     },
     {
         id: 5,
@@ -134,7 +134,7 @@ export const articles: FrontendArticle[] = [
         readTime: 7,
         views: 456,
         likes: 34,
-        comments: 6,
+        //comments: 6,
     },
     {
         id: 6,
@@ -152,7 +152,7 @@ export const articles: FrontendArticle[] = [
         readTime: 11,
         views: 389,
         likes: 28,
-        comments: 9,
+        //comments: 9,
     },
 ];
 
