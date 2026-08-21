@@ -18,6 +18,7 @@ Tag.init(
     },
     {
         sequelize,
+        timestamps: false,
         tableName: 'cms_tag'  // 指定表名
     }
 );

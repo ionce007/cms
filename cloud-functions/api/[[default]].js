@@ -29,6 +29,10 @@ app.get("/sync-db", async (req, res) => {
 });
 
 app.get('/articles', controllers.Article.getArticles);
+app.get('/articles/:id', controllers.Article.getArticleById);
+app.get('/articles/pinned', controllers.Article.getPinnedArticles);
+app.get('/categories', controllers.Article.getCategories);
+app.get('/tags', controllers.Article.getTags);
 
 // 导出处理函数
 export default app;
