@@ -9,7 +9,7 @@ async function getCategories(req, res, next) {
         let where = { [Op.and]: [] };
 
         where.status = 0;
-        const platform = 1;
+        const platform = '1';
         where[Op.and].push(sequelize.where(sequelize.fn('FIND_IN_SET', platform, sequelize.col('platform')), { [Op.gt]: 0 }));
         if (id) where.id = id;
         if (search) {

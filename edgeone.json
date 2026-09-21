@@ -6,7 +6,8 @@
         "mysql2",
         "pg-hstore",
         "express",
-        "sequelize"
+        "sequelize",
+        "axios"
       ]
     }
   }
