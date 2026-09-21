@@ -1,0 +1,13 @@
+{
+  "cloudFunctions": {
+    "nodejs": {
+      "externalNodeModules": [
+        "dotenv",
+        "mysql2",
+        "pg-hstore",
+        "express",
+        "sequelize"
+      ]
+    }
+  }
+}
