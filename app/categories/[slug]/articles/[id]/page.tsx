@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import CategoryArticleClient from './CategoryArticleClient';
 import { Category1, FrontendArticle1 } from '@/types/frontend';
 
-const baseUrl = process.env.API_URL || 'http://localhost:8088/api';
+const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
 
 interface PageProps {
     params: Promise<{ slug: string; id: string }>;

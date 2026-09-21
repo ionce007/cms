@@ -7,7 +7,7 @@ import { Tag } from '@/types/frontend';
 interface TagPageProps {
     params: Promise<{ slug: string }>;
 }
-const baseUrl = process.env.API_URL || 'http://localhost:8088/api';
+const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
 
 async function getTags(): Promise<Tag[]> {
     const [tagResult] = await Promise.allSettled([

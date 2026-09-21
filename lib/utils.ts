@@ -87,7 +87,7 @@ export function isUrl(str: string): boolean {
 }
 
 export async function getBaseUrl(headersList: Headers) {
-    const host = headersList.get('host') || 'localhost:3000';
+    const host = headersList.get('host') || 'blog.foryet.com';
     const protocol = headersList.get('x-forwarded-proto') || 'http';
     const url = new URL(`${protocol}://${host}/api`);
     return url.toString();

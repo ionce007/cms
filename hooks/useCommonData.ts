@@ -2,7 +2,7 @@
 import useSWR from 'swr';
 import { Category1, Tag, FrontendArticle1, SiteInfo, FragInfo, defaultSiteInfo } from '@/types/frontend';
 
-const baseUrl = process.env.API_URL || 'http://localhost:8088/api';
+const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
 
 const fetcher = async (url: string) => {
     const res = await fetch(url);

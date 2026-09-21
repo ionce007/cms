@@ -15,7 +15,7 @@ const getSafeLocationHref = () => {
 
     return '';
 };
-const baseUrl = 'http://localhost:8088';
+const baseUrl = (process.env.API_URL || 'https://blog.foryet.com/api').replace('/api','');
 export class ImageProxy {
     constructor(config = { refUrl: baseUrl }) {
         this.refUrl = '';

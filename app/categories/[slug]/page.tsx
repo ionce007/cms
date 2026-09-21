@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import CategoryClient from './CategoryClient';
 import { defaultCategory, Category1 } from '@/types/frontend';
 //import { useCategories } from '@/hooks/useCommonData';
-const baseUrl = process.env.API_URL || 'http://localhost:8088/api';
+const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
 
 interface CategoryPageProps {
     params: Promise<{ slug: string }>;

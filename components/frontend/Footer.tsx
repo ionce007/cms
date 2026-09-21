@@ -3,7 +3,7 @@
 import { defaultSiteInfo, SiteInfo } from '@/types/frontend';
 import { useSiteInfo } from '@/hooks/useCommonData';
 
-const baseUrl = process.env.API_URL || 'http://localhost:8088/api';
+const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
 
 export default function Footer() {
     const currentYear = new Date().getFullYear();

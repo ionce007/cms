@@ -28,7 +28,7 @@ export default function SafeImage({
         //console.log('image src = ', src);
     }, [src])
     // ✅ 自动 HTTP → HTTPS 代理
-    //const imgProxy = new ImageProxy({ refUrl: 'http://localhost:8088' });
+    //const imgProxy = new ImageProxy({ refUrl: 'https://blog.foryet.com'; });
     //const proxiedSrc = imgProxy.getProxyUrl(src);
     const proxiedSrc = src;//getProxiedImageUrl(src);
 

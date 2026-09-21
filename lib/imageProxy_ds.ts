@@ -1,7 +1,7 @@
 // lib/imageProxy.ts
 
 // ✅ 后端图片代理地址（Express）
-const API_BASE_URL = process.env.API_URL || 'http://localhost:8088/api';
+const API_BASE_URL = process.env.API_URL || 'https://blog.foryet.com/api';
 
 const PROXY_PATH = `${API_BASE_URL}/img/proxy`;
 

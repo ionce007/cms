@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { FrontendArticle1 } from '@/types/frontend';
 import { useSidebarData } from './useCommonData';
 
-const baseUrl = process.env.API_URL || 'http://localhost:8088/api';
+const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
 
 // ========== 类型定义 ==========
 interface UseArticleDetailResult {

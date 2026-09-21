@@ -15,7 +15,7 @@ import { useSidebarData } from '@/hooks/useCommonData';
 import { ArticleFilters as FilterType, FrontendArticle1 } from '@/types/frontend';
 
 const ITEMS_PER_PAGE = 6;
-const baseUrl = process.env.API_URL || 'http://localhost:8088/api';
+const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
 
 export default function ArticlesPage() {
     // ✅ 使用 SWR Hook 获取侧边栏数据 + 进度
