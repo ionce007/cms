@@ -7,13 +7,23 @@ interface LoadingProgressProps {
     loadingStates: Record<string, boolean>;
 }
 
-const ITEM_CONFIG: Record<string, { label: string; icon: string }> = {
+/*const ITEM_CONFIG: Record<string, { label: string; icon: string }> = {
     categories: { label: '分类', icon: '📂' },
     tags: { label: '标签', icon: '🏷️' },
     popularPosts: { label: '热门', icon: '🔥' },
     featuredArticles: { label: '精选', icon: '⭐' },
     articles: { label: '文章', icon: '📄' },
     article: { label: '正文', icon: '📖' },  // ✅ 新增：文章详情
+};*/
+const ITEM_CONFIG: Record<string, { label: string; icon: string }> = {
+    categories: { label: '分类', icon: '📂' },
+    tags: { label: '标签', icon: '🏷️' },
+    popularPosts: { label: '热门', icon: '🔥' },
+    featuredArticles: { label: '精选', icon: '⭐' },
+    articles: { label: '文章', icon: '📄' },
+    article: { label: '正文', icon: '📖' },
+    featured: { label: '置顶', icon: '📌' },   // ✅ 新增
+    recent: { label: '最新', icon: '🆕' },     // ✅ 新增
 };
 
 export default function LoadingProgress({
