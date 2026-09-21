@@ -20,6 +20,7 @@ async function initializeDatabase() {
     let result = {code: 0, message: 'Failed to initialize database.'};
     try {
         await sequelize.sync({ alter: true });
+        //await sequelize.sync();
         console.log('Database configured.');
         result = {code: 1, message: 'Database initialized successfully.'};
     }

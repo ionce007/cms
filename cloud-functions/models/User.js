@@ -9,6 +9,7 @@ User.init({
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
+        allowNull: false,
         comment: '用户ID'
     },
     role_id: {
@@ -20,7 +21,7 @@ User.init({
         },
         comment: '角色ID'
     },
-    username: { type: DataTypes.STRING(50), comment: '用户名称' },
+    username: { type: DataTypes.STRING(50), allowNull: false, comment: '用户名称' },
     password: { type: DataTypes.STRING, comment: '用户密码' },
     status: { type: DataTypes.INTEGER, comment: '用户状态，1-启用，0-禁用' },
     remark: { type: DataTypes.STRING(255), comment: '备注' },
@@ -30,4 +31,5 @@ User.init({
     comment: '系统用户表'
 });
 User.belongsTo(Role, { foreignKey: 'role_id' });
+Role.hasMany(User, { foreignKey: 'role_id' });
 module.exports = User;

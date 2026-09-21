@@ -24,6 +24,7 @@ Field.init(
     {
         sequelize,
         tableName: 'cms_field',  // 指定表名
+        timestamps: false,
         comment: '字段字典表'  // 表注释
     }
 );

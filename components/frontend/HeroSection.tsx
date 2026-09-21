@@ -1,11 +1,15 @@
 // components/frontend/HeroSection.tsx
-import { FrontendArticle } from '@/types/frontend';
+import { FrontendArticle1 } from '@/types/frontend';
+import SafeImage from './SafeImage';
 
 interface HeroSectionProps {
-    article: FrontendArticle;
+    article?: FrontendArticle1 | null;
 }
 
 export default function HeroSection({ article }: HeroSectionProps) {
+    if (!article) {
+        return null;
+    }
     return (
         <section className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-primary-900 text-white overflow-hidden">
             {/* 背景装饰 */}
@@ -19,7 +23,7 @@ export default function HeroSection({ article }: HeroSectionProps) {
                     {/* 标签 */}
                     <div className="flex items-center space-x-2 mb-4 animate-slide-up">
                         <span className="px-3 py-1 bg-primary-500/20 text-primary-200 text-xs font-medium rounded-full border border-primary-400/30">
-                            {article.category}
+                            {article.Category.name}
                         </span>
                         {article.featured && (
                             <span className="px-3 py-1 bg-yellow-500/20 text-yellow-200 text-xs font-medium rounded-full border border-yellow-400/30">
@@ -36,14 +40,19 @@ export default function HeroSection({ article }: HeroSectionProps) {
                     </h1>
 
                     {/* 摘要 */}
-                    <p className="text-lg text-gray-300 leading-relaxed mb-8 animate-slide-up">
-                        {article.excerpt}
+                    <p className="text-lg text-gray-300 line-clamp-2 leading-relaxed mb-8 animate-slide-up">
+                        {article.description }
                     </p>
 
                     {/* 作者和元信息 */}
                     <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400 animate-slide-up">
                         <div className="flex items-center space-x-2">
-                            <img
+                            {/*<img
+                                src={article.author.avatar}
+                                alt={article.author.name}
+                                className="w-8 h-8 rounded-full ring-2 ring-white/20"
+                            />*/}
+                            <SafeImage
                                 src={article.author.avatar}
                                 alt={article.author.name}
                                 className="w-8 h-8 rounded-full ring-2 ring-white/20"
@@ -51,7 +60,7 @@ export default function HeroSection({ article }: HeroSectionProps) {
                             <span className="text-gray-200 font-medium">{article.author.name}</span>
                         </div>
                         <span className="text-gray-500">•</span>
-                        <span>{article.publishDate}</span>
+                        <span>{article.createdAt.substring(0, 10)}</span>
                         <span className="text-gray-500">•</span>
                         <span>{article.readTime} 分钟阅读</span>
                         <span className="text-gray-500">•</span>
@@ -60,7 +69,7 @@ export default function HeroSection({ article }: HeroSectionProps) {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
-                            <span>{article.views.toLocaleString()} 次阅读</span>
+                            <span>{article.pv.toLocaleString()} 次阅读</span>
                         </span>
                     </div>
 

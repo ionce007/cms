@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import { Comment } from '@/types/frontend';
+import SafeImage from './SafeImage';
 
 interface CommentSectionProps {
     comments: Comment[];
@@ -63,7 +64,12 @@ export default function CommentSection({ comments, articleId }: CommentSectionPr
             <div className="space-y-6">
                 {commentList.map((comment) => (
                     <div key={comment.id} className="flex space-x-3">
-                        <img
+                        {/*<img
+                            src={comment.author.avatar}
+                            alt={comment.author.name}
+                            className="w-10 h-10 rounded-full flex-shrink-0"
+                        />*/}
+                        <SafeImage
                             src={comment.author.avatar}
                             alt={comment.author.name}
                             className="w-10 h-10 rounded-full flex-shrink-0"

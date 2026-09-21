@@ -1,6 +1,6 @@
 const { DataTypes, Model } = require('sequelize');
 const sequelize = require('../common/db');
-
+const  { isUrl } = require('../common/utils');
 class Category extends Model { }
 
 Category.init(
@@ -28,11 +28,39 @@ Category.init(
         mid: { type: DataTypes.STRING(5), comment: '栏目模型id' },
         listView: { type: DataTypes.STRING(100), comment: '栏目列表页模板' },
         articleView: { type: DataTypes.STRING(100), comment: '详情页模板' },
+        platform: { type: DataTypes.STRING(50), comment: '平台类型，0-render.com 1-EdgeOne 999-Other' },
+        count: {
+            type: DataTypes.VIRTUAL,
+            comment: '栏目下的文章数量',
+            defaultValue: 0,
+            get() {
+                const count = this.getDataValue('count');
+                return count !== undefined && count !== null ? parseInt(count) : 0;
+            }
+        },
+        icon: {
+            type: DataTypes.VIRTUAL,
+            comment: '栏目图标',
+            defaultValue: '',
+            get() { return  !this.url || isUrl(this.url) ? '' : this.url; }
+        },
     },
     {
         sequelize,
         tableName: 'cms_category',  // 指定表名
-        comment: '栏目表'  // 表注释
+        comment: '栏目表',  // 表注释
+        // 默认 scope：自动包含文章数量
+        defaultScope: {
+            attributes: {
+                include: [
+                    [
+                        sequelize.literal(`(SELECT COUNT(*) FROM cms_article WHERE cms_article.cid = Category.id)`),
+                        'count'
+                    ]
+                ]
+            }
+        }
     }
 );
+
 module.exports = Category;

@@ -1,7 +1,7 @@
 // data/frontendData.ts
 
-import { FrontendArticle, Category, Tag, PopularPost, SiteInfo } from '@/types/frontend';
-
+//import { FrontendArticle1, Category1, Tag, PopularPost, SiteInfo, SiteInfo1 } from '@/types/frontend';
+/*
 export const siteInfo: SiteInfo = {
     name: 'TechBlog',
     description: '分享技术知识，记录开发心得，探索前沿科技。我们致力于为开发者提供高质量的技术文章和教程。',
@@ -14,6 +14,25 @@ export const siteInfo: SiteInfo = {
     },
 };
 
+export const siteInfo: SiteInfo = {
+    id: 0,
+    name: '',
+    domain: '',
+    wx: '',
+    icp: '',
+    code: '',
+    json: {
+        logo: '',
+        github: '',
+        twitter: '',
+        weibo: '',
+        email: '',
+    },
+    title: '',
+    keywords: '',
+    description: '',
+}
+
 export const categories: Category[] = [
     { id: 1, name: '前端开发', slug: 'frontend', count: 128, icon: '🎨' },
     { id: 2, name: '后端开发', slug: 'backend', count: 95, icon: '⚙️' },
@@ -24,7 +43,8 @@ export const categories: Category[] = [
     { id: 7, name: 'DevOps', slug: 'devops', count: 31, icon: '🔄' },
     { id: 8, name: '安全', slug: 'security', count: 25, icon: '🔒' },
 ];
-
+*/
+/*
 export const tags: Tag[] = [
     { id: 1, name: 'React', slug: 'react', count: 45 },
     { id: 2, name: 'Next.js', slug: 'nextjs', count: 32 },
@@ -42,8 +62,9 @@ export const tags: Tag[] = [
     { id: 14, name: 'PostgreSQL', slug: 'postgresql', count: 14 },
     { id: 15, name: 'Redis', slug: 'redis', count: 11 },
 ];
-
+*/
 // 注意：每个文章对象都添加了 categorySlug 字段
+/*
 export const articles: FrontendArticle[] = [
     {
         id: 1,
@@ -155,7 +176,8 @@ export const articles: FrontendArticle[] = [
         //comments: 9,
     },
 ];
-
+*/
+/*
 export const popularPosts: PopularPost[] = [
     { id: 1, title: 'React 19 新特性完全指南', date: '2026-08-08', views: 1234 },
     { id: 2, title: 'Next.js 14 App Router 实战教程', date: '2026-08-07', views: 892 },
@@ -163,3 +185,4 @@ export const popularPosts: PopularPost[] = [
     { id: 4, title: 'TypeScript 5.0 类型体操', date: '2026-08-06', views: 567 },
     { id: 5, title: 'Docker 容器化最佳实践', date: '2026-08-04', views: 456 },
 ];
+*/

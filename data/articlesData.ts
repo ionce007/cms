@@ -1,7 +1,7 @@
 // data/articlesData.ts
-import { FrontendArticle, Category, Tag } from '@/types/frontend';
-
-export const categories: Category[] = [
+import { FrontendArticle1, Category1, Tag } from '@/types/frontend';
+/*
+export const categories: Category1[] = [
     { id: 1, name: '前端开发', slug: 'frontend', count: 128, icon: '🎨' },
     { id: 2, name: '后端开发', slug: 'backend', count: 95, icon: '⚙️' },
     { id: 3, name: '移动开发', slug: 'mobile', count: 67, icon: '📱' },
@@ -11,8 +11,8 @@ export const categories: Category[] = [
     { id: 7, name: 'DevOps', slug: 'devops', count: 31, icon: '🔄' },
     { id: 8, name: '安全', slug: 'security', count: 25, icon: '🔒' },
 ];
-
-export const tags: Tag[] = [
+*/
+/*export const tags: Tag[] = [
     { id: 1, name: 'React', slug: 'react', count: 45 },
     { id: 2, name: 'Next.js', slug: 'nextjs', count: 32 },
     { id: 3, name: 'TypeScript', slug: 'typescript', count: 38 },
@@ -29,7 +29,8 @@ export const tags: Tag[] = [
     { id: 14, name: 'PostgreSQL', slug: 'postgresql', count: 14 },
     { id: 15, name: 'Redis', slug: 'redis', count: 11 },
 ];
-
+*/
+/*
 export const allArticles: FrontendArticle[] = [
     {
         id: 1,
@@ -249,3 +250,4 @@ export const allArticles: FrontendArticle[] = [
         //comments: 4,
     },
 ];
+*/

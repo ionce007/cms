@@ -34,6 +34,7 @@ ArticleTag.init(
     {
         sequelize,
         tableName: 'cms_articletag',  // 指定表名
+        timestamps: false,
         comment: '文章标签关联表'  // 表注释
     }
 );

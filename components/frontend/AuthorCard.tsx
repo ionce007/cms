@@ -1,15 +1,21 @@
 // components/frontend/AuthorCard.tsx
-import { FrontendArticle } from '@/types/frontend';
+import { FrontendArticle1 } from '@/types/frontend';
+import SafeImage from './SafeImage';
 
 interface AuthorCardProps {
-    author: FrontendArticle['author'];
+    author: FrontendArticle1['author'];
 }
 
 export default function AuthorCard({ author }: AuthorCardProps) {
     return (
         <div className="bg-white rounded-xl border border-gray-200 p-6 mt-8">
             <div className="flex items-center space-x-4">
-                <img
+                {/*<img
+                    src={author.avatar}
+                    alt={author.name}
+                    className="w-16 h-16 rounded-full"
+                />*/}
+                <SafeImage
                     src={author.avatar}
                     alt={author.name}
                     className="w-16 h-16 rounded-full"

@@ -20,6 +20,7 @@ Cmodel.init(
     {
         sequelize,
         tableName: 'cms_model',  // 指定表名
+        timestamps: false,
         comment: '模型字典表'  // 表注释
     }
 );

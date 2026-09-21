@@ -38,7 +38,7 @@ export const mockStats: StatData[] = [
         trend: [5, 8, 10, 12, 15, 18, 20, 22, 23.5],
     },
 ];
-
+/*
 export const mockContentData: ContentSection[] = [
     {
         id: 1,
@@ -179,7 +179,7 @@ export const mockContentData: ContentSection[] = [
         ],
     },
 ];
-
+*/
 export const mockNotifications: Notification[] = [
     {
         id: 1,

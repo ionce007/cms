@@ -1,3 +1,5 @@
+import { FrontendArticle1 } from "./frontend";
+
 // ========== 基础类型 ==========
 export type ContentStatus = 'published' | 'draft' | 'archived';
 export type MediaType = 'image' | 'video' | 'document' | 'audio';
@@ -6,7 +8,7 @@ export type StatColor = 'blue' | 'green' | 'purple' | 'orange' | 'red';
 export type ChangeType = 'increase' | 'decrease';
 
 // ========== 数据模型 ==========
-export interface Article {
+/*export interface Article {
     id: number;
     title: string;
     category: string;
@@ -19,7 +21,7 @@ export interface Article {
     coverImage?: string;
     readTime?: number;
 }
-
+*/
 export interface Media {
     id: number;
     title: string;
@@ -51,7 +53,10 @@ export interface Setting {
     path?: string;
     category?: string;
 }
-
+export interface Article {
+    id: number;
+    title: string;
+}
 export interface ContentSection {
     id: number;
     title: string;
@@ -124,7 +129,8 @@ export interface ContentSectionProps {
 }
 
 export interface ArticleCardProps {
-    article: Article;
+    //article: Article;
+    article: FrontendArticle1;
 }
 
 export interface MediaCardProps {

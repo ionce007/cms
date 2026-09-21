@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import CommentSection from './CommentSection';
 import RelatedArticles from './RelatedArticles';
 import ShareButtons from './ShareButtons';
+import SafeImage from './SafeImage';
 
 interface ArticleDetailContentProps {
     article: ArticleDetail;
@@ -105,8 +106,13 @@ export default function ArticleDetailContent({ article, relatedArticles }: Artic
             <article className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 {/* 封面图 */}
                 <div className="relative h-64 sm:h-80 lg:h-96 overflow-hidden">
-                    <img
-                        src={article.coverImage}
+                    {/*<img
+                        src={article.img}
+                        alt={article.title}
+                        className="w-full h-full object-cover"
+                    />*/}
+                    <SafeImage
+                        src={article.img}
                         alt={article.title}
                         className="w-full h-full object-cover"
                     />
@@ -114,7 +120,7 @@ export default function ArticleDetailContent({ article, relatedArticles }: Artic
                     <div className="absolute bottom-0 left-0 right-0 p-6">
                         <div className="flex items-center space-x-2 mb-2">
                             <span className="px-3 py-1 bg-white/90 text-gray-700 text-xs font-medium rounded-full">
-                                {article.category}
+                                {article.Category.name}
                             </span>
                             {article.featured && (
                                 <span className="px-3 py-1 bg-yellow-400/90 text-yellow-900 text-xs font-medium rounded-full">
@@ -131,20 +137,25 @@ export default function ArticleDetailContent({ article, relatedArticles }: Artic
                 {/* 文章元信息 */}
                 <div className="px-6 py-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center space-x-3">
-                        <img
+                        {/*<img
+                            src={article.author.avatar}
+                            alt={article.author.name}
+                            className="w-10 h-10 rounded-full"
+                        />*/}
+                        <SafeImage
                             src={article.author.avatar}
                             alt={article.author.name}
                             className="w-10 h-10 rounded-full"
                         />
                         <div>
                             <div className="text-sm font-medium text-gray-800">{article.author.name}</div>
-                            <div className="text-xs text-gray-500">{article.publishDate}</div>
+                            <div className="text-xs text-gray-500">{article.createdAt.substring(0, 10)}</div>
                         </div>
                     </div>
                     <div className="flex items-center space-x-4 text-sm text-gray-500">
                         <span>{article.readTime} 分钟阅读</span>
                         <span>•</span>
-                        <span>{article.views.toLocaleString()} 次阅读</span>
+                        <span>{article.pv.toLocaleString()} 次阅读</span>
                         <span>•</span>
                         <span>{article.comments.length} 条评论</span>
                     </div>
@@ -160,11 +171,11 @@ export default function ArticleDetailContent({ article, relatedArticles }: Artic
                     <div className="flex flex-wrap gap-2 mt-8 pt-6 border-t border-gray-100">
                         {article.tags.map(tag => (
                             <a
-                                key={tag}
-                                href={`/tags/${tag.toLowerCase()}`}
+                                key={tag.id}
+                                href={`/tags/${tag.id}`}
                                 className="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full hover:bg-primary-50 hover:text-primary-600 transition-colors"
                             >
-                                #{tag}
+                                #{tag.name}
                             </a>
                         ))}
                     </div>

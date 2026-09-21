@@ -1,8 +1,9 @@
 // components/frontend/RelatedArticles.tsx
-import { FrontendArticle } from '@/types/frontend';
+import { FrontendArticle1 } from '@/types/frontend';
+import SafeImage from './SafeImage';
 
 interface RelatedArticlesProps {
-    articles: FrontendArticle[];
+    articles: FrontendArticle1[];
 }
 
 export default function RelatedArticles({ articles }: RelatedArticlesProps) {
@@ -19,8 +20,13 @@ export default function RelatedArticles({ articles }: RelatedArticlesProps) {
                         className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group"
                     >
                         <div className="aspect-video overflow-hidden">
-                            <img
-                                src={article.coverImage}
+                            {/*<img
+                                src={article.img}
+                                alt={article.title}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            />*/}
+                            <SafeImage
+                                src={article.img}
                                 alt={article.title}
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                             />
@@ -30,7 +36,7 @@ export default function RelatedArticles({ articles }: RelatedArticlesProps) {
                                 {article.title}
                             </h4>
                             <div className="flex items-center space-x-2 mt-2 text-xs text-gray-500">
-                                <span>{article.publishDate}</span>
+                                <span>{article.createdAt.substring(0, 10)}</span>
                                 <span>•</span>
                                 <span>{article.readTime} 分钟</span>
                             </div>

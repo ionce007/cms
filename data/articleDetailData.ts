@@ -1,4 +1,5 @@
 // data/articleDetailData.ts
+/*
 import { allArticles } from './articlesData';
 
 // ========== 类型定义 ==========
@@ -453,9 +454,7 @@ const mockComments: Record<number, ArticleComment[]> = {
 
 // ========== 核心函数 ==========
 
-/**
- * 获取文章详情
- */
+
 export function getArticleDetail(id: number): ArticleDetailData | null {
     const article = allArticles.find((item) => item.id === id);
 
@@ -491,16 +490,12 @@ export function getArticleDetail(id: number): ArticleDetailData | null {
     };
 }
 
-/**
- * 获取文章评论
- */
+
 export function getArticleComments(articleId: number): ArticleComment[] {
     return mockComments[articleId] || [];
 }
 
-/**
- * 添加文章评论
- */
+
 export function addArticleComment(articleId: number, comment: ArticleComment): void {
     if (!mockComments[articleId]) {
         mockComments[articleId] = [];
@@ -508,9 +503,7 @@ export function addArticleComment(articleId: number, comment: ArticleComment): v
     mockComments[articleId].push(comment);
 }
 
-/**
- * 获取相关文章
- */
+
 export function getRelatedArticles(
     articleId: number,
     categorySlug: string,
@@ -520,3 +513,4 @@ export function getRelatedArticles(
         .filter((item) => item.id !== articleId && item.categorySlug === categorySlug)
         .slice(0, limit);
 }
+*/

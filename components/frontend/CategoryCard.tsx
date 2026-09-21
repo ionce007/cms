@@ -2,11 +2,11 @@
 'use client';
 
 import Link from 'next/link';
-import { Category } from '@/types/frontend';
+import { Category1 } from '@/types/frontend';
 import { cn } from '@/lib/utils';
 
 interface CategoryCardProps {
-    category: Category;
+    category: Category1;
     articleCount: number;
     index?: number;
 }
@@ -28,7 +28,7 @@ export default function CategoryCard({ category, articleCount, index = 0 }: Cate
 
     return (
         <Link
-            href={`/categories/${category.slug}`}
+            href={`/categories/${category.pinyin}`}
             className={cn(
                 'bg-white rounded-xl border border-gray-200 p-6',
                 'hover:shadow-lg hover:border-primary-200 transition-all duration-300',

@@ -1,4 +1,5 @@
 // components/frontend/SidebarWidget.tsx
+'use client';
 interface SidebarWidgetProps {
     title: string;
     icon: string;

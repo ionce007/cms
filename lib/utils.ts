@@ -55,3 +55,40 @@ export function getStatusLabel(status: string): string {
     };
     return labels[status] || status;
 }
+
+/**
+ * 判断字符串是否为网址，支持 http / https，支持二级/多级子域名 cms.foryet.com
+ * @param str 输入字符串
+ * @returns boolean
+ */
+export function isUrl(str: string): boolean {
+    if (!str || typeof str !== 'string') return false;
+    const s = str.trim();
+    if (s.length === 0) return false;
+
+    let urlStr = s;
+    // 没有 http:// 也没有 https://，才补 https:// 仅用于解析校验
+    if (!/^https?:\/\//i.test(s)) {
+        urlStr = 'https://' + s;
+    }
+
+    try {
+        const url = new URL(urlStr);
+
+        // 允许 http: 或者 https: 协议
+        const isValidProtocol = url.protocol === 'http:' || url.protocol === 'https:';
+        // hostname 必须包含 . ，排除 localhost 这种无点主机名
+        const hasDotInHost = url.hostname.includes('.');
+
+        return isValidProtocol && hasDotInHost;
+    } catch {
+        return false;
+    }
+}
+
+export async function getBaseUrl(headersList: Headers) {
+    const host = headersList.get('host') || 'localhost:3000';
+    const protocol = headersList.get('x-forwarded-proto') || 'http';
+    const url = new URL(`${protocol}://${host}/api`);
+    return url.toString();
+}

@@ -2,16 +2,17 @@
 'use client';
 
 import Link from 'next/link';
-import { Tag, FrontendArticle } from '@/types/frontend';
+import { Tag } from '@/types/frontend';
 import { cn } from '@/lib/utils';
 import { useMemo } from 'react';
 
 interface TagCloudProps {
     tags: Tag[];
-    articles: FrontendArticle[];
+    //articles: FrontendArticle[];
 }
 
-export default function TagCloud({ tags, articles }: TagCloudProps) {
+export default function TagCloud({ tags }: TagCloudProps) {
+/*
     // 计算每个标签的实际文章数
     const tagsWithCount = useMemo(() => {
         return tags.map(tag => {
@@ -25,6 +26,10 @@ export default function TagCloud({ tags, articles }: TagCloudProps) {
     // 找出最大和最小文章数用于字体大小计算
     const maxCount = Math.max(...tagsWithCount.map(t => t.actualCount));
     const minCount = Math.min(...tagsWithCount.map(t => t.actualCount));
+*/
+    // 找出最大和最小文章数用于字体大小计算
+    const maxCount = Math.max(...tags.map(t => t.articleCount));
+    const minCount = Math.min(...tags.map(t => t.articleCount));
 
     // 根据文章数计算字体大小
     const getFontSize = (count: number) => {
@@ -47,12 +52,12 @@ export default function TagCloud({ tags, articles }: TagCloudProps) {
     };
 
     // 热门标签（按文章数排序前10）
-    const popularTags = tagsWithCount
-        .sort((a, b) => b.actualCount - a.actualCount)
+    const popularTags: Tag[] = tags
+        .sort((a, b) => b.articleCount - a.articleCount)
         .slice(0, 10);
 
     // 所有标签
-    const allTags = tagsWithCount.sort((a, b) => a.name.localeCompare(b.name));
+    const allTags: Tag[] = tags.sort((a, b) => a.name.localeCompare(b.name));
 
     return (
         <div className="space-y-8">
@@ -66,7 +71,7 @@ export default function TagCloud({ tags, articles }: TagCloudProps) {
                     {popularTags.map((tag, index) => (
                         <Link
                             key={tag.id}
-                            href={`/tags/${tag.slug}`}
+                            href={`/tags/${tag.path}`}
                             className={cn(
                                 'px-4 py-2 rounded-lg font-medium transition-all duration-200',
                                 'hover:shadow-md hover:scale-105',
@@ -82,7 +87,7 @@ export default function TagCloud({ tags, articles }: TagCloudProps) {
                                     'text-xs px-1.5 py-0.5 rounded-full',
                                     index < 3 ? 'bg-white/20' : 'bg-gray-200'
                                 )}>
-                                    {tag.actualCount}
+                                    {tag.articleCount}
                                 </span>
                             </span>
                         </Link>
@@ -100,17 +105,21 @@ export default function TagCloud({ tags, articles }: TagCloudProps) {
                     {allTags.map(tag => (
                         <Link
                             key={tag.id}
-                            href={`/tags/${tag.slug}`}
+                            href={`/tags/${tag.path}`}
                             className={cn(
-                                'px-3 py-1.5 rounded-lg transition-all duration-200',
+                                ' horizonal-align items-center px-3 py-1.5 rounded-lg transition-all duration-200',
                                 'hover:shadow-md hover:scale-105',
-                                getFontSize(tag.actualCount),
-                                getColorClass(tag.actualCount)
+                                getFontSize(tag.articleCount),
+                                getColorClass(tag.articleCount)
                             )}
-                            title={`${tag.actualCount} 篇文章`}
+                            title={`${tag.articleCount} 篇文章`}
                         >
-                            #{tag.name}
-                            <span className="ml-1 text-xs opacity-70">({tag.actualCount})</span>
+                            
+
+                            <span className="flex items-center space-x-2">
+                                <span>#{tag.name}</span>
+                                <span className="ml-1 text-xs opacity-70">({tag.articleCount})</span>
+                            </span>
                         </Link>
                     ))}
                 </div>
