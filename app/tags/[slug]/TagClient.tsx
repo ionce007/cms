@@ -15,7 +15,7 @@ import { useSidebarData } from '@/hooks/useCommonData';
 import { FrontendArticle1 } from '@/types/frontend';
 
 const ITEMS_PER_PAGE = 6;
-const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088/api';
+const baseUrl = process.env.API_URL || 'http://localhost:8088/api';
 
 interface TagClientProps {
     slug: string;

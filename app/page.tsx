@@ -9,7 +9,7 @@ import { defaultArticle, FrontendArticle1 } from '@/types/frontend';
 import { getBaseUrl } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
-const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088/api';
+const baseUrl = process.env.API_URL || 'http://localhost:8088/api';
 
 async function getApiBaseUrl() {
     const headersList = await headers();
