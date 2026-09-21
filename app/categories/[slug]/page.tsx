@@ -2,8 +2,8 @@
 import type { Metadata } from 'next';
 //import { categories } from '@/data/articlesData';
 import CategoryClient from './CategoryClient';
-import { defaultCategory,Category1 } from '@/types/frontend';
-
+import { defaultCategory, Category1 } from '@/types/frontend';
+//import { useCategories } from '@/hooks/useCommonData';
 const baseUrl = process.env.API_URL || 'http://localhost:8088/api';
 
 interface CategoryPageProps {
@@ -11,6 +11,9 @@ interface CategoryPageProps {
 }
 
 async function getCategories(): Promise<Category1[]> {
+    /*const categoryRes = useCategories();
+    console.log('categoryRes = ', categoryRes)
+    return categoryRes.data || [];*/
     const [CategoryResult] = await Promise.allSettled([
         fetch(`${baseUrl}/categories`),
     ]);
