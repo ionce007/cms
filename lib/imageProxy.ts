@@ -3,7 +3,7 @@
 // ✅ 后端图片代理地址（Express）
 const API_BASE_URL = process.env.API_URL || 'https://blog.foryet.com/api';
 
-const PROXY_PATH = `${API_BASE_URL}/img/proxy`;
+const PROXY_PATH = `${API_BASE_URL}/imgproxy`;
 
 /**
  * 将 HTTP 图片 URL 转换为 HTTPS 代理 URL
