@@ -1,6 +1,5 @@
 // ./edge-functions/api/image.js
 export default async function onRequest(context) {
-    console.log('aaaaaaaaaa')
     // 从 query 参数获取远程图片地址
     const url = new URL(context.request.url);
     const imageUrl = url.searchParams.get('url');

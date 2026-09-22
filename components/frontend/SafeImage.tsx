@@ -3,7 +3,8 @@
 
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { ImageProxy } from '@/public/js/imageProxy';
+//import { ImageProxy } from '@/lib/imageProxy';
+import { getProxiedImageUrl } from '@/lib/imageProxy';
 
 interface SafeImageProps {
     src?: string | null;
@@ -30,7 +31,9 @@ export default function SafeImage({
     // ✅ 自动 HTTP → HTTPS 代理
     //const imgProxy = new ImageProxy({ refUrl: 'https://blog.foryet.com'; });
     //const proxiedSrc = imgProxy.getProxyUrl(src);
-    const proxiedSrc = src;//getProxiedImageUrl(src);
+    //const proxiedSrc = getProxiedImageUrl(src);
+
+    const proxiedSrc = src ? getProxiedImageUrl(src) : '';
 
     const isEmpty = !proxiedSrc || proxiedSrc.trim() === '';
     const showFallback = isEmpty || hasError;

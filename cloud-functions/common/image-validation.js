@@ -15,7 +15,6 @@
 // URL 参数验证
 const validateImageUrl = (req, res, next) => {
     const { url } = req.query;
-console.log('url = ',url);
     if (!url) {
         return res.status(400).json({
             error: 'Missing required parameter: url',
@@ -36,7 +35,7 @@ console.log('url = ',url);
 };
 
 // 图片格式过滤
-const validateImageFormat = (allowedFormats = ['jpeg', 'jpg', 'png', 'gif', 'webp']) => {
+const validateImageFormat = (allowedFormats = ['jpeg', 'jpg', 'png', 'gif', 'webp', 'bmp', 'svg']) => {
     return (req, res, next) => {
         const format = req.query.format;
 

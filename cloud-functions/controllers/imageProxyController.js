@@ -98,7 +98,7 @@ async function proxyImage(req, res, next) {
     }
 }
 
-  async function imgProxy(req, res, next){
+async function imgProxy(req, res, next) {
     try {
         const { url, format } = req.query;
         console.log('url = ', url, '     format = ', format);
@@ -163,4 +163,4 @@ async function proxyImage(req, res, next) {
         });
     }
 }
-module.exports = { proxyImage ,imgProxy};
+module.exports = { proxyImage, imgProxy };

@@ -1,5 +1,5 @@
 // lib/htmlProcessor.ts
-import { getProxiedImageUrl } from './imageProxy_ds';
+import { getProxiedImageUrl } from './imageProxy';
 
 /**
  * 处理 HTML 内容中的所有 HTTP 图片

@@ -6,7 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { processHtmlImages } from '@/lib/htmlProcessor';
-import { getProxiedImageUrl } from '@/lib/imageProxy_ds';
+import { getProxiedImageUrl } from '@/lib/imageProxy';
 
 interface ArticleContentProps {
     content: string;

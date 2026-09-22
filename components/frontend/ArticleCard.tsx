@@ -57,7 +57,7 @@ export default function ArticleCard({ article, index = 0, linkPrefix = '/article
                     {article.tags.slice(0, 3).map((tag) => (
                         <Link
                             key={tag.id}
-                            href={`/tag/${tag.path}`}
+                            href={`/tags/${tag.path}`}
                             className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-md hover:bg-primary-50 hover:text-primary-600 transition-colors"
                         >
                             #{tag.name}

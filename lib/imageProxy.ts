@@ -12,7 +12,6 @@ export function getProxiedImageUrl(url: string | Blob): string {
     if (url instanceof Blob) {
         return URL.createObjectURL(url);
     }
-    debugger;
     if (!url || url.trim() === '') return '';
 
     const trimmed = url.trim();
