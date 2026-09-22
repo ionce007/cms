@@ -2,23 +2,27 @@
 import { getProxiedImageUrl } from './imageProxy';
 
 /**
- * 处理 HTML 内容中的所有 HTTP 图片
- * 替换为代理 URL
+ * 处理 HTML 内容中的所有图片 URL
+ * 支持 http://、//（协议相对）、https://
  */
 export function processHtmlImages(html: string): string {
     if (!html) return '';
 
     let processed = html;
 
-    // 1. <img src="http://...">
+    // ✅ 统一的正则：匹配 http:// 或 // 开头的 URL
+    // (?:https?:)?\/\/  →  匹配 http://、https://、//
+    const IMG_URL_PATTERN = '(?:https?:)?\\/\\/[^"\'\\s)]+';
+
+    // 1. <img src="...">
     processed = processed.replace(
-        /(<img[^>]+src=["'])(http:\/\/[^"']+)(["'])/gi,
+        new RegExp(`(<img[^>]+src=["'])(${IMG_URL_PATTERN})(["'])`, 'gi'),
         (match, prefix, url, suffix) => {
             return `${prefix}${getProxiedImageUrl(url)}${suffix}`;
         }
     );
 
-    // 2. srcset 多图
+    // 2. <img srcset="...">
     processed = processed.replace(
         /(<img[^>]+srcset=["'])([^"']+)(["'])/gi,
         (match, prefix, srcset, suffix) => {
@@ -27,7 +31,8 @@ export function processHtmlImages(html: string): string {
                 .map((item: string) => {
                     const trimmed = item.trim();
                     const parts = trimmed.split(/\s+/);
-                    if (parts[0] && parts[0].startsWith('http://')) {
+                    // ✅ 用 getProxiedImageUrl 统一处理
+                    if (parts[0]) {
                         parts[0] = getProxiedImageUrl(parts[0]);
                     }
                     return parts.join(' ');
@@ -37,44 +42,44 @@ export function processHtmlImages(html: string): string {
         }
     );
 
-    // 3. background-image: url(http://...)
+    // 3. background-image: url(...)
     processed = processed.replace(
-        /url\(["']?(http:\/\/[^"')]+)["']?\)/gi,
+        /url\(["']?((?:https?:)?\/\/[^"')]+)["']?\)/gi,
         (match, url) => {
             return `url("${getProxiedImageUrl(url)}")`;
         }
     );
 
-    // 4. <source src="http://...">
+    // 4. <source src="...">
     processed = processed.replace(
-        /(<source[^>]+src=["'])(http:\/\/[^"']+)(["'])/gi,
+        new RegExp(`(<source[^>]+src=["'])(${IMG_URL_PATTERN})(["'])`, 'gi'),
         (match, prefix, url, suffix) => {
             return `${prefix}${getProxiedImageUrl(url)}${suffix}`;
         }
     );
 
-    // 5. <video poster="http://...">
+    // 5. <video poster="...">
     processed = processed.replace(
-        /(<video[^>]+poster=["'])(http:\/\/[^"']+)(["'])/gi,
+        new RegExp(`(<video[^>]+poster=["'])(${IMG_URL_PATTERN})(["'])`, 'gi'),
         (match, prefix, url, suffix) => {
             return `${prefix}${getProxiedImageUrl(url)}${suffix}`;
         }
     );
 
-    // 6. <a href="http://...jpg">
+    // 6. <a href="...jpg">
     processed = processed.replace(
-        /(<a[^>]+href=["'])(http:\/\/[^"']+\.(?:jpg|jpeg|png|gif|webp|svg|bmp|avif))(["'])/gi,
+        /(<a[^>]+href=["'])((?:https?:)?\/\/[^"']+\.(?:jpg|jpeg|png|gif|webp|svg|bmp|avif))(["'])/gi,
         (match, prefix, url, suffix) => {
             return `${prefix}${getProxiedImageUrl(url)}${suffix}`;
         }
     );
 
-    // 7. <style> 标签内的 URL
+    // 7. <style> 内的 URL
     processed = processed.replace(
         /(<style[^>]*>)([\s\S]*?)(<\/style>)/gi,
         (match, open, css, close) => {
             const newCss = css.replace(
-                /url\(["']?(http:\/\/[^"')]+)["']?\)/gi,
+                /url\(["']?((?:https?:)?\/\/[^"')]+)["']?\)/gi,
                 (m: string, url: string) => `url("${getProxiedImageUrl(url)}")`
             );
             return `${open}${newCss}${close}`;

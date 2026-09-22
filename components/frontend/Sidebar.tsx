@@ -3,10 +3,18 @@
 
 import { useSidebarData } from '@/hooks/useCommonData';
 import SidebarWidget from './SidebarWidget';
+import { processHtmlImages } from '@/lib/htmlProcessor';
+import { useMemo } from 'react';
 
 export default function Sidebar() {
     // ✅ SWR 自动缓存，多个页面使用同一份数据
     const { categories, tags, popularArticles, featuredArticles, siteInfo, frags, loadingStates } = useSidebarData();
+    const processedContent = useMemo(() => {
+        const fragInfo = frags.find(x => x.mark === 'site_introduce');
+        const content = fragInfo && fragInfo.content ? fragInfo.content : '';
+        return processHtmlImages(content);
+    }, [frags]);
+
     //const fragInfo = frags.find(x => x.mark === 'site_introduce');
     return (
         <aside className="space-y-6">
@@ -26,7 +34,7 @@ export default function Sidebar() {
 
                                 <p className="text-sm text-gray-600 leading-relaxed"
                                     dangerouslySetInnerHTML={{
-                                        __html: fragInfo?.content || siteInfo?.description || '暂无介绍',
+                                        __html: processedContent || siteInfo?.description || '暂无介绍',
                                     }}
                                 />
 

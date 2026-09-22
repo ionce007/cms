@@ -14,10 +14,10 @@ export function getProxiedImageUrl(url: string | Blob): string {
     }
     if (!url || url.trim() === '') return '';
 
-    const trimmed = url.trim();
-
+    let trimmed = url.trim();
+    if (trimmed.startsWith('//')) trimmed = `http:${trimmed}`;
     // 已经是相对路径或 HTTPS，直接返回
-    if ((trimmed.startsWith('/') && !trimmed.startsWith('//')) || trimmed.startsWith('https://')) {
+    if (trimmed.startsWith('/') || trimmed.startsWith('https://')) {
         return trimmed;
     }
 
@@ -27,9 +27,8 @@ export function getProxiedImageUrl(url: string | Blob): string {
     }
 
     // ✅ HTTP 图片，走后端代理
-    if (trimmed.startsWith('http://') || trimmed.startsWith('//img.foryet.com')) {
-        const imgUrl = trimmed.startsWith('//img.foryet.com') ? `http:${trimmed}` : trimmed;
-        return `${PROXY_PATH}?url=${encodeURIComponent(imgUrl)}`;
+    if (trimmed.startsWith('http://')) {
+        return `${PROXY_PATH}?url=${encodeURIComponent(trimmed)}`;
     }
 
     return trimmed;
