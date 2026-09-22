@@ -5,6 +5,8 @@ import Header from '@/components/frontend/Header';
 import Footer from '@/components/frontend/Footer';
 import Sidebar from '@/components/frontend/Sidebar';
 import { useFrag } from '@/hooks/useCommonData';
+import { processHtmlImages } from '@/lib/htmlProcessor';
+import { useMemo } from 'react';
 
 type AboutClientProps = {
   slug: string;
@@ -13,7 +15,10 @@ type AboutClientProps = {
 export default function AboutClient({ slug }: AboutClientProps) {
     // ✅ 从 cms_frag 表读取 mark = 'aboutus' 的 HTML 内容
     const { frag, isLoading, error } = useFrag(slug);
-
+    const processedContent = useMemo(() => {
+        const content = frag && frag.content ? frag.content : '';
+        return processHtmlImages(content);
+    }, [frag]);
     // ========== 加载中 ==========
     if (isLoading) {
         return (
@@ -128,7 +133,7 @@ export default function AboutClient({ slug }: AboutClientProps) {
                                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                                     <div
                                         className="about-content p-6 lg:p-8"
-                                        dangerouslySetInnerHTML={{ __html: frag.content }}
+                                        dangerouslySetInnerHTML={{ __html: processedContent }}
                                     />
                                 </div>
                             ) : (
