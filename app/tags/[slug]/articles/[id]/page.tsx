@@ -3,8 +3,9 @@ import type { Metadata } from 'next';
 //import { tags, allArticles } from '@/data/articlesData';
 import { FrontendArticle1, Tag } from '@/types/frontend';
 import TagArticleClient from './TagArticleClient';
+import { API_BASE_URL } from '@/config/env';
 
-const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
+//const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
 
 interface PageProps {
     params: Promise<{ slug: string; id: string }>;
@@ -16,7 +17,7 @@ export function generateStaticParams(): { slug: string; id: string }[] {
 }
 async function getArticle(id: number) {
     try {
-        const response = await fetch(`${baseUrl}/articles/${id}`);
+        const response = await fetch(`${API_BASE_URL}/articles/${id}`);
         const data = await response.json();
         return data.article;
     }
@@ -38,7 +39,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 async function getTags() {
-    const response = await fetch(`${baseUrl}/tags`);
+    const response = await fetch(`${API_BASE_URL}/tags`);
     const data = await response.json();
     const tags: Tag[] = !data || !data.data || data.data.length === 0 ? [] : data.data;
     return { tags };

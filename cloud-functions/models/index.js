@@ -13,12 +13,14 @@ const LoginLog = require('./Loginlog');
 const Message = require('./Message');
 const Site = require('./Site');
 const Slide = require('./Slide');
-
+const Formula = require('./Formula');
+const Token = require('./Token');
 const sequelize = require('../common/db');
 
 async function initializeDatabase() {
     let result = {code: 0, message: 'Failed to initialize database.'};
     try {
+        console.log('Database synchronization in progress, please wait......');
         await sequelize.sync({ alter: true });
         //await sequelize.sync();
         console.log('Database configured.');
@@ -49,3 +51,5 @@ exports.LoginLog = LoginLog;
 exports.Message = Message;
 exports.Site = Site;
 exports.Slide = Slide;
+exports.Formula = Formula;
+exports.Token = Token;

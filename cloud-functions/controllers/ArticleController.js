@@ -47,7 +47,12 @@ async function getArticles(req, res, next) {
                 ]
             });
         }
-        const include = { model: Category, required: false }
+        const include = {
+            model: Category, required: false,
+            attributes: {
+                exclude: ['seoTitle', 'seoKeywords', 'seoDescription', 'orderBy', 'listView', 'articleView', 'orderBy']  // 排除 Category 的字段
+            }
+        }
         // 排序处理
         let order = [['createdAt', 'DESC']]; // 默认按创建时间倒序
         if (sort === 'latest') {
@@ -62,7 +67,8 @@ async function getArticles(req, res, next) {
         const attributes = {
             include: [
                 [sequelize.literal(`(SELECT JSON_ARRAYAGG(JSON_OBJECT('id', id, 'name', name)) FROM cms_tag WHERE FIND_IN_SET(cms_tag.id, Article.tagId) > 0)`), 'tags']
-            ]
+            ],
+            exclude: ['subCid', 'articleView', 'source', 'content', 'status']
         }
         const { count, rows } = await Article.findAndCountAll({ attributes, where, include, order, limit, offset });
         const result = rows.map(article => {
@@ -104,13 +110,16 @@ async function getCategoryArticles(req, res, next) {
             model: Category,
             required: true,  // 使用 INNER JOIN，确保只返回有匹配栏目的文章
             where: { pinyin: slug }, // 添加栏目查询条件
-            //attributes: ['id', 'name', 'pinyin']  // 指定返回的栏目字段
-        };
+            attributes: {
+                exclude: ['seoTitle', 'seoKeywords', 'seoDescription', 'orderBy', 'listView', 'articleView', 'orderBy']  // 排除 Category 的字段
+            }
+        }
 
         const attributes = {
             include: [
                 [sequelize.literal(`(SELECT JSON_ARRAYAGG(JSON_OBJECT('id', id, 'name', name, 'path', path)) FROM cms_tag WHERE FIND_IN_SET(cms_tag.id, Article.tagId) > 0)`), 'tags']
-            ]
+            ],
+            exclude: ['subCid', 'articleView', 'source', 'content', 'status']
         }
         let order = [['createdAt', 'DESC']]; // 默认按创建时间倒序
         if (sort === 'latest') {
@@ -175,7 +184,8 @@ async function getTagArticles(req, res, next) {
         const attributes = {
             include: [
                 [sequelize.literal(`(SELECT JSON_ARRAYAGG(JSON_OBJECT('id', id, 'name', name, 'path', path)) FROM cms_tag WHERE FIND_IN_SET(cms_tag.id, Article.tagId) > 0)`), 'tags']
-            ]
+            ],
+            exclude: ['subCid', 'articleView', 'source', 'content', 'status']
         }
         // ✅ 构建排序规则
         const orderMap = {
@@ -271,7 +281,12 @@ async function searchArticles(req, res, next) {
                 ]
             });
         }
-        const include = { model: Category, required: false }
+        const include = {
+            model: Category, required: false,
+            attributes: {
+                exclude: ['seoTitle', 'seoKeywords', 'seoDescription', 'orderBy', 'listView', 'articleView', 'orderBy']  // 排除 Category 的字段
+            }
+        }
         if (tag) {
             where[Op.and].push(
                 sequelize.where(
@@ -283,7 +298,8 @@ async function searchArticles(req, res, next) {
         const attributes = {
             include: [
                 [sequelize.literal(`(SELECT JSON_ARRAYAGG(JSON_OBJECT('id', id, 'name', name, 'path', path)) FROM cms_tag WHERE FIND_IN_SET(cms_tag.id, Article.tagId) > 0)`), 'tags']
-            ]
+            ],
+            exclude: ['subCid', 'articleView', 'source', 'content', 'status']
         }
         // 排序处理
         let order = [['createdAt', 'DESC']]; // 默认按创建时间倒序
@@ -326,7 +342,12 @@ async function getRecentArticles(req, res, next) {
         const where = { status: { [Op.eq]: 0 } };
         const order = [['createdAt', 'DESC']];
 
-        const include = { model: Category, required: false }
+        const include = {
+            model: Category, required: false,
+            attributes: {
+                exclude: ['seoTitle', 'seoKeywords', 'seoDescription', 'orderBy', 'listView', 'articleView', 'orderBy']  // 排除 Category 的字段
+            }
+        }
         const articles = await Article.findAll({
             attributes: {
                 include: [
@@ -378,13 +399,17 @@ async function getPinnedArticles(req, res, next) {
         const order = [
             ['createdAt', 'DESC'],
         ];
-        const include = { model: Category, required: false }
+        const include = {
+            model: Category, required: false,
+            attributes: {
+                exclude: ['seoTitle', 'seoKeywords', 'seoDescription', 'orderBy', 'listView', 'articleView', 'orderBy']  // 排除 Category 的字段
+            }
+        }
         const attributes = {
             include: [
-                [
-                    sequelize.literal(`(SELECT JSON_ARRAYAGG(JSON_OBJECT('id', id, 'name', name,'path', path)) FROM cms_tag WHERE FIND_IN_SET(cms_tag.id, Article.tagId) > 0)`), 'tags'
-                ]
-            ]
+                [ sequelize.literal(`(SELECT JSON_ARRAYAGG(JSON_OBJECT('id', id, 'name', name,'path', path)) FROM cms_tag WHERE FIND_IN_SET(cms_tag.id, Article.tagId) > 0)`), 'tags' ]
+            ],
+            exclude: ['subCid', 'articleView', 'source', 'content', 'status']
         }
         const articles = await Article.findAll({
             attributes,
@@ -423,13 +448,16 @@ async function getArticleById(req, res, next) {
         const { id } = req.params || req.query;
         //const article = await Article.findByPk(id);
         const where = { id: id };
-        const include = { model: Category, required: false }
+        const include = {
+            model: Category, required: false,
+            attributes: {
+                exclude: ['seoTitle', 'seoKeywords', 'seoDescription', 'orderBy', 'listView', 'articleView', 'orderBy']  // 排除 Category 的字段
+            }
+        }
         const article = await Article.findOne({
             attributes: {
                 include: [
-                    [
-                        sequelize.literal(`(SELECT JSON_ARRAYAGG(JSON_OBJECT('id', id, 'name', name,'path',path)) FROM cms_tag WHERE FIND_IN_SET(cms_tag.id, Article.tagId) > 0)`), 'tags'
-                    ]
+                    [ sequelize.literal(`(SELECT JSON_ARRAYAGG(JSON_OBJECT('id', id, 'name', name,'path',path)) FROM cms_tag WHERE FIND_IN_SET(cms_tag.id, Article.tagId) > 0)`), 'tags' ]
                 ]
             },
             where, include
@@ -460,13 +488,17 @@ async function getPopularArticles(req, res, next) {
         const offset = (page - 1) * limit;
         const where = { status: { [Op.eq]: 0 } };
         const order = [['pv', 'DESC'], ['createdAt', 'DESC']];
-        const include = { model: Category, required: false }
+        const include = {
+            model: Category, required: false,
+            attributes: {
+                exclude: ['seoTitle', 'seoKeywords', 'seoDescription', 'orderBy', 'listView', 'articleView', 'orderBy']  // 排除 Category 的字段
+            }
+        }
         const attributes = {
             include: [
-                [
-                    sequelize.literal(`(SELECT JSON_ARRAYAGG(JSON_OBJECT('id', id, 'name', name,'path', path)) FROM cms_tag WHERE FIND_IN_SET(cms_tag.id, Article.tagId) > 0)`), 'tags'
-                ]
-            ]
+                [ sequelize.literal(`(SELECT JSON_ARRAYAGG(JSON_OBJECT('id', id, 'name', name,'path', path)) FROM cms_tag WHERE FIND_IN_SET(cms_tag.id, Article.tagId) > 0)`), 'tags' ]
+            ],
+            exclude: ['subCid', 'articleView', 'source', 'content', 'status']
         }
         const articles = await Article.findAll({ where, attributes, include, limit, offset, order });
 
@@ -510,13 +542,17 @@ async function getFeaturedArticles(req, res, next) {
         const order = [
             ['createdAt', 'DESC'],
         ];
-        const include = { model: Category, required: false }
+        const include = {
+            model: Category, required: false,
+            attributes: {
+                exclude: ['seoTitle', 'seoKeywords', 'seoDescription', 'orderBy', 'listView', 'articleView', 'orderBy']  // 排除 Category 的字段
+            }
+        }
         const attributes = {
             include: [
-                [
-                    sequelize.literal(`(SELECT JSON_ARRAYAGG(JSON_OBJECT('id', id, 'name', name,'path', path)) FROM cms_tag WHERE FIND_IN_SET(cms_tag.id, Article.tagId) > 0)`), 'tags'
-                ]
-            ]
+                [ sequelize.literal(`(SELECT JSON_ARRAYAGG(JSON_OBJECT('id', id, 'name', name,'path', path)) FROM cms_tag WHERE FIND_IN_SET(cms_tag.id, Article.tagId) > 0)`), 'tags' ]
+            ],
+            exclude: ['subCid', 'articleView', 'source', 'content', 'status']
         }
         const articles = await Article.findAll({ attributes, where, include, limit, offset: 0, order });
         if (!articles) {
@@ -555,13 +591,17 @@ async function getArticlesByTag(req, res, next) {
             },
             status: { [Op.eq]: 0 }
         };
-        const include = { model: Category, required: false }
+        const include = {
+            model: Category, required: false,
+            attributes: {
+                exclude: ['seoTitle', 'seoKeywords', 'seoDescription', 'orderBy', 'listView', 'articleView', 'orderBy']  // 排除 Category 的字段
+            }
+        }
         const attributes = {
             include: [
-                [
-                    sequelize.literal(`(SELECT JSON_ARRAYAGG(JSON_OBJECT('id', id, 'name', name,'path', path)) FROM cms_tag WHERE FIND_IN_SET(cms_tag.id, Article.tagId) > 0)`), 'tags'
-                ]
-            ]
+                [ sequelize.literal(`(SELECT JSON_ARRAYAGG(JSON_OBJECT('id', id, 'name', name,'path', path)) FROM cms_tag WHERE FIND_IN_SET(cms_tag.id, Article.tagId) > 0)`), 'tags' ]
+            ],
+            exclude: ['subCid', 'articleView', 'source', 'content', 'status']
         }
         const { count, rows } = await Article.findAndCountAll({ attributes, where, include, limit, offset });
         const result = rows.map(article => {
@@ -598,7 +638,8 @@ async function getRelatedArticlesById(req, res, next) {
         const attributes = {
             include: [
                 [sequelize.literal(`(SELECT JSON_ARRAYAGG(JSON_OBJECT('id', id, 'name', name)) FROM cms_tag WHERE FIND_IN_SET(cms_tag.id, Article.tagId) > 0)`), 'tags']
-            ]
+            ],
+            exclude: ['subCid', 'articleView', 'source', 'content', 'status']
         }
         // 2. 查同栏目下的其他文章
         const { count, rows } = await Article.findAndCountAll({
@@ -653,7 +694,12 @@ async function getRelatedArticles(req, res, next) {
             ]
         };
 
-        const include = { model: Category, required: false }
+        const include = {
+            model: Category, required: false,
+            attributes: {
+                exclude: ['seoTitle', 'seoKeywords', 'seoDescription', 'orderBy', 'listView', 'articleView', 'orderBy']  // 排除 Category 的字段
+            }
+        }
         // 排序处理
         let order = [['createdAt', 'DESC']]; // 默认按创建时间倒序
         if (sort === 'latest') {
@@ -668,7 +714,8 @@ async function getRelatedArticles(req, res, next) {
         const attributes = {
             include: [
                 [sequelize.literal(`(SELECT JSON_ARRAYAGG(JSON_OBJECT('id', id, 'name', name)) FROM cms_tag WHERE FIND_IN_SET(cms_tag.id, Article.tagId) > 0)`), 'tags']
-            ]
+            ],
+            exclude: ['subCid', 'articleView', 'source', 'content', 'status']
         }
         const { count, rows } = await Article.findAndCountAll({ attributes, where, include, order, limit, offset });
         const result = rows.map(article => {

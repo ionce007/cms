@@ -4,8 +4,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { defaultArticle, FrontendArticle1 } from '@/types/frontend';
 import { useSidebarData } from './useCommonData';
+import { API_BASE_URL, API_ENDPOINTS } from '@/config';
 
-const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
+const pinnedurl = `${API_BASE_URL}${API_ENDPOINTS.ARTICLES_PINNED}`;
+const recentUrl = `${API_BASE_URL}${API_ENDPOINTS.ARTICLES_RECENT}`;
+
+//const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
 
 interface UseHomeDataResult {
     featuredArticle: FrontendArticle1 | null;
@@ -41,8 +45,8 @@ export function useHomeData(): UseHomeDataResult {
 
         // ✅ 并行请求两个 API
         const [featuredResult, recentResult] = await Promise.allSettled([
-            fetch(`${baseUrl}/articles/pinned`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/articles/recent`, { cache: 'no-store' }),
+            fetch(pinnedurl, { cache: 'no-store' }),
+            fetch(recentUrl, { cache: 'no-store' }),
         ]);
 
         // 处理置顶文章

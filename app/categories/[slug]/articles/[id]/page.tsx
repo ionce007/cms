@@ -3,15 +3,16 @@ import type { Metadata } from 'next';
 //import { categories, allArticles } from '@/data/articlesData';
 import CategoryArticleClient from './CategoryArticleClient';
 import { Category1, FrontendArticle1 } from '@/types/frontend';
+import { API_BASE_URL } from '@/config/env';
 
-const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
+//const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
 
 interface PageProps {
     params: Promise<{ slug: string; id: string }>;
 }
 async function getCategories(): Promise<Category1[]> {
     try {
-        const response = await fetch(`${baseUrl}/categories`);
+        const response = await fetch(`${API_BASE_URL}/categories`);
         if (!response.ok) {
             return [];
         }
@@ -29,7 +30,7 @@ export function generateStaticParams(): { slug: string; id: string }[] {
 }
 async function getArticle(id: number) {
     try {
-        const response = await fetch(`${baseUrl}/articles/${id}`);
+        const response = await fetch(`${API_BASE_URL}/articles/${id}`);
         const data = await response.json();
         return data.article;
     }

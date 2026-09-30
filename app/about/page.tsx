@@ -12,11 +12,11 @@ export const metadata: Metadata = {
 };
 
 export default async function AboutPage({ params }: AboutPageProps) {
-    const { slug } = await params;
+    /*const { slug } = await params;
     let pageParam = 'aboutus'
     if (slug) {
         if (slug.trim().toLocaleLowerCase() === 'page-46.html') pageParam = 'donate'
         else if (slug.trim().toLocaleLowerCase() === 'page-47.html') pageParam = 'gratitude'
-    }
-    return <AboutClient slug={pageParam} />;
+    }*/
+    return <AboutClient  />;
 }

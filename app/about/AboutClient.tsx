@@ -4,6 +4,8 @@
 import Header from '@/components/frontend/Header';
 import Footer from '@/components/frontend/Footer';
 import Sidebar from '@/components/frontend/Sidebar';
+import AboutHero from '@/components/frontend/AboutHero'
+
 import { useFrag } from '@/hooks/useCommonData';
 import { processHtmlImages } from '@/lib/htmlProcessor';
 import { useMemo } from 'react';
@@ -12,8 +14,9 @@ type AboutClientProps = {
   slug: string;
 };
 
-export default function AboutClient({ slug }: AboutClientProps) {
+export default function AboutClient() {
     // ✅ 从 cms_frag 表读取 mark = 'aboutus' 的 HTML 内容
+    const slug = 'aboutus'
     const { frag, isLoading, error } = useFrag(slug);
     const processedContent = useMemo(() => {
         const content = frag && frag.content ? frag.content : '';
@@ -82,7 +85,6 @@ export default function AboutClient({ slug }: AboutClientProps) {
                             </h1>
                         </div>
                     </div>
-
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                         <div className="flex flex-col lg:flex-row gap-8">
                             <div className="flex-1 min-w-0">
@@ -114,6 +116,7 @@ export default function AboutClient({ slug }: AboutClientProps) {
 
             <main className="flex-1">
                 {/* 页面标题 - 与其他页面保持一致 */}
+                {/*}
                 <div className="bg-white border-b border-gray-200">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                         <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
@@ -124,7 +127,8 @@ export default function AboutClient({ slug }: AboutClientProps) {
                         </p>
                     </div>
                 </div>
-
+                */}
+                <AboutHero />
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1">
                     <div className="flex flex-col lg:flex-row gap-8">
                         {/* ✅ 左侧主内容 - 渲染 HTML */}

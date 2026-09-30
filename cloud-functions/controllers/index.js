@@ -1,12 +1,13 @@
 
-//const { Tag } = require('../models');
 const ArticleController = require('./ArticleController');
 const CategoryController = require('./CategoryController');
 const TagController = require('./TagController');
 const FragController = require('./FragController');
 const SiteController = require('./SiteController');
 const ImageController = require('./imageProxyController');
-
+const BaiduAuthController = require('./baidu/AuthController')
+const TokenController = require('./TokenControllers')
+const FormulaController = require('./FormulaController')
 //exports.Article = ArticleController;
 
 module.exports = {
@@ -15,5 +16,8 @@ module.exports = {
     Tag: TagController,
     Frag: FragController,
     Site: SiteController,
-    Image: ImageController
+    Image: ImageController,
+    BaibuAuth: BaiduAuthController,
+    BaiduToken: TokenController,
+    Formula: FormulaController
 }

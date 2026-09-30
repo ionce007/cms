@@ -23,7 +23,7 @@ export default function CommentSection({ comments, articleId }: CommentSectionPr
             articleId,
             author: {
                 name: '当前用户',
-                avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=40&h=40&fit=crop',
+                avatar: '/img/avatar.jpg',
             },
             content: newComment,
             date: new Date().toISOString().split('T')[0],

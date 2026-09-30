@@ -1,4 +1,6 @@
 // components/frontend/ArticleSkeleton.tsx
+const paragraphWidths = ['72%', '88%', '64%', '92%', '78%', '86%', '70%', '82%', '58%', '46%'];
+
 export default function ArticleSkeleton() {
     return (
         <article className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -32,11 +34,11 @@ export default function ArticleSkeleton() {
 
             {/* 正文骨架 */}
             <div className="px-6 py-8 space-y-4">
-                {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                {paragraphWidths.map((width, index) => (
                     <div
-                        key={i}
+                        key={`skeleton-line-${index}`}
                         className="h-4 bg-gray-200 rounded animate-pulse"
-                        style={{ width: `${60 + Math.random() * 40}%` }}
+                        style={{ width }}
                     />
                 ))}
                 <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />

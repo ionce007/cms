@@ -65,5 +65,15 @@ app.get('/frags', controllers.Frag.getFrags);
 app.get('/frags/:id', controllers.Frag.getFragById);
 app.get('/frags/mark/:mark', controllers.Frag.getFragByMark);
 app.get('/siteinfo', controllers.Site.getSiteInfo);
+
+app.get('/formulas', controllers.Formula.getFormulas);
+app.get('/formulas/:id', controllers.Formula.getFormulaById);
+app.post('/formulas/:id/like', controllers.Formula.likeFormula);
+app.get('/formulas/:id/download', controllers.Formula.getDownloadUrl);
+
+app.get('/bdpan/list', controllers.BaiduToken.getPanFiles)
+app.get('/bdpan/auth', controllers.BaiduToken.getBaiduAuthCode)
+//app.get('/formulas', getFormulas);
+//app.get('/formulas', getFormulas);
 // 导出处理函数
 export default app;

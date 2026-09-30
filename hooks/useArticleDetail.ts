@@ -4,8 +4,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { FrontendArticle1 } from '@/types/frontend';
 import { useSidebarData } from './useCommonData';
+import { API_BASE_URL } from '@/config/env';
 
-const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
+//const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
 
 // ========== 类型定义 ==========
 interface UseArticleDetailResult {
@@ -41,8 +42,8 @@ export function useArticleDetail(articleId: number): UseArticleDetailResult {
         try {
             // ✅ 并行请求：文章详情 + 关联文章
             const [articleRes, relatedRes] = await Promise.allSettled([
-                fetch(`${baseUrl}/articles/${articleId}`),
-                fetch(`${baseUrl}/articles/${articleId}/related`),
+                fetch(`${API_BASE_URL}/articles/${articleId}`),
+                fetch(`${API_BASE_URL}/articles/${articleId}/related`),
             ]);
             // 处理文章详情
             if (articleRes.status === 'fulfilled' && articleRes.value.ok) {

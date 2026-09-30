@@ -24,6 +24,9 @@ const ITEM_CONFIG: Record<string, { label: string; icon: string }> = {
     article: { label: '正文', icon: '📖' },
     featured: { label: '置顶', icon: '📌' },   // ✅ 新增
     recent: { label: '最新', icon: '🆕' },     // ✅ 新增
+    // ✅ 下载相关
+    downloads: { label: '文件', icon: '📁' },
+    download: { label: '文件详情', icon: '📄' },
 };
 
 export default function LoadingProgress({

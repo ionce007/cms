@@ -5,6 +5,7 @@ import Link from 'next/link';
 import SafeImage from './SafeImage';
 import { FrontendArticle1 } from '@/types/frontend';
 import { cn } from '@/lib/utils';
+//import { ROUTES } from '@/config';
 
 interface ArticleCardProps {
     article: FrontendArticle1;

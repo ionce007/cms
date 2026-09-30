@@ -5,12 +5,12 @@ const nextConfig = {
 		remotePatterns: [
 			{
 				protocol: 'https',
-				hostname: 'example.com',
-				pathname: '/images/**',
+				hostname: 'img.foryet.com',
+				pathname: '/upload/**',
 			},
 			{
 				protocol: 'https',
-				hostname: 'images.unsplash.com',
+				hostname: 'blog.foryet.com',
 				pathname: '/**',
 			},
 		],

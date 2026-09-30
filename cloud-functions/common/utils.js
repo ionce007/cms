@@ -108,3 +108,47 @@ export function isUrl(str) {
         return false;
     }
 }
+
+
+export function DateAdd(date, strInterval, number) {
+  //y年 q季度 m月 d日 w周 h小时 n分钟 s秒 ms毫秒
+  var dtTmp = date; //this;
+  switch (strInterval) {
+    case 's': return new Date(Date.parse(dtTmp) + (1000 * number));
+    case 'n': return new Date(Date.parse(dtTmp) + (60000 * number));
+    case 'h': return new Date(Date.parse(dtTmp) + (3600000 * number));
+    case 'd': return new Date(Date.parse(dtTmp) + (86400000 * number));
+    case 'w': return new Date(Date.parse(dtTmp) + ((86400000 * 7) * number));
+    case 'q': return new Date(dtTmp.getFullYear(), (dtTmp.getMonth()) + number * 3, dtTmp.getDate(), dtTmp.getHours(), dtTmp.getMinutes(), dtTmp.getSeconds());
+    case 'm': return new Date(dtTmp.getFullYear(), (dtTmp.getMonth()) + number, dtTmp.getDate(), dtTmp.getHours(), dtTmp.getMinutes(), dtTmp.getSeconds());
+    case 'y': return new Date((dtTmp.getFullYear() + number), dtTmp.getMonth(), dtTmp.getDate(), dtTmp.getHours(), dtTmp.getMinutes(), dtTmp.getSeconds());
+  }
+};
+export function dateFormat(date = new Date(), format = 'yyyy-MM-dd HH:mm:ss') {
+  // 处理输入日期
+  const d = date instanceof Date ? date : new Date(date);
+  if (isNaN(d.getTime())) throw new Error('Invalid date');
+
+  // 定义替换规则
+  const replacements = {
+    'yyyy': d.getFullYear(),
+    'yy': String(d.getFullYear()).slice(-2),
+    'MM': String(d.getMonth() + 1).padStart(2, '0'),
+    'M': d.getMonth() + 1,
+    'dd': String(d.getDate()).padStart(2, '0'),
+    'd': d.getDate(),
+    'HH': String(d.getHours()).padStart(2, '0'),
+    'H': d.getHours(),
+    'hh': String(d.getHours() % 12 || 12).padStart(2, '0'),
+    'h': d.getHours() % 12 || 12,
+    'mm': String(d.getMinutes()).padStart(2, '0'),
+    'm': d.getMinutes(),
+    'ss': String(d.getSeconds()).padStart(2, '0'),
+    's': d.getSeconds(),
+    'a': d.getHours() < 12 ? 'am' : 'pm',
+    'A': d.getHours() < 12 ? 'AM' : 'PM'
+  };
+  // 执行替换
+  return format.replace(/(yyyy|yy|MM|M|dd|d|HH|H|hh|h|mm|m|ss|s|a|A)/g,
+    match => replacements[match]);
+}

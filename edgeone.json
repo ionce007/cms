@@ -7,7 +7,8 @@
         "pg-hstore",
         "express",
         "sequelize",
-        "axios"
+        "axios",
+        "sync-request"
       ]
     }
   }

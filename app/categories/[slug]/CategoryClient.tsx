@@ -13,9 +13,10 @@ import Pagination from '@/components/frontend/Pagination';
 import LoadingProgress from '@/components/frontend/LoadingProgress';
 import { useSidebarData } from '@/hooks/useCommonData';
 import { FrontendArticle1 } from '@/types/frontend';
+import { API_BASE_URL } from '@/config/env';
 
 const ITEMS_PER_PAGE = 6;
-const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
+//const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
 
 interface CategoryClientProps {
     slug: string;
@@ -59,7 +60,7 @@ export default function CategoryClient({ slug, categoryName, categoryIcon }: Cat
         async function fetchArticles() {
             setArticlesLoading(true);
             try {
-                const response = await fetch(`${baseUrl}/articles/category`, {
+                const response = await fetch(`${API_BASE_URL}/articles/category`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

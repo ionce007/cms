@@ -33,10 +33,11 @@ Article.init(
         author: {
             type: DataTypes.JSON,
             allowNull: true,
-            defaultValue: { name: '缠说・股经', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop' },
+            defaultValue: { name: '缠说・股经', avatar: '/img/avatar.jpg' },
             get() {
-                const rawValue = this.getDataValue('settings');
-                return rawValue ? JSON.parse(rawValue) : { name: '缠说・股经', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop' };
+                return { name: '缠说・股经', avatar: '/img/avatar.jpg' };
+                //const rawValue = this.getDataValue('settings');
+                //return rawValue ? JSON.parse(rawValue) : { name: '缠说・股经', avatar: '/img/avatar.jpg' };
             },
             comment: '作者'
         },

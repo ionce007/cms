@@ -1,8 +1,10 @@
 // hooks/useArticle.ts
 import useSWR from 'swr';
-import { FrontendArticle1 } from '@/types/frontend';
 
-const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
+import { API_BASE_URL } from '@/config/env';
+//import { API_ENDPOINTS } from '@/config/routes';
+
+//const baseUrl = API_BASE_URL;//process.env.API_URL || 'https://blog.foryet.com/api';
 
 const fetcher = async (url: string) => {
     const res = await fetch(url);
@@ -14,26 +16,26 @@ const fetcher = async (url: string) => {
 export function useArticle(id: number) {
     // ✅ 同时调用多个 API
     const articleSWR = useSWR(
-        `${baseUrl}/articles/${id}`,
+        `${API_BASE_URL}/articles/${id}`,
         fetcher,
         { revalidateOnFocus: false, dedupingInterval: 60000 }
     );
 
     const relatedSWR = useSWR(
-        `${baseUrl}/articles/${id}/related`,
+        `${API_BASE_URL}/articles/${id}/related`,
         fetcher,
         { revalidateOnFocus: false, dedupingInterval: 60000 }
     );
-
+/*
     const commentsSWR = useSWR(
-        id ? `${baseUrl}/articles/${id}/comments` : null,
+        id ? `${API_BASE_URL}/articles/${id}/comments` : null,
         fetcher,
         { revalidateOnFocus: false, dedupingInterval: 60000 }
     );
-
+*/
     const authorSWR = useSWR(
         articleSWR.data?.data?.cid
-            ? `${baseUrl}/categories/${articleSWR.data.data.cid}`
+            ? `${API_BASE_URL}/categories/${articleSWR.data.data.cid}`
             : null,
         fetcher,  // ✅ 依赖第一个 API 的结果
         { revalidateOnFocus: false }

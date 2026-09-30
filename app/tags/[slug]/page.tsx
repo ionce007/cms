@@ -3,15 +3,16 @@ import type { Metadata } from 'next';
 //import { tags } from '@/data/articlesData';
 import TagClient from './TagClient';
 import { Tag } from '@/types/frontend';
+import { API_BASE_URL } from '@/config/env';
 
 interface TagPageProps {
     params: Promise<{ slug: string }>;
 }
-const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
+//const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
 
 async function getTags(): Promise<Tag[]> {
     const [tagResult] = await Promise.allSettled([
-        fetch(`${baseUrl}/tags`),
+        fetch(`${API_BASE_URL}/tags`),
     ]);
 
     if (tagResult.status !== 'fulfilled' || !tagResult.value.ok) {

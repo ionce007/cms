@@ -1,25 +1,36 @@
 // app/layout.tsx
 import type { Metadata } from 'next';
-import '../public/css/globals.css';
+import { getSiteConfig } from '@/lib/siteConfig';
+import '@/public/css/globals.css';
 
-export const metadata: Metadata = {
-    title: {
-        default: 'TechBlog - 技术博客',
-        template: '%s | TechBlog',
-    },
-    description: '分享技术知识，记录开发心得',
-};
+export async function generateMetadata(): Promise<Metadata> {
+    const siteConfig = await getSiteConfig();
 
-export default function RootLayout({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
+    return {
+        title: {
+            default: siteConfig.name,
+            template: `%s | ${siteConfig.name}`,
+        },
+        description: siteConfig.description,
+        keywords: siteConfig.keywords,
+        openGraph: {
+            title: siteConfig.name,
+            description: siteConfig.description,
+            siteName: siteConfig.name,
+            type: 'website',
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: siteConfig.name,
+            description: siteConfig.description,
+        },
+    };
+}
+
+export default function RootLayout({ children, }: { children: React.ReactNode; }) {
     return (
         <html lang="zh-CN">
-            <body>
-                {children}
-            </body>
+            <body>{children}</body>
         </html>
     );
 }

@@ -13,9 +13,10 @@ import Pagination from '@/components/frontend/Pagination';
 import LoadingProgress from '@/components/frontend/LoadingProgress';
 import { useSidebarData } from '@/hooks/useCommonData';
 import { ArticleFilters as FilterType, FrontendArticle1 } from '@/types/frontend';
+import { API_BASE_URL } from '@/config/env';
 
 const ITEMS_PER_PAGE = 6;
-const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
+//const baseUrl = API_BASE_URL;//process.env.API_URL || 'https://blog.foryet.com/api';
 
 export default function ArticlesPage() {
     // ✅ 使用 SWR Hook 获取侧边栏数据 + 进度
@@ -60,14 +61,13 @@ export default function ArticlesPage() {
                     page: currentPage,
                     limit: ITEMS_PER_PAGE,
                 };
-                const response = await fetch(`${baseUrl}/articles/search`, {
+                const response = await fetch(`${API_BASE_URL}/articles/search`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(params),
                 });
 
                 const data = await response.json();
-
                 if (data && data.code === 1) {
                     setPaginatedArticles(data.data || []);
                     const count = data.count || 0;
@@ -114,7 +114,9 @@ export default function ArticlesPage() {
         setCurrentPage(page);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
-
+    useEffect(()=>{
+        console.log('articles loaded!')
+    },[paginatedArticles])
     if (error) {
         return (
             <div className="min-h-screen text-center bg-gray-50 flex flex-col items-center justify-center">

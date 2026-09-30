@@ -17,26 +17,6 @@ export interface ButtonProps {
     onClick?: () => void;
 }
 // ========== 文章 ==========
-/*
-export interface FrontendArticle {
-    id: number;
-    title: string;
-    excerpt: string;
-    coverImage: string;
-    author: {
-        name: string;
-        avatar: string;
-    };
-    category: string;
-    categorySlug: string;
-    tags: string[];
-    publishDate: string;
-    readTime: number;
-    views: number;
-    likes: number;
-    featured?: boolean;
-}
-*/
 export interface FrontendArticle1 {
     id: number;
     cid: number;
@@ -291,7 +271,7 @@ export const defaultArticle: FrontendArticle1 = {
     attr: '',
     articleView: '',
     source: '',
-    author: { name: '', avatar: '', },
+    author: {  name: '缠说・股经', avatar: '/img/avatar.jpg'  },
     description: '',
     img: '',
     content: '',

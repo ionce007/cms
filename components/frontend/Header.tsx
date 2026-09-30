@@ -7,11 +7,16 @@ import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { FrontendArticle1 } from '@/types/frontend';
 import SafeImage from './SafeImage';
-//import { allArticles } from '@/data/articlesData';
+import { useSiteConfig } from '@/hooks/useSiteConfig';
+import { NAV_ITEMS, isNavActive } from '@/config/navigation';
+
+
 
 export default function Header() {
     const pathname = usePathname();
     const router = useRouter();
+
+    const { siteConfig } = useSiteConfig();  // ✅ 动态获取
 
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -128,13 +133,13 @@ export default function Header() {
         );
     };
 
-    const navItems = [
+    /*const navItems = [
         { label: '首页', href: '/', active: pathname === '/' },
         { label: '文章', href: '/articles', active: pathname.startsWith('/articles') },
         { label: '分类', href: '/categories', active: pathname.startsWith('/categories') },
         { label: '标签', href: '/tags', active: pathname.startsWith('/tags') },
         { label: '关于', href: '/about', active: pathname === '/about' },
-    ];
+    ];*/
 
     return (
         <header
@@ -149,23 +154,25 @@ export default function Header() {
                 <div className="flex items-center justify-between h-16">
                     {/* 左侧：Logo + 导航 */}
                     <div className="flex items-center space-x-4">
-                        <Link href="/" className="flex items-center space-x-2 group">
-                            <div className="w-9 h-9 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
-                                <span className="text-white font-bold text-lg">T</span>
+                        <Link href="/" className="flex items-center space-x-2">
+                            <div className="w-9 h-9 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
+                                <span className="text-white font-bold text-lg">
+                                    {siteConfig.json.logo}
+                                </span>
                             </div>
-                            <span className="text-xl font-bold text-gray-800 hidden sm:block">
-                                Tech<span className="text-primary-600">Blog</span>
+                            <span className="text-xl font-bold text-gray-800">
+                                {siteConfig.name}
                             </span>
                         </Link>
 
                         <nav className="hidden lg:flex items-center space-x-1 ml-8">
-                            {navItems.map((item) => (
+                            {NAV_ITEMS.map((item) => (
                                 <Link
                                     key={item.href}
                                     href={item.href}
                                     className={cn(
                                         'px-4 py-2 rounded-lg text-lg font-medium transition-all duration-200',
-                                        item.active
+                                        isNavActive(pathname, item)
                                             ? 'bg-primary-50 text-primary-600 shadow-sm'
                                             : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                                     )}
@@ -257,11 +264,6 @@ export default function Header() {
                                                             className="block px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0"
                                                         >
                                                             <div className="flex items-start space-x-3">
-                                                                {/*<img
-                                                                    src={article.img}
-                                                                    alt={article.title}
-                                                                    className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
-                                                                />*/}
                                                                 <SafeImage
                                                                     src={article.img}
                                                                     alt={article.title}
@@ -360,13 +362,13 @@ export default function Header() {
                             )}
                         </div>
 
-                        {navItems.map((item) => (
+                        {NAV_ITEMS.map((item) => (
                             <Link
                                 key={item.href}
                                 href={item.href}
                                 className={cn(
                                     'block px-4 py-3 rounded-lg text-base font-medium transition-colors',
-                                    item.active
+                                    isNavActive(pathname, item)
                                         ? 'bg-primary-50 text-primary-700'
                                         : 'text-gray-700 hover:bg-gray-100'
                                 )}

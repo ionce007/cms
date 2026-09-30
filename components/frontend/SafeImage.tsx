@@ -1,10 +1,9 @@
 // components/frontend/SafeImage.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-//import { ImageProxy } from '@/lib/imageProxy';
-import { getProxiedImageUrl } from '@/lib/imageProxy';
+import { getProxiedImageUrl, getSiteProtocol } from '@/lib/imageProxy';
 
 interface SafeImageProps {
     src?: string | null;
@@ -24,16 +23,16 @@ export default function SafeImage({
     loading = 'lazy',
 }: SafeImageProps) {
     const [hasError, setHasError] = useState(false);
+    // ✅ 首次渲染时用默认协议（SSR），客户端挂载后再用真实协议
+    const [protocol, setProtocol] = useState<'http:' | 'https:'>('https:');
 
     useEffect(() => {
-        //console.log('image src = ', src);
-    }, [src])
-    // ✅ 自动 HTTP → HTTPS 代理
-    //const imgProxy = new ImageProxy({ refUrl: 'https://blog.foryet.com'; });
-    //const proxiedSrc = imgProxy.getProxyUrl(src);
-    //const proxiedSrc = getProxiedImageUrl(src);
+        // ✅ 客户端挂载后，读取真实协议
+        setProtocol(getSiteProtocol());
+    }, []);
 
-    const proxiedSrc = src ? getProxiedImageUrl(src) : '';
+    // ✅ 根据网站协议决定是否代理
+    const proxiedSrc = getProxiedImageUrl(src, { protocol });
 
     const isEmpty = !proxiedSrc || proxiedSrc.trim() === '';
     const showFallback = isEmpty || hasError;

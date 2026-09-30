@@ -1,8 +1,10 @@
 // hooks/useCommonData.ts
 import useSWR from 'swr';
 import { Category1, Tag, FrontendArticle1, SiteInfo, FragInfo, defaultSiteInfo } from '@/types/frontend';
+import { useSiteConfig } from './useSiteConfig';
+import { API_BASE_URL } from '@/config/env';
 
-const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
+//const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
 
 const fetcher = async (url: string) => {
     const res = await fetch(url);
@@ -12,32 +14,32 @@ const fetcher = async (url: string) => {
 };
 
 export function useCategories() {
-    return useSWR<Category1[]>(`${baseUrl}/categories`, fetcher, {
+    return useSWR<Category1[]>(`${API_BASE_URL}/categories`, fetcher, {
         revalidateOnFocus: false,
         dedupingInterval: 60000 * 3, // 3分钟内不重复请求
     });
 }
 export function useCategoryArticles(slug: string) {
-    return useSWR<Category1[]>(`${baseUrl}/categories/${slug}`, fetcher, {
+    return useSWR<Category1[]>(`${API_BASE_URL}/categories/${slug}`, fetcher, {
         revalidateOnFocus: false,
         dedupingInterval: 60000 * 3, // 3分钟内不重复请求
     });
 }
 export function useArticles() {
-    return useSWR<Tag[]>(`${baseUrl}/articles`, fetcher, {
+    return useSWR<Tag[]>(`${API_BASE_URL}/articles`, fetcher, {
         revalidateOnFocus: false,
         dedupingInterval: 60000 * 3,
     });
 }
 export function useTags() {
-    return useSWR<Tag[]>(`${baseUrl}/tags`, fetcher, {
+    return useSWR<Tag[]>(`${API_BASE_URL}/tags`, fetcher, {
         revalidateOnFocus: false,
         dedupingInterval: 60000 * 3,
     });
 }
 export function useFrag(mark: string) {
     const { data, error, isLoading } = useSWR<FragInfo>(
-        mark ? `${baseUrl}/frags/mark/${mark}` : null,
+        mark ? `${API_BASE_URL}/frags/mark/${mark}` : null,
         fetcher,
         {
             revalidateOnFocus: false,
@@ -53,28 +55,29 @@ export function useFrag(mark: string) {
     };
 }
 export function usePopularArticles() {
-    return useSWR<FrontendArticle1[]>(`${baseUrl}/articles/popular`, fetcher, {
+    return useSWR<FrontendArticle1[]>(`${API_BASE_URL}/articles/popular`, fetcher, {
         revalidateOnFocus: false,
         dedupingInterval: 60000 * 3,
     });
 }
 
 export function useFeaturedArticles() {
-    return useSWR<FrontendArticle1[]>(`${baseUrl}/articles/featured`, fetcher, {
+    return useSWR<FrontendArticle1[]>(`${API_BASE_URL}/articles/featured`, fetcher, {
         revalidateOnFocus: false,
         dedupingInterval: 60000 * 3,
     });
 }
 
 export function useSiteInfoData() {
-    return useSWR<SiteInfo>(`${baseUrl}/siteinfo`, fetcher, {
+    return useSiteConfig();
+    /*return useSWR<SiteInfo>(`${API_BASE_URL}/siteinfo`, fetcher, {
         revalidateOnFocus: false,
         dedupingInterval: 60000 * 3,
-    });
+    });*/
 }
 
 export function useSiteInfo() {
-    const { data, error, isLoading } = useSWR<SiteInfo>(`${baseUrl}/siteinfo`, fetcher, {
+    const { data, error, isLoading } = useSWR<SiteInfo>(`${API_BASE_URL}/siteinfo`, fetcher, {
         revalidateOnFocus: false,
         dedupingInterval: 60000 * 3,
     });
@@ -88,7 +91,7 @@ export function useSiteInfo() {
 }
 
 export function useFragData() {
-    return useSWR<FragInfo[]>(`${baseUrl}/frags`, fetcher, {
+    return useSWR<FragInfo[]>(`${API_BASE_URL}/frags`, fetcher, {
         revalidateOnFocus: false,
         dedupingInterval: 60000 * 3,
     });
@@ -140,7 +143,7 @@ export function useSidebarData() {
         tags: tags.data || [],
         popularArticles: popularArticles.data || [],
         featuredArticles: featuredArticles.data || [],
-        siteInfo: siteInfo.data || defaultSiteInfo,
+        siteInfo: siteInfo.siteConfig,
         frags: frags.data || [],
 
         // 状态
