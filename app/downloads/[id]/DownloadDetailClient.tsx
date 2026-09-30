@@ -13,6 +13,7 @@ import { useSidebarData } from '@/hooks/useCommonData';
 import { formatFileSize, formatTimestamp } from '@/config/constants';
 import { API_BASE_URL } from '@/config/env';
 import { API_ENDPOINTS } from '@/config/routes'
+import { processHtmlImages } from '@/lib/htmlProcessor';
 
 interface DownloadDetailClientProps {
     id: string;
@@ -224,7 +225,7 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
                                             </h2>
                                             <div
                                                 className="article-html-content prose prose-gray max-w-none"
-                                                dangerouslySetInnerHTML={{ __html: item.content }}
+                                                dangerouslySetInnerHTML={{ __html: processHtmlImages(item.content) }}
                                             />
                                         </div>
                                     )}
