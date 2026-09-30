@@ -114,7 +114,7 @@ async function createAuthToken(token) {
         await Token.destroy({ where: { supplier: 'baidupan' } });
 
         const date = dateFormat(new Date(), 'YYYY-MM-DD HH:mm:ss');
-        token.supplier = bdSupplier;
+        token.supplier = 'baidupan';
         token.remark = '百度网盘Access Token'
         token.updatedAt = date;
         token.createdAt = date;
