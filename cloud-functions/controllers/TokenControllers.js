@@ -135,6 +135,8 @@ async function getBaiduAuthCode(req, res, next) {
         var client_id = process.env.PAN_APIKEY;
         var client_secret = process.env.PAN_SECRETKEY;
         var redirect_uri = process.env.PAN_REDIRECT_URI;
+        console.log('client_id = ', client_id, '    client_secret = ', client_secret, '   redirect_uri = ', redirect_uri);
+
         var reqUrl = `https://openapi.baidu.com/oauth/2.0/token?grant_type=authorization_code&code=${code}&client_id=${client_id}&client_secret=${client_secret}&redirect_uri=${redirect_uri}`;
         var header = { 'User-Agent': 'pan.baidu.com' };
         var ret = request("GET", reqUrl, header);
