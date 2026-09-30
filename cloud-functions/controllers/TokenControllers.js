@@ -118,11 +118,9 @@ async function createAuthToken(token) {
         token.remark = '百度网盘Access Token'
         token.updatedAt = date;
         token.createdAt = date;
-        console.log('token = ', token)
         const newToken = await Token.create(token);
-        console.log('newToken = ', newToken)
-        return newToken;
-
+        console.log('newToken.dataValues = ', newToken.dataValues)
+        return newToken.dataValues;
     }
     catch (err) {
         console.error(err);
