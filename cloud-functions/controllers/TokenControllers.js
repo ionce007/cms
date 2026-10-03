@@ -119,7 +119,6 @@ async function createAuthToken(token) {
         token.updatedAt = date;
         token.createdAt = date;
         const newToken = await Token.create(token);
-        console.log('newToken.dataValues = ', newToken.dataValues)
         return newToken.dataValues;
     }
     catch (err) {
@@ -129,6 +128,8 @@ async function createAuthToken(token) {
 
 }
 async function getBaiduAuthCode(req, res, next) {
+    const refUrl = req.query.refUrl || '/admin/#/formula/auth';
+    console.log('refUrl = ', refUrl);
     try {
         var code = req.query.code;
         var client_id = process.env.PAN_APIKEY;
@@ -140,15 +141,12 @@ async function getBaiduAuthCode(req, res, next) {
         var header = { 'User-Agent': 'pan.baidu.com' };
         var ret = request("GET", reqUrl, header);
         var retJson = JSON.parse(ret.getBody('utf8'));
-        console.log('retJson = ', retJson)
         const token = await createAuthToken(retJson);
-        console.log('token = ', token)
-        //var token = await Token.findOne({ where: { supplier: 'baidupan' } }, { raw: true });
 
-        res.redirect('/admin/#/formula/auth');
+        res.redirect(refUrl);
     } catch (e) {
         console.log('获取授权失败！error:' + e.message);
-        res.redirect('/admin/#/formula/auth');
+        res.redirect(refUrl);
     }
 }
 
