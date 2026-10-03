@@ -128,7 +128,7 @@ async function createAuthToken(token) {
 
 }
 async function getBaiduAuthCode(req, res, next) {
-    const refUrl = req.query.refUrl || '/admin/#/formula/auth';
+    const refUrl = req.query.state || '/admin/#/formula/auth';
     console.log('refUrl = ', refUrl);
     try {
         var code = req.query.code;
