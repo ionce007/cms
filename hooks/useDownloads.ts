@@ -20,7 +20,6 @@ export function useDownloads(options: UseDownloadsOptions = {}) {
     const {
         page = 1,
         limit = 12,
-        category = '',
         kind = '',
         search = '',
         sort = 'latest',
@@ -45,10 +44,10 @@ export function useDownloads(options: UseDownloadsOptions = {}) {
                 sort,
             });
 
-            if (category !== '' && category !== undefined) {
-                params.append('category', String(category));
+            if (kind !== '' && kind !== undefined) {
+                params.append('kind', String(kind));
             }
-            if (kind) params.append('kind', kind);
+            //if (kind) params.append('kind', kind);
             if (search) params.append('search', search);
 
             const url = `${API_BASE_URL}${API_ENDPOINTS.FORMULAS}?${params}`;
@@ -75,7 +74,7 @@ export function useDownloads(options: UseDownloadsOptions = {}) {
             setIsLoading(false);
             setIsLoaded(true);
         }
-    }, [page, limit, category, kind, search, sort]);
+    }, [page, limit, kind, search, sort]);
 
     useEffect(() => {
         fetchData();

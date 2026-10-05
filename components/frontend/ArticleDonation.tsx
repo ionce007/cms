@@ -7,8 +7,8 @@ interface ArticleDonationProps {
 }
 
 function getPayUrl() {
-    const wxPay = process.env.PAY_WX || '//img.foryet.com/uploads/2026/0125_31014606929_wxPay.png';
-    const aliPay = process.env.PAY_ALIPAY || '//img.foryet.com/uploads/2026/0125_31014634042_zfbPay.png';
+    const wxPay = process.env.NEXT_PUBLIC_PAY_WX || '//img.foryet.com/uploads/2026/0125_31014606929_wxPay.png';
+    const aliPay = process.env.NEXT_PUBLIC_PAY_ALIPAY || '//img.foryet.com/uploads/2026/0125_31014634042_zfbPay.png';
     return { wxPay, aliPay };
 }
 

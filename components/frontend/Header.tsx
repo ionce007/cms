@@ -305,13 +305,25 @@ export default function Header() {
                             )}
                         </div>
 
-                        <button className="hidden md:inline-flex items-center space-x-1.5 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm hover:shadow">
+                        {/*<button className="hidden md:inline-flex items-center space-x-1.5 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm hover:shadow">
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                             </svg>
                             <span>订阅</span>
-                        </button>
-
+                        </button>*/}
+                        <a
+                            href="/rss.xml"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 rounded-lg text-gray-600 hover:bg-orange-50 hover:text-orange-500 transition-colors"
+                            title="RSS 订阅"
+                            aria-label="RSS 订阅"
+                        >
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19 7.38 20 6.18 20C5 20 4 19 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z" />
+                            </svg>
+                        </a>
+                        
                         <button
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                             className="lg:hidden p-2 -mr-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"

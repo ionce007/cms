@@ -69,10 +69,12 @@ app.get('/siteinfo', controllers.Site.getSiteInfo);
 app.get('/formulas', controllers.Formula.getFormulas);
 app.get('/formulas/:id', controllers.Formula.getFormulaById);
 app.post('/formulas/:id/like', controllers.Formula.likeFormula);
-app.get('/formulas/:id/download', controllers.Formula.getDownloadUrl);
+//app.get('/formulas/:id/download', controllers.Formula.getDownloadUrl);
 
-app.get('/bdpan/list', controllers.BaiduToken.getPanFiles)
+//app.get('/bdpan/list', controllers.BaiduToken.getPanFiles)
 app.get('/bdpan/auth', controllers.BaiduToken.getBaiduAuthCode)
+app.get('/bdpan/token', controllers.BaiduToken.getToken)
+app.get('/formulas/:id/download', controllers.BaiduToken.getDownloadUrl)
 //app.get('/formulas', getFormulas);
 //app.get('/formulas', getFormulas);
 // 导出处理函数

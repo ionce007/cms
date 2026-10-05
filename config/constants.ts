@@ -77,8 +77,8 @@ export const FORMULA_CATEGORIES: FormulaCategory[] = [
 export const FORMULA_KINDS: FormulaKind[] = [
     { value: 'zbgs', label: '指标公式', icon: '📈' },
     { value: 'xggs', label: '选股公式', icon: '🎯' },
-    { value: 'zbt', label: '指标图', icon: '📊' },
-    { value: 'other', label: '其他', icon: '📁' },
+    { value: 'jyfx', label: '经验分享', icon: '📊' },
+    { value: 'czsm', label: '操作说明', icon: '📁' },
 ];
 
 /**

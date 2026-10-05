@@ -3,6 +3,7 @@
 
 import Link from 'next/link';
 import SafeImage from './SafeImage';
+import CoverImage from './CoverImage';
 import { formatFileSize, formatTimestamp } from '@/config/constants';
 import { API_BASE_URL } from '@/config/env';
 import { API_ENDPOINTS } from '@/config/routes'
@@ -34,11 +35,13 @@ export default function DownloadCard({ item, index = 0 }: DownloadCardProps) {
                     href={detailUrl}
                     className="block relative overflow-hidden aspect-video bg-gray-100 cursor-pointer"
                 >
-                    <SafeImage
+                    <CoverImage
                         src={item.img}
                         alt={item.server_filename}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        aspectRatio="video"
+                        objectFit="cover"
                         fallbackIcon="📄"
+                        className="group-hover:scale-105 transition-transform duration-500"
                     />
                     {/* 分类标签 */}
                     <div className="absolute top-3 left-3 pointer-events-none">
@@ -95,9 +98,9 @@ export default function DownloadCard({ item, index = 0 }: DownloadCardProps) {
                 {/* 文件名 */}
                 <h3 className="text-base font-semibold text-gray-800 mb-2 group-hover:text-primary-600 transition-colors line-clamp-2">
                     {hasDetail ? (
-                        <Link href={detailUrl}>{item.server_filename.substring(0,item.server_filename.lastIndexOf('.'))}</Link>
+                        <Link href={detailUrl}>{item.server_filename.substring(0, item.server_filename.lastIndexOf('.'))}</Link>
                     ) : (
-                        item.server_filename.substring(0,item.server_filename.lastIndexOf('.'))
+                        item.server_filename.substring(0, item.server_filename.lastIndexOf('.'))
                     )}
                 </h3>
 

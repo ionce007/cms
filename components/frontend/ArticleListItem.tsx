@@ -4,7 +4,8 @@
 import Link from 'next/link';
 import { FrontendArticle1 } from '@/types/frontend';
 import { cn } from '@/lib/utils';
-import SafeImage from './SafeImage';
+//import SafeImage from './SafeImage';
+import CoverImage from './CoverImage';
 
 interface ArticleListItemProps {
     article: FrontendArticle1;
@@ -35,11 +36,21 @@ export default function ArticleListItem({ article, index = 0, linkPrefix = '/art
                             alt={article.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />*/}
-                        <SafeImage
+                        {/*<SafeImage
                             src={article.img}
                             alt={article.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
+                        />*/}
+                        <Link href={articleUrl} className="relative sm:w-56 lg:w-64 flex-shrink-0 overflow-hidden">
+                            <CoverImage
+                                src={article.img}
+                                alt={article.title}
+                                aspectRatio="auto"
+                                objectFit="cover"
+                                className="h-full min-h-[160px]"
+                                fallbackIcon="📄"
+                            />
+                        </Link>
                     </div>
                     <div className="absolute top-3 left-3">
                         <span className="px-2.5 py-1 bg-white/90 backdrop-blur-sm text-gray-700 text-xs font-medium rounded-full shadow-sm">
@@ -54,7 +65,7 @@ export default function ArticleListItem({ article, index = 0, linkPrefix = '/art
                         {article.tags.slice(0, 4).map((tag) => (
                             <Link
                                 key={tag.id}
-                                href={`/tag/${tag.path.toLowerCase()}`}
+                                href={`/tag/${tag.path}`}
                                 className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-md hover:bg-primary-50 hover:text-primary-600 transition-colors"
                             >
                                 #{tag.name}
@@ -77,11 +88,21 @@ export default function ArticleListItem({ article, index = 0, linkPrefix = '/art
                                 alt={article.author.name}
                                 className="w-7 h-7 rounded-full ring-2 ring-white"
                             />*/}
-                            <SafeImage
+                            {/*<SafeImage
                                 src={article.author.avatar}
                                 alt={article.author.name}
                                 className="w-7 h-7 rounded-full ring-2 ring-white"
-                            />
+                            />*/}
+                            {/*<Link href={articleUrl} className="relative sm:w-56 lg:w-64 flex-shrink-0 overflow-hidden">
+                                <CoverImage
+                                    src={article.img}
+                                    alt={article.title}
+                                    aspectRatio="auto"
+                                    objectFit="cover"
+                                    className="h-full min-h-[160px]"
+                                    fallbackIcon="📄"
+                                />
+                            </Link>*/}
                             <div>
                                 <div className="text-sm text-gray-700 font-medium leading-tight">
                                     {article.author.name}

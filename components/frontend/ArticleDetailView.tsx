@@ -9,6 +9,7 @@ import ArticleBreadcrumb from './ArticleBreadcrumb';
 import { FrontendArticle1 } from '@/types/frontend';
 import { cn } from '@/lib/utils';
 import SafeImage from './SafeImage';
+import CoverImage from './CoverImage';
 
 interface ArticleDetailViewProps {
     article: FrontendArticle1;
@@ -55,15 +56,13 @@ export default function ArticleDetailView({
 
             {/* 封面图 */}
             <div className="relative h-64 sm:h-80 lg:h-96 overflow-hidden mt-4">
-                {/*<img
+                <CoverImage
                     src={article.img}
                     alt={article.title}
-                    className="w-full h-full object-cover"
-                />*/}
-                <SafeImage
-                    src={article.img}
-                    alt={article.title}
-                    className="w-full h-full object-cover"
+                    aspectRatio="fill"
+                    objectFit="contain"
+                    useBlurBackground={true}
+                    fallbackIcon="📄"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-6">

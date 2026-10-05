@@ -21,12 +21,12 @@ const ITEMS_PER_PAGE = 6;
 export default function DownloadClient() {
     const [currentPage, setCurrentPage] = useState(1);
     const [sortBy, setSortBy] = useState<SortOption>('latest');
-    const [category, setCategory] = useState<string>('');
+    const [kind, setKind] = useState<string>('');
     const [search, setSearch] = useState('');
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
-
+    
     // ✅ 下载列表数据
-    const {
+    let {
         items,
         totalItems,
         totalPages,
@@ -36,7 +36,7 @@ export default function DownloadClient() {
         page: currentPage,
         limit: ITEMS_PER_PAGE,
         sort: sortBy,
-        category,
+        kind,
         search,
     });
 
@@ -74,13 +74,16 @@ export default function DownloadClient() {
         }
     }, []);
 
+    const doSearch = (query: string) => {
+        
+    }
     const handleViewModeChange = (mode: ViewMode) => {
         setViewMode(mode);
         localStorage.setItem(STORAGE_KEYS.VIEW_MODE, mode);
     };
 
-    const handleCategoryChange = (value: string) => {
-        setCategory(value);
+    const handleKindChange = (value: string) => {
+        setKind(value);
         setCurrentPage(1);
     };
 
@@ -197,8 +200,8 @@ export default function DownloadClient() {
 
                                     <div className="flex items-center gap-2 overflow-x-auto pb-1 -mb-1 scrollbar-thin">
                                         <button
-                                            onClick={() => handleCategoryChange('')}
-                                            className={`flex-shrink-0 px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${category === ''
+                                            onClick={() => handleKindChange('')}
+                                            className={`flex-shrink-0 px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${kind === ''
                                                     ? 'bg-primary-50 text-primary-700 border border-primary-200'
                                                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                                 }`}
@@ -207,9 +210,9 @@ export default function DownloadClient() {
                                         </button>
                                         {FORMULA_KINDS.map((k) => (
                                             <button
-                                                key={k.value}
-                                                onClick={() => handleCategoryChange(k.value)}
-                                                className={`flex-shrink-0 px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${category === k.value
+                                                key={k.label}
+                                                onClick={() => handleKindChange(k.label)}
+                                                className={`flex-shrink-0 px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${kind === k.label
                                                         ? 'bg-primary-50 text-primary-700 border border-primary-200'
                                                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                                     }`}

@@ -3,6 +3,7 @@
 
 import Link from 'next/link';
 import SafeImage from './SafeImage';
+import CoverImage from './CoverImage';
 import { FrontendArticle1 } from '@/types/frontend';
 import { cn } from '@/lib/utils';
 //import { ROUTES } from '@/config';
@@ -32,10 +33,18 @@ export default function ArticleCard({ article, index = 0, linkPrefix = '/article
                     alt={article.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />*/}
-                <SafeImage
+                {/*<SafeImage
                     src={article.img}
                     alt={article.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />*/}
+                <CoverImage
+                    src={article.img}
+                    alt={article.title}
+                    aspectRatio="video"
+                    objectFit="cover"
+                    fallbackIcon="📄"
+                    className="group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute top-3 left-3">
                     <span className="px-2.5 py-1 bg-white/90 backdrop-blur-sm text-gray-700 text-xs font-medium rounded-full shadow-sm">

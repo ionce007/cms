@@ -56,11 +56,11 @@ export default function LoadingProgress({
                     </div>
                     <div>
                         <p className="text-sm font-semibold text-gray-700">
-                            正在加载...
+                            正在加载......
                         </p>
-                        <p className="text-xs text-gray-400 mt-0.5">
+                        {/*<p className="text-xs text-gray-400 mt-0.5">
                             {loadingMessage}
-                        </p>
+                        </p>*/}
                     </div>
                 </div>
                 <span className="text-sm font-bold text-primary-600">

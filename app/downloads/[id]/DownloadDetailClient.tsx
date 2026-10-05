@@ -5,15 +5,15 @@ import { useState, useMemo } from 'react';
 import Header from '@/components/frontend/Header';
 import Footer from '@/components/frontend/Footer';
 import Sidebar from '@/components/frontend/Sidebar';
-import SafeImage from '@/components/frontend/SafeImage';
+import CoverImage from '@/components/frontend/CoverImage';
 import DownloadDetailSkeleton from '@/components/frontend/DownloadDetailSkeleton';
 import LoadingProgress from '@/components/frontend/LoadingProgress';
+import PaymentModal from '@/components/frontend/PaymentModal';  // ✅ 导入
 import { useDownloadDetail } from '@/hooks/useDownloads';
 import { useSidebarData } from '@/hooks/useCommonData';
 import { formatFileSize, formatTimestamp } from '@/config/constants';
 import { API_BASE_URL } from '@/config/env';
-import { API_ENDPOINTS } from '@/config/routes'
-import { processHtmlImages } from '@/lib/htmlProcessor';
+import { API_ENDPOINTS } from '@/config/routes';
 
 interface DownloadDetailClientProps {
     id: string;
@@ -22,11 +22,11 @@ interface DownloadDetailClientProps {
 export default function DownloadDetailClient({ id }: DownloadDetailClientProps) {
     const { item, isLoading, error } = useDownloadDetail(id);
     const [isDownloading, setIsDownloading] = useState(false);
+    // ✅ 支付模态框状态
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
-    // ✅ 侧边栏数据
     const sidebar = useSidebarData();
 
-    // ✅ 组合加载状态：侧边栏 4 项 + 文件详情 1 项 = 5 项
     const loadingStates = useMemo(() => ({
         ...sidebar.loadingStates,
         download: !isLoading,
@@ -37,7 +37,6 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
     const progress = Math.round((completed / total) * 100);
     const isAllLoaded = completed === total;
 
-    // ✅ 加载提示文案
     const loadingMessage = useMemo(() => {
         const pending: string[] = [];
         if (!loadingStates.categories) pending.push('分类');
@@ -49,19 +48,40 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
         return `正在加载：${pending.join('、')}...`;
     }, [loadingStates]);
 
-    // 处理下载
-    const handleDownload = async () => {
+    // ✅ 点击"立即下载"→ 打开支付模态框
+    const handleDownloadClick = () => {
+        if (!item) return;
+
+        // 免费文件：直接下载
+        if (item.isSell === 0 || item.price === 0) {
+            handleDirectDownload();
+            return;
+        }
+
+        // 付费文件：弹出支付模态框
+        setIsPaymentModalOpen(true);
+    };
+
+    // ✅ 确认下载（支付模态框里的"立即下载"按钮）
+    const handleConfirmDownload = async () => {
+        await handleDirectDownload();
+        // 下载成功后关闭模态框
+        setIsPaymentModalOpen(false);
+    };
+
+    // ✅ 实际下载逻辑
+    const handleDirectDownload = async () => {
         if (!item) return;
 
         setIsDownloading(true);
         try {
-            const res = await fetch(
-                `${API_BASE_URL}${API_ENDPOINTS.FORMULA_DETAIL(item.fs_id)}/download`
-            );
+            const downUrl = `${API_BASE_URL}${API_ENDPOINTS.FORMULA_DETAIL(item.fs_id)}/download`
+            const res = await fetch(downUrl);
+            debugger
             const data = await res.json();
 
-            if (data.code === 1 && data.data.downloadUrl) {
-                window.open(data.data.downloadUrl, '_blank');
+            if (data.code === 1 && data.url) {
+                window.open(data.url, '_blank');
             } else {
                 alert(data.message || '获取下载链接失败');
             }
@@ -82,25 +102,17 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                         <div className="flex flex-col lg:flex-row gap-8">
                             <div className="flex-1 min-w-0">
-                                {/* ✅ 加载进度 */}
                                 <LoadingProgress
                                     progress={progress}
                                     loadingMessage={loadingMessage}
                                     loadingStates={loadingStates}
                                 />
-
-                                {/* ✅ 详情骨架屏 */}
                                 <DownloadDetailSkeleton />
                             </div>
-
-                            {/* 侧边栏骨架 */}
                             <div className="w-full lg:w-80 flex-shrink-0">
                                 <div className="space-y-6">
                                     {[1, 2, 3].map((item) => (
-                                        <div
-                                            key={item}
-                                            className="bg-white rounded-xl border border-gray-200 p-5"
-                                        >
+                                        <div key={item} className="bg-white rounded-xl border border-gray-200 p-5">
                                             <div className="h-5 bg-gray-200 rounded w-24 mb-4 animate-pulse" />
                                             <div className="space-y-2">
                                                 <div className="h-4 bg-gray-200 rounded w-full animate-pulse" />
@@ -126,12 +138,8 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
                 <main className="flex-1 flex items-center justify-center">
                     <div className="text-center">
                         <div className="text-6xl mb-4">😕</div>
-                        <h2 className="text-xl font-semibold text-gray-800 mb-2">
-                            文件不存在
-                        </h2>
-                        <p className="text-gray-600 mb-6">
-                            {error || '该文件可能已被删除'}
-                        </p>
+                        <h2 className="text-xl font-semibold text-gray-800 mb-2">文件不存在</h2>
+                        <p className="text-gray-600 mb-6">{error || '该文件可能已被删除'}</p>
                         <a
                             href="/downloads"
                             className="inline-flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
@@ -159,7 +167,7 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
                         <a href="/downloads" className="hover:text-primary-600 transition-colors">下载</a>
                         <span>/</span>
                         <span className="text-gray-800 font-medium truncate max-w-[200px]">
-                            {item.server_filename.substring(0,item.server_filename.lastIndexOf('.'))}
+                            {item.server_filename.substring(0, item.server_filename.lastIndexOf('.'))}
                         </span>
                     </nav>
 
@@ -170,10 +178,12 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
                                 {/* 封面图 */}
                                 {item.img && (
                                     <div className="relative aspect-video overflow-hidden">
-                                        <SafeImage
+                                        <CoverImage
                                             src={item.img}
                                             alt={item.server_filename}
-                                            className="w-full h-full object-cover"
+                                            aspectRatio="fill"
+                                            objectFit="contain"
+                                            useBlurBackground={true}
                                             fallbackIcon="📄"
                                         />
                                     </div>
@@ -182,7 +192,7 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
                                 {/* 文件信息 */}
                                 <div className="p-6">
                                     <h1 className="text-2xl font-bold text-gray-800 mb-4">
-                                        {item.server_filename.substring(0,item.server_filename.lastIndexOf('.'))}
+                                        {item.server_filename.substring(0, item.server_filename.lastIndexOf('.'))}
                                     </h1>
 
                                     {item.summary && (
@@ -213,7 +223,9 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
                                         <div>
                                             <div className="text-xs text-gray-400 mb-1">价格</div>
                                             <div className="text-sm font-medium text-gray-700">
-                                                {item.isSell === 0 ? '免费' : item.price > 0 ? `¥${item.price}` : '免费'}
+                                                {item.isSell === 0 || item.price === 0
+                                                    ? '免费'
+                                                    : `¥${item.price}`}
                                             </div>
                                         </div>
                                     </div>
@@ -225,14 +237,15 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
                                             </h2>
                                             <div
                                                 className="article-html-content prose prose-gray max-w-none"
-                                                dangerouslySetInnerHTML={{ __html: processHtmlImages(item.content) }}
+                                                dangerouslySetInnerHTML={{ __html: item.content }}
                                             />
                                         </div>
                                     )}
 
                                     <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-100">
+                                        {/* ✅ 点击打开支付模态框 */}
                                         <button
-                                            onClick={handleDownload}
+                                            onClick={handleDownloadClick}
                                             disabled={isDownloading}
                                             className="inline-flex items-center space-x-2 px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:opacity-50"
                                         >
@@ -277,6 +290,16 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
             </main>
 
             <Footer />
+
+            {/* ✅ 支付模态框 */}
+            <PaymentModal
+                isOpen={isPaymentModalOpen}
+                onClose={() => setIsPaymentModalOpen(false)}
+                fs_id={item.fs_id}
+                fileName={item.server_filename}
+                price={item.price}
+                onConfirmDownload={handleConfirmDownload}
+            />
         </div>
     );
 }

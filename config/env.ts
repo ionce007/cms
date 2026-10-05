@@ -15,9 +15,12 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_BASE_
 /**
  * 站点基础地址（用于 SEO、OG）
  */
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://blog.foryet.com';
+//export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://blog.foryet.com';
 
-
+/**
+ * ✅ 站点基础地址（用于 RSS、Sitemap 中的绝对 URL）
+ */
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 /**
  * 图片代理路径
  */

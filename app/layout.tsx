@@ -1,6 +1,7 @@
 // app/layout.tsx
 import type { Metadata } from 'next';
 import { getSiteConfig } from '@/lib/siteConfig';
+import { SITE_URL } from '@/config/env';
 import '@/public/css/globals.css';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -23,6 +24,12 @@ export async function generateMetadata(): Promise<Metadata> {
             card: 'summary_large_image',
             title: siteConfig.name,
             description: siteConfig.description,
+        },
+        alternates: {
+            canonical: SITE_URL,
+            types: {
+                'application/rss+xml': `${SITE_URL}/rss.xml`,
+            },
         },
     };
 }

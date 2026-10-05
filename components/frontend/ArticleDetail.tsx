@@ -8,6 +8,7 @@ import CommentSection from './CommentSection';
 import RelatedArticles from './RelatedArticles';
 import ShareButtons from './ShareButtons';
 import SafeImage from './SafeImage';
+import CoverImage from './CoverImage';
 
 interface ArticleDetailProps {
     article: ArticleDetailType;
@@ -31,18 +32,16 @@ export default function ArticleDetail({ article, relatedArticles }: ArticleDetai
     return (
         <article className="bg-white rounded-xl border border-gray-200 overflow-hidden">
             {/* 封面图 */}
-            <div className="relative h-64 sm:h-80 lg:h-96 overflow-hidden">
-                {/*<img
+            <div className="relative h-64 sm:h-80 lg:h-96 overflow-hidden mt-4">
+                <CoverImage
                     src={article.img}
                     alt={article.title}
-                    className="w-full h-full object-cover"
-                />*/}
-                <SafeImage
-                    src={article.img}
-                    alt={article.title}
-                    className="w-full h-full object-cover"
+                    aspectRatio="fill"
+                    objectFit="contain"
+                    useBlurBackground={true}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
+                {/*<div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />*/}
                 <div className="absolute bottom-0 left-0 right-0 p-6">
                     <div className="flex items-center space-x-2 mb-2">
                         <span className="px-3 py-1 bg-white/90 text-gray-700 text-xs font-medium rounded-full">

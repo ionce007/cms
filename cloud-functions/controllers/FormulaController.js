@@ -1,7 +1,6 @@
 // controllers/formulaController.js
 const { Op } = require('sequelize');
 const Formula = require('../models/Formula');
-
 /**
  * 获取下载列表
  * GET /api/formulas?page=1&limit=12&category=&kind=&search=&sort=
@@ -24,15 +23,9 @@ async function getFormulas(req, res) {
         const where = {
             status: 1,
             isdir: 0,
-            [Op.or]: [
-                { kind: { [Op.eq]: '选股公式' } },
-                { kind: { [Op.eq]: '指标公式' } },
-            ]
         };
 
-        if (kind) {
-            where.kind = kind;
-        }
+        if (kind) where.kind = kind;
 
         if (search) {
             where[Op.or] = [
