@@ -36,6 +36,7 @@ export const API_ENDPOINTS = {
     // 文章
     ARTICLES: '/articles',
     ARTICLE_DETAIL: (id: number | string) => `/articles/${id}`,
+    ARTICLE_VIEW: (id: number | string) => `/articles/${id}/view`,
     ARTICLES_PINNED: '/articles/pinned',
     ARTICLES_RECENT: '/articles/recent',
     ARTICLES_POPULAR: '/articles/popular',

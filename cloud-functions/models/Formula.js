@@ -33,6 +33,8 @@ Formula.init(
         content: { type: DataTypes.TEXT, defaultValue: '', comment: '指标公式操作说明' },
         views: { type: DataTypes.INTEGER, defaultValue: 0, comment: '浏览次数' },
         likes: { type: DataTypes.INTEGER, defaultValue: 0, comment: '喜欢次数' },
+        downloads: { type: DataTypes.INTEGER, defaultValue: 0, comment: '下载次数' },
+        marked: { type: DataTypes.INTEGER, comment: '“收藏”的点击数量' },
         status: { type: DataTypes.INTEGER, defaultValue: 0, comment: '状态，1-显示 0-隐藏' },
         author: {
             type: DataTypes.JSON,

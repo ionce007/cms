@@ -1,6 +1,7 @@
 // components/frontend/HeroSection.tsx
 import { FrontendArticle1 } from '@/types/frontend';
 import SafeImage from './SafeImage';
+import { calcReadTime } from '@/lib/utils';
 
 interface HeroSectionProps {
     article?: FrontendArticle1 | null;
@@ -41,17 +42,12 @@ export default function HeroSection({ article }: HeroSectionProps) {
 
                     {/* 摘要 */}
                     <p className="text-lg text-gray-300 line-clamp-2 leading-relaxed mb-8 animate-slide-up">
-                        {article.description }
+                        {article.description}
                     </p>
 
                     {/* 作者和元信息 */}
                     <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400 animate-slide-up">
                         <div className="flex items-center space-x-2">
-                            {/*<img
-                                src={article.author.avatar}
-                                alt={article.author.name}
-                                className="w-8 h-8 rounded-full ring-2 ring-white/20"
-                            />*/}
                             <SafeImage
                                 src={article.author.avatar}
                                 alt={article.author.name}
@@ -61,15 +57,12 @@ export default function HeroSection({ article }: HeroSectionProps) {
                         </div>
                         <span className="text-gray-500">•</span>
                         <span>{article.createdAt.substring(0, 10)}</span>
-                        <span className="text-gray-500">•</span>
-                        <span>{article.readTime} 分钟阅读</span>
-                        <span className="text-gray-500">•</span>
+                        <span><span className="text-gray-500 mr-1">🕒</span>{calcReadTime(article.content)} 分钟阅读</span>
                         <span className="flex items-center space-x-1">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                            <span>{article.pv.toLocaleString()} 次阅读</span>
+                            <span><span className="text-gray-500 mr-1">👁️</span>{article.pv} 次阅读</span>
+                        </span>
+                        <span className="flex items-center space-x-1">
+                            <span><span className="text-gray-500 mr-1">👍</span>{article.likes ? article.likes : 0} 次点赞</span>
                         </span>
                     </div>
 

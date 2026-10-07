@@ -39,7 +39,8 @@ export interface FrontendArticle1 {
     updatedAt: string;
     readTime: number;
     likes: number;
-    tags: { id: number; name: string; path: string; }[];
+    marked: number;
+    Tags: { id: number; name: string; path: string; }[];
     featured?: boolean;
 }
 
@@ -283,7 +284,8 @@ export const defaultArticle: FrontendArticle1 = {
     updatedAt: '',
     readTime: 0,
     likes: 0,
-    tags: [],
+    marked: 0,
+    Tags: [],
     featured: false
 }
 export const defaultArticleDetail: Partial<ArticleDetail> = { //ArticleDetail = {

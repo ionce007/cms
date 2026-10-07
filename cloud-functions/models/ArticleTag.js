@@ -1,7 +1,7 @@
 const { DataTypes, Model } = require('sequelize');
 const sequelize = require('../common/db');
-const Article = require('./Article');
-const Tag = require('./Tag');
+//const Article = require('./Article');
+//const Tag = require('./Tag');
 
 class ArticleTag extends Model { }
 
@@ -39,7 +39,8 @@ ArticleTag.init(
     }
 );
 
+/*
 Article.belongsToMany(Tag, { through: ArticleTag });
 Tag.belongsToMany(Article, { through: ArticleTag });
-
+*/
 module.exports = ArticleTag;

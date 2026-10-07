@@ -30,27 +30,15 @@ export default function ArticleListItem({ article, index = 0, linkPrefix = '/art
                     href={articleUrl}
                     className="relative sm:w-64 lg:w-72 flex-shrink-0 overflow-hidden"
                 >
-                    <div className="aspect-video sm:aspect-auto sm:h-full min-h-[160px]">
-                        {/*<img
+                    <div className="aspect-video sm:aspect-auto h-40 sm:h-44 lg:h-48">
+                        <CoverImage
                             src={article.img}
                             alt={article.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />*/}
-                        {/*<SafeImage
-                            src={article.img}
-                            alt={article.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />*/}
-                        <Link href={articleUrl} className="relative sm:w-56 lg:w-64 flex-shrink-0 overflow-hidden">
-                            <CoverImage
-                                src={article.img}
-                                alt={article.title}
-                                aspectRatio="auto"
-                                objectFit="cover"
-                                className="h-full min-h-[160px]"
-                                fallbackIcon="📄"
-                            />
-                        </Link>
+                            aspectRatio="fill"
+                            objectFit="cover"
+                            useBlurBackground={false}
+                            className="w-full h-full"
+                        />
                     </div>
                     <div className="absolute top-3 left-3">
                         <span className="px-2.5 py-1 bg-white/90 backdrop-blur-sm text-gray-700 text-xs font-medium rounded-full shadow-sm">
@@ -62,7 +50,7 @@ export default function ArticleListItem({ article, index = 0, linkPrefix = '/art
                 {/* 右侧内容 */}
                 <div className="flex-1 p-5 flex flex-col">
                     <div className="flex flex-wrap gap-1.5 mb-2">
-                        {article.tags.slice(0, 4).map((tag) => (
+                        {article.Tags.slice(0, 4).map((tag) => (
                             <Link
                                 key={tag.id}
                                 href={`/tag/${tag.path}`}
@@ -83,26 +71,6 @@ export default function ArticleListItem({ article, index = 0, linkPrefix = '/art
 
                     <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-gray-100">
                         <div className="flex items-center space-x-2">
-                            {/*<img
-                                src={article.author.avatar}
-                                alt={article.author.name}
-                                className="w-7 h-7 rounded-full ring-2 ring-white"
-                            />*/}
-                            {/*<SafeImage
-                                src={article.author.avatar}
-                                alt={article.author.name}
-                                className="w-7 h-7 rounded-full ring-2 ring-white"
-                            />*/}
-                            {/*<Link href={articleUrl} className="relative sm:w-56 lg:w-64 flex-shrink-0 overflow-hidden">
-                                <CoverImage
-                                    src={article.img}
-                                    alt={article.title}
-                                    aspectRatio="auto"
-                                    objectFit="cover"
-                                    className="h-full min-h-[160px]"
-                                    fallbackIcon="📄"
-                                />
-                            </Link>*/}
                             <div>
                                 <div className="text-sm text-gray-700 font-medium leading-tight">
                                     {article.author.name}
@@ -113,9 +81,10 @@ export default function ArticleListItem({ article, index = 0, linkPrefix = '/art
                             </div>
                         </div>
                         <div className="flex items-center space-x-4 text-xs text-gray-400">
-                            <span>{article.readTime} 分钟</span>
-                            <span>{article.pv.toLocaleString()} 阅读</span>
-                            <span>{article.likes} 点赞</span>
+                            <span className="flex items-center space-x-1"><span className="mr-1">⏱️</span><span>{article.readTime} 分钟</span></span>
+                            <span className="flex items-center space-x-1"><span className="mr-1">👁️</span><span>{article.pv} 阅读</span></span>
+                            <span className="flex items-center space-x-1"><span className="mr-1">👍</span><span>{article.likes || 0} 点赞</span></span>
+                            <span className="flex items-center space-x-1"><span className="mr-1">🔖</span><span>{article.marked || 0}</span></span>
                         </div>
                     </div>
                 </div>

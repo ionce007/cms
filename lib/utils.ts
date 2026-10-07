@@ -92,3 +92,81 @@ export async function getBaseUrl(headersList: Headers) {
     const url = new URL(`${protocol}://${host}/api`);
     return url.toString();
 }
+
+type ReadTimeOptions = {
+    chineseSpeed?: number;
+    englishSpeed?: number;
+    imageSeconds?: number;
+    codeLineSeconds?: number;
+    includeImages?: boolean;
+    includeCode?: boolean;
+};
+
+export function calcReadTime(htmlContent: string, options: ReadTimeOptions = {}) {
+    const {
+        chineseSpeed = 350,      // 中文阅读速度（字/分钟）
+        englishSpeed = 225,      // 英文阅读速度（词/分钟）
+        imageSeconds = 10,       // 每张图片阅读时间（秒）
+        codeLineSeconds = 10,     // 每行代码阅读时间（秒）
+        includeImages = true,    // 是否计算图片时间
+        includeCode = true       // 是否计算代码时间
+    } = options;
+
+    if (!htmlContent) return 0;
+
+    // 移除不需要的内容
+    let text = htmlContent
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, '')
+        .replace(/<noscript[^>]*>[\s\S]*?<\/noscript>/gi, '')
+        .replace(/<!--[\s\S]*?-->/g, '');
+
+    // 提取图片数量
+    const imageCount = includeImages
+        ? (text.match(/<img[^>]*>/gi) || []).length
+        : 0;
+
+    // 提取代码块
+    let codeLines = 0;
+    if (includeCode) {
+        const codeBlocks = text.match(/<(pre|code)[^>]*>[\s\S]*?<\/\1>/gi) || [];
+        codeBlocks.forEach(block => {
+            const codeText = block
+                .replace(/<[^>]*>/g, '')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&amp;/g, '&');
+            codeLines += codeText.split('\n').length;
+        });
+    }
+
+    // 移除所有 HTML 标签和实体
+    text = text
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&[a-zA-Z]+;/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    // 统计中文字符
+    const chineseChars = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
+
+    // 统计英文单词
+    const englishWords = (text.replace(/[\u4e00-\u9fa5]/g, ' ')
+        .match(/[a-zA-Z0-9]+/g) || []).length;
+
+    // 计算阅读时间
+    const textMinutes = chineseChars / chineseSpeed + englishWords / englishSpeed;
+    const imageMinutes = imageCount * imageSeconds / 60;
+    const codeMinutes = codeLines * codeLineSeconds / 60;
+
+    const totalMinutes = Math.ceil(textMinutes + imageMinutes + codeMinutes);
+
+    return Math.max(1, totalMinutes);
+}

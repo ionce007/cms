@@ -5,7 +5,7 @@ import Link from 'next/link';
 import SafeImage from './SafeImage';
 import CoverImage from './CoverImage';
 import { FrontendArticle1 } from '@/types/frontend';
-import { cn } from '@/lib/utils';
+import { calcReadTime, cn } from '@/lib/utils';
 //import { ROUTES } from '@/config';
 
 interface ArticleCardProps {
@@ -28,16 +28,6 @@ export default function ArticleCard({ article, index = 0, linkPrefix = '/article
         >
             {/* 封面图 */}
             <Link href={articleUrl} className="block relative overflow-hidden aspect-video">
-                {/*<img
-                    src={article.img}
-                    alt={article.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />*/}
-                {/*<SafeImage
-                    src={article.img}
-                    alt={article.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />*/}
                 <CoverImage
                     src={article.img}
                     alt={article.title}
@@ -64,7 +54,7 @@ export default function ArticleCard({ article, index = 0, linkPrefix = '/article
             <div className="p-5">
                 {/* 标签 */}
                 <div className="flex flex-wrap gap-1.5 mb-3">
-                    {article.tags.slice(0, 3).map((tag) => (
+                    {article.Tags.slice(0, 3).map((tag) => (
                         <Link
                             key={tag.id}
                             href={`/tags/${tag.path}`}
@@ -88,11 +78,6 @@ export default function ArticleCard({ article, index = 0, linkPrefix = '/article
                 {/* 底部 */}
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                     <div className="flex items-center space-x-2">
-                        {/*<img
-                            src={article.author.avatar}
-                            alt={article.author.name}
-                            className="w-7 h-7 rounded-full ring-2 ring-white"
-                        />*/}
                         <SafeImage
                             src={article.author.avatar}
                             alt={article.author.name}
@@ -103,9 +88,10 @@ export default function ArticleCard({ article, index = 0, linkPrefix = '/article
                         </span>
                     </div>
                     <div className="flex items-center space-x-3 text-xs text-gray-400">
-                        <span>{article.readTime}分钟</span>
-                        <span>•</span>
-                        <span>{article.pv.toLocaleString()}</span>
+                        <span className="flex items-center space-x-1"><span className="mr-1">⏱️</span><span>{calcReadTime(article.content)}分钟</span></span>
+                        <span className="flex items-center space-x-1"><span className="mr-1">👁️</span><span>{article.pv}</span></span>
+                        <span className="flex items-center space-x-1"><span className="mr-1">👍</span><span>{article.likes || 0 }</span></span>
+                        <span className="flex items-center space-x-1"><span className="mr-1">🔖</span><span>{article.marked || 0}</span></span>
                     </div>
                 </div>
             </div>

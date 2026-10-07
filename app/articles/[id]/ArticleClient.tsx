@@ -9,6 +9,7 @@ import ArticleDetailView from '@/components/frontend/ArticleDetailView';
 import ArticleSkeleton from '@/components/frontend/ArticleSkeleton';
 import ArticleLoadingProgress from '@/components/frontend/ArticleLoadingProgress';
 import { useArticle } from '@/hooks/useArticle';
+import { useViewCounter } from '@/hooks/useViewCounter'; 
 
 interface ArticleClientProps {
     articleId: number;
@@ -19,6 +20,13 @@ export default function ArticleClient({ articleId }: ArticleClientProps) {
 
     // ✅ 模拟加载进度（基于真实加载状态驱动）
     const [progress, setProgress] = useState(0);
+
+        // ✅ 浏览计数
+    const { pv } = useViewCounter({
+        articleId,
+        enabled: !!article,  // 文章加载完成后才计数
+        initialPv: article?.pv || 0,
+    });
 
     useEffect(() => {
         if (isLoading) {
@@ -133,7 +141,7 @@ export default function ArticleClient({ articleId }: ArticleClientProps) {
                     <div className="flex flex-col lg:flex-row gap-8">
                         <div className="flex-1 min-w-0">
                             <ArticleDetailView
-                                article={article}
+                                article={{ ...article, pv }}
                                 relatedArticles={relatedArticles}
                                 breadcrumbItems={[
                                     { label: '首页', href: '/', icon: '🏠' },

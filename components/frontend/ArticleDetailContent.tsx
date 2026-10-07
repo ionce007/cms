@@ -169,7 +169,7 @@ export default function ArticleDetailContent({ article, relatedArticles }: Artic
 
                     {/* 标签 */}
                     <div className="flex flex-wrap gap-2 mt-8 pt-6 border-t border-gray-100">
-                        {article.tags.map(tag => (
+                        {article.Tags.map(tag => (
                             <a
                                 key={tag.id}
                                 href={`/tags/${tag.id}`}

@@ -8,6 +8,7 @@ import ArticleDetailView from '@/components/frontend/ArticleDetailView';
 import ArticleDetailSkeleton from '@/components/frontend/ArticleDetailSkeleton';
 import LoadingProgress from '@/components/frontend/LoadingProgress';
 import { useArticleDetailWithSidebar } from '@/hooks/useArticleDetail';
+import { useViewCounter } from '@/hooks/useViewCounter';
 
 interface TagArticleClientProps {
     slug: string;
@@ -30,7 +31,12 @@ export default function TagArticleClient({
         loadingMessage,
         isAllLoaded,
     } = useArticleDetailWithSidebar(articleId);
-
+    // ✅ 浏览计数
+    const { pv } = useViewCounter({
+        articleId,
+        enabled: isAllLoaded && !!article,
+        initialPv: article?.pv || 0,
+    });
     // ========== 加载中 ==========
     if (!isAllLoaded) {
         return (
@@ -119,7 +125,7 @@ export default function TagArticleClient({
                     <div className="flex flex-col lg:flex-row gap-8">
                         <div className="flex-1 min-w-0">
                             <ArticleDetailView
-                                article={article}
+                                article={{ ...article, pv }}  // ✅ 覆盖 pv
                                 relatedArticles={relatedArticles}
                                 relatedLinkPrefix={`/tags/${slug}`}  // ✅
                                 breadcrumbItems={[

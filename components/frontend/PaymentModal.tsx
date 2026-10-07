@@ -88,6 +88,15 @@ export default function PaymentModal({
             const data = await res.json();
 
             if (data.code === 1 && data.url) {
+                // ✅ 记录下载次数（可选）
+                try {
+                    await fetch(
+                        `${API_BASE_URL}/formulas/${fs_id}/downloadcount`,
+                        { method: 'POST' }
+                    );
+                } catch (e) {
+                    console.error('记录下载次数失败:', e);
+                }
                 window.open(data.url, '_blank');
             } else {
                 alert(data.message || '获取下载链接失败');

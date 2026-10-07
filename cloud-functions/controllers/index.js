@@ -8,6 +8,7 @@ const ImageController = require('./imageProxyController');
 const BaiduAuthController = require('./baidu/AuthController')
 const TokenController = require('./TokenControllers')
 const FormulaController = require('./FormulaController')
+const MemberController = require('./MemberController')
 //exports.Article = ArticleController;
 
 module.exports = {
@@ -19,5 +20,6 @@ module.exports = {
     Image: ImageController,
     BaibuAuth: BaiduAuthController,
     BaiduToken: TokenController,
-    Formula: FormulaController
+    Formula: FormulaController,
+    Member: MemberController,
 }

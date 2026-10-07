@@ -1,6 +1,7 @@
 const { DataTypes, Model } = require('sequelize');
 const sequelize = require('../common/db');
-const Category = require('./Category');
+//const Category = require('./Category');
+//const ArticleTag = require('./ArticleTag');
 const { calcReadTime } = require('../common/utils');
 
 class Article extends Model { }
@@ -55,7 +56,8 @@ Article.init(
             type: DataTypes.VIRTUAL,
             get() { return !this.attr ? false : (this.attr.indexOf('1') >= 0 && this.attr.indexOf('2') >= 0); }
         },
-        likes: { type: DataTypes.INTEGER, comment: '“喜欢”的点击数量' }
+        likes: { type: DataTypes.INTEGER, comment: '“喜欢”的点击数量' },
+        marked: { type: DataTypes.INTEGER, comment: '“收藏”的点击数量' }
     },
     {
         sequelize,
@@ -64,7 +66,15 @@ Article.init(
     }
 );
 //Category.hasMany(Article, { foreignKey: 'cid'});
-Category.hasMany(Article, { foreignKey: 'cid', as: 'Articles' });
+/*Category.hasMany(Article, { foreignKey: 'cid', as: 'Articles' });
 Article.belongsTo(Category, { foreignKey: 'cid' });
+
+Article.belongsToMany(Tag, {
+    through: ArticleTag,
+    foreignKey: 'aid',      // ArticleTag 中指向 Article 的字段
+    otherKey: 'tid',        // ArticleTag 中指向 Tag 的字段
+    as: 'Tags'              // 别名
+});
+*/
 module.exports = Article;
 

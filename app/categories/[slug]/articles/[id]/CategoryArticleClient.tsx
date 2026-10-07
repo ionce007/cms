@@ -9,6 +9,7 @@ import ArticleDetailSkeleton from '@/components/frontend/ArticleDetailSkeleton';
 import LoadingProgress from '@/components/frontend/LoadingProgress';
 import { useArticleDetailWithSidebar } from '@/hooks/useArticleDetail';
 import { useEffect } from 'react';
+import { useViewCounter } from '@/hooks/useViewCounter';
 
 interface CategoryArticleClientProps {
     slug: string;
@@ -33,9 +34,12 @@ export default function CategoryArticleClient({
         isAllLoaded,
     } = useArticleDetailWithSidebar(articleId);
 
-    /*useEffect(() => {
-        console.log('article = ', article)
-    }, [article, relatedArticles])*/
+       // ✅ 浏览计数
+    const { pv } = useViewCounter({
+        articleId,
+        enabled: isAllLoaded && !!article,
+        initialPv: article?.pv || 0,
+    });
     // 加载中...
     if (!isAllLoaded) {
         return (
@@ -120,7 +124,7 @@ export default function CategoryArticleClient({
                     <div className="flex flex-col lg:flex-row gap-8">
                         <div className="flex-1 min-w-0">
                             <ArticleDetailView
-                                article={article}
+                                article={{ ...article, pv }}  // ✅ 覆盖 pv
                                 relatedArticles={relatedArticles}  // ✅ 传递关联文章
                                 relatedLinkPrefix={`/categories/${slug}`}  // ✅ 关联文章链接保持在分类下
                                 breadcrumbItems={[

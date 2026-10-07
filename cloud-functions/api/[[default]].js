@@ -2,9 +2,10 @@ import mysql2 from 'mysql2';
 import { Sequelize } from 'sequelize';
 import express from "express";
 
-const { initializeDatabase } = require('../models');
+const { initializeDatabase, defineAssociations } = require('../models');
 const controllers = require('../controllers');
 const { validateImageUrl, validateImageFormat } = require('../common/image-validation');
+const { requireAuth } = require('../middleware/auth');
 
 const env = require('dotenv')
 env.config();
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 //import app from "../index.js"; // 导入 index.js 中的 Express 应用
+defineAssociations();
 
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
@@ -35,6 +37,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/sync-db", async (req, res) => {
+    defineAssociations();
     const ret = await initializeDatabase();
     res.json(ret);
 });
@@ -51,8 +54,12 @@ app.get('/articles/popular', controllers.Article.getPopularArticles);
 app.get('/articles/featured', controllers.Article.getFeaturedArticles);
 app.post('/articles/category', controllers.Article.getCategoryArticles);
 app.post('/articles/tag', controllers.Article.getTagArticles);
+app.get('/articles/tag', controllers.Article.getArticlesByTag);
 app.get('/articles/related', controllers.Article.getRelatedArticles);
 app.get('/articles/:id', controllers.Article.getArticleById);
+app.post('/articles/:id/view', controllers.Article.incrementViewCount);
+app.post('/articles/:id/like', controllers.Article.toggleLike);
+app.post('/articles/:id/marked', controllers.Article.toggleBookmark);
 app.get('/articles/:id/related', controllers.Article.getRelatedArticlesById);
 app.get('/categories', controllers.Category.getCategories);
 app.get('/categories/articles', controllers.Article.getArticles);
@@ -68,14 +75,31 @@ app.get('/siteinfo', controllers.Site.getSiteInfo);
 
 app.get('/formulas', controllers.Formula.getFormulas);
 app.get('/formulas/:id', controllers.Formula.getFormulaById);
-app.post('/formulas/:id/like', controllers.Formula.likeFormula);
+app.post('/formulas/:id/view', controllers.Formula.incrementViewCount);
+app.post('/formulas/:id/like', controllers.Formula.toggleLike);
+app.post('/formulas/:id/downloadcount', controllers.Formula.incrementDownloadCount);
+app.post('/formulas/:id/like', controllers.Formula.toggleLike);
+app.post('/formulas/:id/marked', controllers.Formula.toggleBookmark);
+app.get('/formulas/:id/download', controllers.BaiduToken.getDownloadUrl)
 //app.get('/formulas/:id/download', controllers.Formula.getDownloadUrl);
 
 //app.get('/bdpan/list', controllers.BaiduToken.getPanFiles)
 app.get('/bdpan/auth', controllers.BaiduToken.getBaiduAuthCode)
 app.get('/bdpan/token', controllers.BaiduToken.getToken)
-app.get('/formulas/:id/download', controllers.BaiduToken.getDownloadUrl)
+
 //app.get('/formulas', getFormulas);
 //app.get('/formulas', getFormulas);
+
+app.post('/member/register', controllers.Member.register);
+app.post('/member/login', controllers.Member.login);
+
+// ✅ 密码找回（公开）
+app.post('/member/forgot-password', controllers.Member.forgotPassword);
+app.get('/member/verify-reset-token', controllers.Member.verifyResetToken);
+app.post('/member/reset-password', controllers.Member.resetPassword);
+// 需要登录
+app.get('/member/me', requireAuth, controllers.Member.getMe);
+app.put('/member/me', requireAuth, controllers.Member.updateMe);
+app.put('/member/password', requireAuth, controllers.Member.changePassword);
 // 导出处理函数
 export default app;

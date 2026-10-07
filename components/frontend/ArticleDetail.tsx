@@ -119,7 +119,7 @@ export default function ArticleDetail({ article, relatedArticles }: ArticleDetai
 
                 {/* 标签 */}
                 <div className="flex flex-wrap gap-2 mt-8">
-                    {article.tags.map((tag) => (
+                    {article.Tags.map((tag) => (
                         <a
                             key={tag.id}
                             href={`/articles?tag=${tag.id}`}

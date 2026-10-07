@@ -44,7 +44,7 @@ sequelize = new Sequelize(
         port: cfg.db.port,
         dialect: cfg.db.dialect,
         pool: cfg.db.pool,
-        logging: false
+        logging: true
     }
 );
 

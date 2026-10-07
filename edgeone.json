@@ -8,7 +8,10 @@
         "express",
         "sequelize",
         "axios",
-        "sync-request"
+        "sync-request",
+        "bcryptjs",
+        "jsonwebtoken",
+        "nodemailer"
       ]
     }
   }

@@ -11,9 +11,14 @@ import LoadingProgress from '@/components/frontend/LoadingProgress';
 import PaymentModal from '@/components/frontend/PaymentModal';  // ✅ 导入
 import { useDownloadDetail } from '@/hooks/useDownloads';
 import { useSidebarData } from '@/hooks/useCommonData';
+import { useDownloadViewCounter } from '@/hooks/useDownloadViewCounter';
 import { formatFileSize, formatTimestamp } from '@/config/constants';
 import { API_BASE_URL } from '@/config/env';
 import { API_ENDPOINTS } from '@/config/routes';
+import ShareButtons from '@/components/frontend/ShareButtons'
+import LikeButton from '@/components/frontend/LikeButton';
+import BookmarkButton from '@/components/frontend/BookmarkButton';
+import { cn } from '@/lib/utils';
 
 interface DownloadDetailClientProps {
     id: string;
@@ -24,6 +29,14 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
     const [isDownloading, setIsDownloading] = useState(false);
     // ✅ 支付模态框状态
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const [isBookmarked, setIsBookmarked] = useState(false);
+
+    // ✅ 浏览计数
+    const { views } = useDownloadViewCounter({
+        fsId: id,
+        enabled: !!item,  // 数据加载完成后再计数
+        initialViews: item?.views || 0,
+    });
 
     const sidebar = useSidebarData();
 
@@ -77,10 +90,18 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
         try {
             const downUrl = `${API_BASE_URL}${API_ENDPOINTS.FORMULA_DETAIL(item.fs_id)}/download`
             const res = await fetch(downUrl);
-            debugger
             const data = await res.json();
 
             if (data.code === 1 && data.url) {
+                // ✅ 记录下载次数（可选）
+                try {
+                    await fetch(
+                        `${API_BASE_URL}/formulas/${item.fs_id}/downloadcount`,
+                        { method: 'POST' }
+                    );
+                } catch (e) {
+                    console.warn('记录下载次数失败:', e);
+                }
                 window.open(data.url, '_blank');
             } else {
                 alert(data.message || '获取下载链接失败');
@@ -277,6 +298,34 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
                                             <span>返回列表</span>
                                         </a>
                                     </div>
+                                </div>
+
+                                {/* 操作按钮 */}
+                                <div className="flex items-center justify-between flex-wrap gap-3 mt-6 pt-6 border-t border-gray-100">
+                                    <div className="flex items-center space-x-3">
+                                        {/* ✅ 用 LikeButton 组件 */}
+                                        <LikeButton
+                                            target="formula"
+                                            id={item.fs_id}
+                                            initialLikes={item.likes || 0}
+                                            size="md"
+                                            showLabel
+                                        />
+
+                                        {/* 收藏按钮 */}
+                                        <BookmarkButton
+                                            target="formula"
+                                            id={item.fs_id}
+                                            initialMarked={item.marked || 0}
+                                            size="md"
+                                            showLabel
+                                        />
+                                    </div>
+
+                                    <ShareButtons
+                                        title={item.summary}
+                                        url={`/articles/${item.fs_id}`}
+                                    />
                                 </div>
                             </article>
                         </div>

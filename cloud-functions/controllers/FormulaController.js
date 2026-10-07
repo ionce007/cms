@@ -118,7 +118,148 @@ async function getFormulaById(req, res) {
         });
     }
 }
+async function incrementViewCount(req, res) {
+    try {
+        const { id } = req.params;
+        const { uid } = req.body || {};
 
+        if (!id) {
+            return res.json({ code: -1, message: '缺少文件 ID' });
+        }
+
+        // ✅ 查找文件
+        const formula = await Formula.findOne({
+            where: {
+                fs_id: id,
+                status: 0,
+                isdir: 0,
+            },
+            attributes: ['fs_id', 'views'],
+        });
+
+        if (!formula) {
+            return res.json({ code: -1, message: '文件不存在' });
+        }
+
+        // ✅ 原子操作 +1
+        await Formula.increment('views', { where: { fs_id: id }, });
+
+        const newViews = (formula.views || 0) + 1;
+
+        res.json({ code: 1, message: 'success', data: { fs_id: formula.fs_id, views: newViews, }, });
+    } catch (error) {
+        console.error('incrementView error:', error);
+        res.json({ code: -1, message: error.message, });
+    }
+}
+
+async function incrementDownloadCount(req, res) {
+    try {
+        const { id } = req.params;
+
+        // ✅ 查找文件
+        const formula = await Formula.findOne({
+            where: { fs_id: id },
+            attributes: ['fs_id'],
+        });
+
+        if (!formula) {
+            return res.json({ code: -1, message: '文件不存在' });
+        }
+
+        // ✅ 增加下载次数（如果有这个字段）
+        await Formula.increment('downloads', { where: { fs_id: id }, });
+
+        res.json({ code: 1, message: 'success', });
+    } catch (error) {
+        console.error('incrementDownloadCount error:', error);
+        res.json({ code: -1, message: error.message, });
+    }
+}
+/**
+ * 下载文件点赞/取消点赞
+ * POST /api/formulas/:id/like
+ */
+async function toggleLike(req, res) {
+    try {
+        const { id } = req.params;
+        const { action = 'like' } = req.body;
+
+        if (!id) {
+            return res.json({ code: -1, message: '缺少文件 ID' });
+        }
+
+        const formula = await Formula.findOne({
+            where: { fs_id: id, status: 1, isdir: 0 },
+            attributes: ['fs_id', 'likes'],
+        });
+
+        if (!formula) {
+            return res.json({ code: -1, message: '文件不存在' });
+        }
+
+        const currentLikes = formula.likes || 0;
+        let newLikes;
+
+        if (action === 'unlike') {
+            newLikes = Math.max(0, currentLikes - 1);
+            await Formula.update(
+                { likes: newLikes },
+                { where: { fs_id: id } }
+            );
+        } else {
+            await Formula.increment('likes', { where: { fs_id: id } });
+            newLikes = currentLikes + 1;
+        }
+
+        res.json({
+            code: 1,
+            message: 'success',
+            data: { fs_id: formula.fs_id, likes: newLikes, action, },
+        });
+    } catch (error) {
+        console.error('toggleLike error:', error);
+        res.json({ code: -1, message: error.message });
+    }
+}
+async function toggleBookmark(req, res) {
+    try {
+        const { id } = req.params;
+        const { action = 'bookmark' } = req.body;
+
+        if (!id) {
+            return res.json({ code: -1, message: '缺少文件 ID' });
+        }
+
+        const formula = await Formula.findOne({
+            where: { fs_id: id, status: 0, isdir: 0 },
+            attributes: ['fs_id', 'marked'],
+        });
+
+        if (!formula) {
+            return res.json({ code: -1, message: '文件不存在' });
+        }
+
+        const currentMarked = formula.marked || 0;
+        let newMarked;
+
+        if (action === 'unbookmark') {
+            newMarked = Math.max(0, currentMarked - 1);
+            await Formula.update(
+                { marked: newMarked },
+                { where: { fs_id: id } }
+            );
+        } else {
+            await Formula.increment('marked', { where: { fs_id: id } });
+            newMarked = currentMarked + 1;
+        }
+
+        res.json({ code: 1, message: 'success', data: { fs_id: formula.fs_id, marked: newMarked, action, }, });
+    } catch (error) {
+        console.error('toggleBookmark error:', error);
+        res.json({ code: -1, message: error.message });
+    }
+}
 /**
  * 增加点赞
  * POST /api/formulas/:id/like
@@ -134,11 +275,7 @@ async function likeFormula(req, res) {
 
         await formula.increment('likes');
 
-        res.json({
-            code: 1,
-            message: 'success',
-            data: { likes: formula.likes + 1 },
-        });
+        res.json({ code: 1, message: 'success', data: { likes: formula.likes + 1 }, });
     } catch (error) {
         res.json({ code: -1, message: error.message });
     }
@@ -239,4 +376,8 @@ module.exports = {
     getFormulaById,
     likeFormula,
     getDownloadUrl,
+    incrementDownloadCount,
+    incrementViewCount,
+    toggleLike,
+    toggleBookmark,
 };

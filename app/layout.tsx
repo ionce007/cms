@@ -2,6 +2,8 @@
 import type { Metadata } from 'next';
 import { getSiteConfig } from '@/lib/siteConfig';
 import { SITE_URL } from '@/config/env';
+import BaiduAnalytics from '@/components/frontend/BaiduAnalytics';
+import { AuthProvider } from '@/contexts/AuthContext';
 import '@/public/css/globals.css';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -37,7 +39,10 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function RootLayout({ children, }: { children: React.ReactNode; }) {
     return (
         <html lang="zh-CN">
-            <body>{children}</body>
+            <body>
+                <AuthProvider>{children}</AuthProvider>
+                <BaiduAnalytics />
+            </body>
         </html>
     );
 }

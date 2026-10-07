@@ -7,9 +7,11 @@ import ArticleContent from './ArticleContent';
 import ShareButtons from './ShareButtons';
 import ArticleBreadcrumb from './ArticleBreadcrumb';
 import { FrontendArticle1 } from '@/types/frontend';
-import { cn } from '@/lib/utils';
+import { calcReadTime, cn } from '@/lib/utils';
 import SafeImage from './SafeImage';
 import CoverImage from './CoverImage';
+import LikeButton from './LikeButton';
+import BookmarkButton from './BookmarkButton';
 
 interface ArticleDetailViewProps {
     article: FrontendArticle1;
@@ -27,8 +29,8 @@ export default function ArticleDetailView({
     backLink,
     relatedLinkPrefix = '/articles',
 }: ArticleDetailViewProps) {
-    const [isLiked, setIsLiked] = useState(false);
-    const [isBookmarked, setIsBookmarked] = useState(false);
+    //const [isLiked, setIsLiked] = useState(false);
+    //const [isBookmarked, setIsBookmarked] = useState(false);
 
     return (
         <article className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -90,11 +92,6 @@ export default function ArticleDetailView({
             {/* 元信息 */}
             <div className="px-6 py-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center space-x-3">
-                    {/*<img
-                        src={article.author.avatar}
-                        alt={article.author.name}
-                        className="w-10 h-10 rounded-full ring-2 ring-white shadow-sm"
-                    />*/}
                     <SafeImage
                         src={article.author.avatar}
                         alt={article.author.name}
@@ -110,11 +107,10 @@ export default function ArticleDetailView({
                     </div>
                 </div>
                 <div className="flex items-center space-x-4 text-sm text-gray-500">
-                    <span>{article.readTime} 分钟阅读</span>
-                    <span>•</span>
-                    <span>{article.pv.toLocaleString()} 次阅读</span>
-                    <span>•</span>
-                    <span>{article.likes} 点赞</span>
+                    <span><span className="mr-1">⏱️</span>{calcReadTime(article.content)}分钟</span>
+                    <span><span className="mr-1">👁️</span>{article.pv}</span>
+                    <span><span className="mr-1">👍</span>{article.likes ? article.likes : 0}</span>
+                    <span><span className="mr-1">🔖</span>{article.marked ? article.marked : 0}</span>
                 </div>
             </div>
 
@@ -124,7 +120,7 @@ export default function ArticleDetailView({
 
                 {/* 标签 */}
                 <div className="flex flex-wrap gap-2 mt-8 pt-6 border-t border-gray-100">
-                    {article.tags.map((tag) => (
+                    {article.Tags.map((tag) => (
                         <Link
                             key={tag.id}
                             href={`/tags/${tag.path.toLowerCase()}`}
@@ -138,35 +134,23 @@ export default function ArticleDetailView({
                 {/* 操作按钮 */}
                 <div className="flex items-center justify-between flex-wrap gap-3 mt-6 pt-6 border-t border-gray-100">
                     <div className="flex items-center space-x-3">
-                        <button
-                            onClick={() => setIsLiked(!isLiked)}
-                            className={cn(
-                                'flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors',
-                                isLiked
-                                    ? 'bg-red-50 text-red-600'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            )}
-                        >
-                            <svg className="w-5 h-5" fill={isLiked ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                            </svg>
-                            <span>{article.likes + (isLiked ? 1 : 0)}</span>
-                        </button>
+                        {/* ✅ 用 LikeButton 组件 */}
+                        <LikeButton
+                            target="article"
+                            id={article.id}
+                            initialLikes={article.likes || 0}
+                            size="md"
+                            showLabel
+                        />
 
-                        <button
-                            onClick={() => setIsBookmarked(!isBookmarked)}
-                            className={cn(
-                                'flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors',
-                                isBookmarked
-                                    ? 'bg-primary-50 text-primary-600'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            )}
-                        >
-                            <svg className="w-5 h-5" fill={isBookmarked ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                            </svg>
-                            <span>收藏</span>
-                        </button>
+                        {/* ✅ 收藏 - 用 BookmarkButton */}
+                        <BookmarkButton
+                            target="article"
+                            id={article.id}
+                            initialMarked={article.marked || 0}
+                            size="md"
+                            showLabel
+                        />
                     </div>
 
                     <ShareButtons
