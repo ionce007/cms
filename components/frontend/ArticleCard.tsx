@@ -69,7 +69,7 @@ export default function ArticleCard({
                     {(article.Tags || []).slice(0, 3).map((tag) => (
                         <Link
                             key={tag.id || tag.name}
-                            href={`/tag/${tag.path || tag.name.toLowerCase()}`}
+                            href={`/tags/${tag.path || tag.name.toLowerCase()}`}
                             className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-md hover:bg-primary-50 hover:text-primary-600 transition-colors"
                         >
                             #{tag.name}

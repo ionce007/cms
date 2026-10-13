@@ -101,7 +101,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     // ✅ 标签详情页
     const tagRoutes: MetadataRoute.Sitemap = tags.map((tag: any) => ({
-        url: `${SITE_URL}/tag/${tag.path}`,
+        url: `${SITE_URL}/tags/${tag.path}`,
         lastModified: now,
         changeFrequency: 'weekly' as const,
         priority: 0.5,
