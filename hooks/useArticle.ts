@@ -1,79 +1,70 @@
 // hooks/useArticle.ts
+'use client';
+
 import useSWR from 'swr';
-
 import { API_BASE_URL } from '@/config/env';
-//import { API_ENDPOINTS } from '@/config/routes';
+import { FrontendArticle } from '@/types/frontend';
+import { useAuth } from '@/contexts/AuthContext';
 
-//const baseUrl = API_BASE_URL;//process.env.API_URL || 'https://blog.foryet.com/api';
+const fetcher = async ([url, token]: [string, string | null]) => {
+    const headers: Record<string, string> = {};
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
 
-const fetcher = async (url: string) => {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('请求失败');
-    const json = await res.json();
-    return json;
+    const res = await fetch(url, { headers });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
 };
 
 export function useArticle(id: number) {
-    // ✅ 同时调用多个 API
+    const { token, isLoading: authLoading } = useAuth();
+
+    // ✅ 关键1：authLoading 为 true 时，key = null → 不发请求
     const articleSWR = useSWR(
-        `${API_BASE_URL}/articles/${id}`,
+        id && !authLoading
+            ? [`${API_BASE_URL}/articles/${id}`, token]
+            : null,  // ← 不发请求
         fetcher,
         { revalidateOnFocus: false, dedupingInterval: 60000 }
     );
 
     const relatedSWR = useSWR(
-        `${API_BASE_URL}/articles/${id}/related`,
-        fetcher,
-        { revalidateOnFocus: false, dedupingInterval: 60000 }
-    );
-/*
-    const commentsSWR = useSWR(
-        id ? `${API_BASE_URL}/articles/${id}/comments` : null,
-        fetcher,
-        { revalidateOnFocus: false, dedupingInterval: 60000 }
-    );
-*/
-    const authorSWR = useSWR(
-        articleSWR.data?.data?.cid
-            ? `${API_BASE_URL}/categories/${articleSWR.data.data.cid}`
+        id && !authLoading
+            ? [`${API_BASE_URL}/articles/${id}/related`, token]
             : null,
-        fetcher,  // ✅ 依赖第一个 API 的结果
-        { revalidateOnFocus: false }
+        fetcher,
+        { revalidateOnFocus: false, dedupingInterval: 60000 }
     );
 
-    // ✅ 组合加载状态
-    const isLoading = articleSWR.isLoading || relatedSWR.isLoading;// || commentsSWR.isLoading;
-
-    // ✅ 计算进度
-    const apis = [articleSWR, relatedSWR];//, commentsSWR];
+    const apis = [articleSWR, relatedSWR];
+    const isLoading = apis.some(s => s.isLoading);
     const completed = apis.filter(s => !s.isLoading && s.data).length;
     const progress = Math.round((completed / apis.length) * 100);
 
     return {
-        // 数据
-        article: articleSWR.data?.article || null,
-        relatedArticles: relatedSWR.data?.data || [],
-        //comments: commentsSWR.data?.data || [],
-        //category: authorSWR.data?.data || null,
-
-        // 状态
-        isLoading,
-        isLoaded: !isLoading,
+        article: (
+            articleSWR.data?.data ||
+            articleSWR.data?.article ||
+            null
+        ) as FrontendArticle | null,
+        relatedArticles: (
+            relatedSWR.data?.data ||
+            relatedSWR.data?.articles ||
+            []
+        ) as FrontendArticle[],
+        // ✅ 关键2：authLoading 也纳入 isLoading
+        isLoading: isLoading || authLoading,
+        isLoaded: !isLoading && !authLoading,
         progress,
         loadingStates: {
             article: !articleSWR.isLoading,
             related: !relatedSWR.isLoading,
-            //comments: !commentsSWR.isLoading,
         },
-
-        // 错误
-        error: articleSWR.error || relatedSWR.error,// || commentsSWR.error,
-
-        // 刷新
+        error: articleSWR.error || relatedSWR.error,
         refresh: () => {
             articleSWR.mutate();
             relatedSWR.mutate();
-            //commentsSWR.mutate();
         },
     };
 }

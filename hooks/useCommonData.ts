@@ -1,6 +1,6 @@
 // hooks/useCommonData.ts
 import useSWR from 'swr';
-import { Category1, Tag, FrontendArticle1, SiteInfo, FragInfo, defaultSiteInfo } from '@/types/frontend';
+import { Category, Tag, FrontendArticle, SiteInfo, FragInfo, defaultSiteInfo } from '@/types/frontend';
 import { useSiteConfig } from './useSiteConfig';
 import { API_BASE_URL } from '@/config/env';
 
@@ -14,13 +14,13 @@ const fetcher = async (url: string) => {
 };
 
 export function useCategories() {
-    return useSWR<Category1[]>(`${API_BASE_URL}/categories`, fetcher, {
+    return useSWR<Category[]>(`${API_BASE_URL}/categories`, fetcher, {
         revalidateOnFocus: false,
         dedupingInterval: 60000 * 3, // 3分钟内不重复请求
     });
 }
 export function useCategoryArticles(slug: string) {
-    return useSWR<Category1[]>(`${API_BASE_URL}/categories/${slug}`, fetcher, {
+    return useSWR<Category[]>(`${API_BASE_URL}/categories/${slug}`, fetcher, {
         revalidateOnFocus: false,
         dedupingInterval: 60000 * 3, // 3分钟内不重复请求
     });
@@ -55,14 +55,14 @@ export function useFrag(mark: string) {
     };
 }
 export function usePopularArticles() {
-    return useSWR<FrontendArticle1[]>(`${API_BASE_URL}/articles/popular`, fetcher, {
+    return useSWR<FrontendArticle[]>(`${API_BASE_URL}/articles/popular`, fetcher, {
         revalidateOnFocus: false,
         dedupingInterval: 60000 * 3,
     });
 }
 
 export function useFeaturedArticles() {
-    return useSWR<FrontendArticle1[]>(`${API_BASE_URL}/articles/featured`, fetcher, {
+    return useSWR<FrontendArticle[]>(`${API_BASE_URL}/articles/featured`, fetcher, {
         revalidateOnFocus: false,
         dedupingInterval: 60000 * 3,
     });

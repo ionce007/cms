@@ -12,7 +12,7 @@ import SortDropdown, { SortOption } from '@/components/frontend/SortDropdown';
 import Pagination from '@/components/frontend/Pagination';
 import LoadingProgress from '@/components/frontend/LoadingProgress';
 import { useSidebarData } from '@/hooks/useCommonData';
-import { FrontendArticle1 } from '@/types/frontend';
+import { FrontendArticle } from '@/types/frontend';
 import { API_BASE_URL } from '@/config/env';
 
 const ITEMS_PER_PAGE = 6;
@@ -27,7 +27,7 @@ interface CategoryClientProps {
 export default function CategoryClient({ slug, categoryName, categoryIcon }: CategoryClientProps) {
     const { progress, loadingMessage, loadingStates, isAllLoaded } = useSidebarData();
 
-    const [articles, setArticles] = useState<FrontendArticle1[]>([]);
+    const [articles, setArticles] = useState<FrontendArticle[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalArticles, setTotalArticles] = useState(0);
     const [totalPages, setTotalPages] = useState(0);

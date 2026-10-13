@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { FrontendArticle1 } from '@/types/frontend';
+import { FrontendArticle } from '@/types/frontend';
 import { useSidebarData } from './useCommonData';
 import { API_BASE_URL } from '@/config/env';
 
@@ -10,8 +10,8 @@ import { API_BASE_URL } from '@/config/env';
 
 // ========== 类型定义 ==========
 interface UseArticleDetailResult {
-    article: FrontendArticle1 | null;
-    relatedArticles: FrontendArticle1[];
+    article: FrontendArticle | null;
+    relatedArticles: FrontendArticle[];
     isLoading: boolean;
     isLoaded: boolean;
     error: string | null;
@@ -22,8 +22,8 @@ interface UseArticleDetailResult {
  * 获取单个文章详情
  */
 export function useArticleDetail(articleId: number): UseArticleDetailResult {
-    const [article, setArticle] = useState<FrontendArticle1 | null>(null);
-    const [relatedArticles, setRelatedArticles] = useState<FrontendArticle1[]>([]);
+    const [article, setArticle] = useState<FrontendArticle | null>(null);
+    const [relatedArticles, setRelatedArticles] = useState<FrontendArticle[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoaded, setIsLoaded] = useState(false);
     const [error, setError] = useState<string | null>(null);

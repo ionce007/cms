@@ -14,7 +14,6 @@ export default function ContactSection() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         // 处理表单提交
-        console.log('Form submitted:', formData);
         setIsSubmitted(true);
         setTimeout(() => setIsSubmitted(false), 3000);
     };

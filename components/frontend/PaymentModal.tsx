@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { API_BASE_URL } from '@/config/env';
 import { API_ENDPOINTS } from '@/config/routes'
 import { getProxiedImageUrl, getSiteProtocol } from '@/lib/imageProxy';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface PaymentModalProps {
     isOpen: boolean;
@@ -34,6 +35,7 @@ export default function PaymentModal({
     wechatQrCode = process.env.NEXT_PUBLIC_PAY_WX || '//img.foryet.com/uploads/2026/0125_31014606929_wxPay.png',
     alipayQrCode = process.env.NEXT_PUBLIC_PAY_ALIPAY || '//img.foryet.com/uploads/2026/0125_31014634042_zfbPay.png',
 }: PaymentModalProps) {
+    const { isLoggedIn, token } = useAuth();
     const [payMethod, setPayMethod] = useState<PayMethod>('wechat');
     const [isDownloading, setIsDownloading] = useState(false);
     const [copied, setCopied] = useState(false);
@@ -77,21 +79,26 @@ export default function PaymentModal({
         }
     }, [isOpen]);
 
+    const headers: Record<string, string> = {};
+    headers['Authorization'] = `Bearer ${token}`;
+    /*useEffect(() => {
+        headers['Authorization'] = `Bearer ${token}`;
+    }, [token])*/
+
     const handleConfirmDownload = async () => {
         if (!fs_id) return;
 
         setIsDownloading(true);
         try {
-            const downUrl = `${API_BASE_URL}${API_ENDPOINTS.FORMULA_DETAIL(fs_id)}/download`
-            const res = await fetch(downUrl);
+            const downUrl = `${API_BASE_URL}/bdpan/${fs_id}/download`
+            const res = await fetch(downUrl, { headers });
             debugger
             const data = await res.json();
 
             if (data.code === 1 && data.url) {
                 // ✅ 记录下载次数（可选）
                 try {
-                    await fetch(
-                        `${API_BASE_URL}/formulas/${fs_id}/downloadcount`,
+                    await fetch(`${API_BASE_URL}/formulas/${fs_id}/downloadcount`,
                         { method: 'POST' }
                     );
                 } catch (e) {
@@ -231,10 +238,10 @@ export default function PaymentModal({
                             )}>
                                 {payMethod === 'wechat' ? '微信' : '支付宝'}
                             </span>
-                            扫码支付
+                            扫码打赏
                         </p>
                         {/* <p className="text-xs text-gray-400 mt-1">
-                            支付完成后请点击下方按钮下载
+                            打赏后请点击下方按钮下载
                         </p>*/}
                     </div>
                 </div>

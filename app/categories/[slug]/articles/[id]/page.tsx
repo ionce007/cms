@@ -2,7 +2,7 @@
 import type { Metadata } from 'next';
 //import { categories, allArticles } from '@/data/articlesData';
 import CategoryArticleClient from './CategoryArticleClient';
-import { Category1, FrontendArticle1 } from '@/types/frontend';
+import { Category, FrontendArticle } from '@/types/frontend';
 import { API_BASE_URL } from '@/config/env';
 
 //const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
@@ -10,14 +10,14 @@ import { API_BASE_URL } from '@/config/env';
 interface PageProps {
     params: Promise<{ slug: string; id: string }>;
 }
-async function getCategories(): Promise<Category1[]> {
+async function getCategories(): Promise<Category[]> {
     try {
         const response = await fetch(`${API_BASE_URL}/categories`);
         if (!response.ok) {
             return [];
         }
 
-        const data = (await response.json()) as { data?: Category1[] };
+        const data = (await response.json()) as { data?: Category[] };
         return data.data ?? [];
     } catch {
         return [];
@@ -43,7 +43,7 @@ async function getArticle(id: number) {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { id } = await params;
     //const article = allArticles.find(a => a.id === parseInt(id));
-    const article: FrontendArticle1 = await getArticle(parseInt(id));
+    const article: FrontendArticle = await getArticle(parseInt(id));
     return {
         title: article ? article.title : '文章未找到',
         description: article?.description,

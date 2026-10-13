@@ -1,9 +1,10 @@
 // common/mailer.js
 const nodemailer = require('nodemailer');
+const { Site } = require('../models');
 
 // ✅ 邮件配置（从环境变量读取）
 const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.qq.com',
+    host: process.env.SMTP_HOST || 'smtp.163.com',
     port: parseInt(process.env.SMTP_PORT || '465'),
     secure: true,  // 465 端口用 true
     auth: {
@@ -37,6 +38,8 @@ async function sendMail({ to, subject, html, text }) {
  * 发送密码重置邮件
  */
 async function sendPasswordResetEmail({ to, username, resetUrl, expireMinutes = 30 }) {
+    const siteInfo = Site.findOne();
+
     const html = `
         <!DOCTYPE html>
         <html>
@@ -84,7 +87,7 @@ async function sendPasswordResetEmail({ to, username, resetUrl, expireMinutes = 
 
     return sendMail({
         to,
-        subject: '【TechBlog】密码重置',
+        subject: `【${siteInfo.name || process.env.SMTP_FROM_NAME || '缠说・股经'}】密码重置`,
         html,
         text: `您好 ${username}，请点击以下链接重置密码：${resetUrl}（${expireMinutes} 分钟内有效）`,
     });

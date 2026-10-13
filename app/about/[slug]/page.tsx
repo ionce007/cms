@@ -12,7 +12,6 @@ export const metadata: Metadata = {
 };
 
 export default async function AboutChildPage({ params }: AboutPageProps) {
-    console.log('AboutChildPage')
     const { slug } = await params;
     let pageParam = 'aboutus'
     if (slug) {

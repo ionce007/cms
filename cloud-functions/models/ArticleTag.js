@@ -39,8 +39,5 @@ ArticleTag.init(
     }
 );
 
-/*
-Article.belongsToMany(Tag, { through: ArticleTag });
-Tag.belongsToMany(Article, { through: ArticleTag });
-*/
+
 module.exports = ArticleTag;

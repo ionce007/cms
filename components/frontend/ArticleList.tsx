@@ -3,13 +3,13 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FrontendArticle1 } from '@/types/frontend';
+import { FrontendArticle } from '@/types/frontend';
 import ArticleCard from './ArticleCard';
 import ArticleListItem from './ArticleListItem';
 import ViewToggle, { ViewMode } from './ViewToggle';
 
 interface ArticleListProps {
-    articles: FrontendArticle1[];
+    articles: FrontendArticle[];
     title?: string;
     showViewToggle?: boolean;  // ✅ 是否显示视图切换
 }

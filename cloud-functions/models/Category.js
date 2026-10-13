@@ -34,6 +34,7 @@ Category.init(
             comment: '栏目下的文章数量',
             defaultValue: 0,
             get() {
+                //return 0;
                 const count = this.getDataValue('count');
                 return count !== undefined && count !== null ? parseInt(count) : 0;
             }

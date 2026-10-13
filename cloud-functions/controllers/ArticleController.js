@@ -1,9 +1,21 @@
 const { Op } = require('sequelize');
 import sequelize from '../common/db';  // 导入 sequelize 实例
-const { Category, Article, ArticleTag, Tag } = require('../models');
+const { Category, Article, Tag, MemberLike, MemberBookmark } = require('../models');
 import { calcReadTime } from '../common/utils';
 
+
+//import { getAllCategories, getAllTags, getAllFrags, getSiteConfig, filterByIds } from './cache/DataCache';
+
 async function test(req, res, next) {
+    //const siteInfo = await getSiteConfig();
+    //return res.json({ site: siteInfo });
+    /*
+    const categories = await getAllCategories();
+    const tags = await getAllTags();
+    const frags = await getAllFrags();
+    const site = await getSiteConfig();
+    res.json({ code: 1, message: 'success', data: { categories, tags, frags, site } });
+    */
     console.log('Tag 表名:', Tag.getTableName());
     const articles = await Article.findAll({
         where: {
@@ -90,7 +102,7 @@ async function getArticles(req, res, next) {
             order,
             limit,
             offset,
-            distinct: true
+            //distinct: true
         });
 
         const result = rows.map(article => {
@@ -194,7 +206,7 @@ async function getCategoryArticles(req, res, next) {
             order,
             limit,
             offset,
-            distinct: true   // ✅ 避免 include 导致 count 不准
+            //distinct: true   // ✅ 避免 include 导致 count 不准
         });
 
         const result = rows.map(article => {
@@ -326,7 +338,7 @@ async function getTagArticles(req, res, next) {
             limit: limitNum,
             offset,
             order,
-            distinct: true
+            //distinct: true
         });
 
         const result = rows.map(article => {
@@ -356,7 +368,99 @@ async function getTagArticles(req, res, next) {
         res.json({ code: -1, message: error.message, count: 0, data: [] });
     }
 }
+async function searchArticlesTest(req, res, next) {
+    const start = Date.now();
+    let data = {};
+    try {
+        const { page = 1, limit = 10, category, tag, search, sort } = req.body;
+        const offset = (page - 1) * limit;
+
+        // ✅ 基础条件：只查已发布
+        const where = {
+            status: 0
+        };
+
+        // 栏目过滤
+        if (category) {
+            where.cid = category;
+        }
+
+        // 关键词搜索
+        if (search) {
+            where[Op.and] = where[Op.and] || [];
+            where[Op.and].push({
+                [Op.or]: [
+                    { title: { [Op.like]: `%${search}%` } },
+                    { content: { [Op.like]: `%${search}%` } },
+                    { description: { [Op.like]: `%${search}%` } }
+                ]
+            });
+        }
+
+        // ✅ 排序规则
+        const orderMap = {
+            latest: [['createdAt', 'DESC']],
+            oldest: [['createdAt', 'ASC']],
+            popular: [['pv', 'DESC']],
+            mostLiked: [['likes', 'DESC']]
+        };
+        const order = orderMap[sort] || orderMap.latest;
+        const attributes = { exclude: ['subCid', 'articleView', 'source', 'status', 'content'] };
+        const { count, rows } = await Article.findAndCountAll({
+            attributes,
+            where,
+            //include,
+            order,
+            limit,
+            offset,
+            //distinct: true   // ✅ 避免 include 导致 count 不准
+        });
+
+
+        const categories = await getAllCategories();
+        const allTags = await getAllTags();
+
+        const result = rows.map(article => {
+            const plain = article.toJSON();
+            const category = categories.find(x => x.id === plain.cid);
+            plain.Category = category;
+            const tags = filterByIds(allTags, plain.tagId);
+            plain.Tags = tags;
+            // Tags 是数组，不需要 JSON.parse
+            // 只有 author 可能是 JSON 字符串
+            if (plain.author && typeof plain.author === 'string') {
+                try {
+                    plain.author = JSON.parse(plain.author);
+                } catch {
+                    // 不是 JSON，保持原样
+                }
+            }
+
+            // 如需计算阅读时长
+            if (plain.content) {
+                plain.readTime = calcReadTime(plain.content);
+            }
+
+            return plain;
+        });
+        const end = Date.now();
+        const diff = end - start;  // 毫秒
+        data = { code: 1, diff: diff, message: 'Articles retrieved successfully', count, data: result };
+        //res.json({ code: 1, message: 'Articles retrieved successfully', count, data: result });
+    } catch (error) {
+        console.error('Error in searchArticles:', error);
+        const end = Date.now();
+        const diff = end - start;  // 毫秒
+        data = { code: -1, diff: diff, message: error.message, count: 0, data: [] };
+        //res.json({ code: -1, message: error.message, count: 0, data: [] });
+    }
+    finally {
+        return res.json(data);
+    }
+}
 async function searchArticles(req, res, next) {
+    const start = Date.now();
+    let data = {};
     try {
         const { page = 1, limit = 10, category, tag, search, sort } = req.body;
         const offset = (page - 1) * limit;
@@ -421,7 +525,7 @@ async function searchArticles(req, res, next) {
 
         // ✅ 不 exclude content，如需算 readTime 要保留
         const attributes = {
-            exclude: ['subCid', 'articleView', 'source', 'status']
+            exclude: ['subCid', 'articleView', 'source', 'status'] //, 'content']
         };
 
         const { count, rows } = await Article.findAndCountAll({
@@ -431,10 +535,10 @@ async function searchArticles(req, res, next) {
             order,
             limit,
             offset,
-            distinct: true   // ✅ 避免 include 导致 count 不准
+            //distinct: true   // ✅ 避免 include 导致 count 不准
         });
 
-        const result = rows.map(article => {
+        /*const result = rows.map(article => {
             const plain = article.toJSON();
 
             // Tags 是数组，不需要 JSON.parse
@@ -451,14 +555,63 @@ async function searchArticles(req, res, next) {
             if (plain.content) {
                 plain.readTime = calcReadTime(plain.content);
             }
+            return plain;
+        });*/
 
+        // ✅ 批量查询当前用户的点赞/收藏状态
+        const userId = req.user ? req.user.toJSON().id : null;
+
+        let likedSet = new Set();
+        let bookmarkedSet = new Set();
+        if (userId && rows.length > 0) {
+            const articleIds = rows.map(a => a.id);
+
+            const [likes, bookmarks] = await Promise.all([
+                MemberLike.findAll({
+                    where: {
+                        memberId: userId,
+                        targetType: 'article',
+                        targetId: { [Op.in]: articleIds },
+                    },
+                    attributes: ['targetId'],
+                }),
+                MemberBookmark.findAll({
+                    where: {
+                        memberId: userId,
+                        targetType: 'article',
+                        targetId: { [Op.in]: articleIds },
+                    },
+                    attributes: ['targetId'],
+                }),
+            ]);
+
+            likedSet = new Set(likes.map(l => Number(l.targetId)));
+            bookmarkedSet = new Set(bookmarks.map(b => Number(b.targetId)));
+        }
+        // ✅ 拼接返回
+        const result = rows.map(article => {
+            let plain = article.toJSON();
+            // 先触发 readTime 计算
+            plain.readTime = article.readTime;
+            // 再删除 content
+            delete plain.content;
+            plain.isLiked = likedSet.has(article.id);
+            plain.isBookmarked = bookmarkedSet.has(article.id);
             return plain;
         });
-
-        res.json({ code: 1, message: 'Articles retrieved successfully', count, data: result });
+        const end = Date.now();
+        const diff = end - start;  // 毫秒
+        data = { code: 1, diff: diff, message: 'Articles retrieved successfully', count, data: result };
+        //res.json({ code: 1, message: 'Articles retrieved successfully', count, data: result });
     } catch (error) {
         console.error('Error in searchArticles:', error);
-        res.json({ code: -1, message: error.message, count: 0, data: [] });
+        const end = Date.now();
+        const diff = end - start;  // 毫秒
+        data = { code: -1, diff: diff, message: error.message, count: 0, data: [] };
+        //res.json({ code: -1, message: error.message, count: 0, data: [] });
+    }
+    finally {
+        return res.json(data);
     }
 }
 async function getRecentArticles(req, res, next) {
@@ -493,7 +646,6 @@ async function getRecentArticles(req, res, next) {
                 attributes: ['id', 'name', 'path']
             }
         ];
-
         // ✅ 不再用 literal 子查询，标签通过 include 得到
         const attributes = {
             exclude: ['subCid', 'articleView', 'source', 'status']
@@ -507,10 +659,41 @@ async function getRecentArticles(req, res, next) {
             limit: Number(limit),
             offset,
             order,
-            distinct: true   // ✅ 避免 include 导致条数重复
+            //distinct: true,   // ✅ 避免 include 导致条数重复，
+            //logging: console.log,   // 打印 SQL
+            //benchmark: true         // 打印耗时
         });
 
-        const result = articles.map(article => {
+        const userId = req.user ? req.user.toJSON().id : null;
+
+        let likedSet = new Set();
+        let bookmarkedSet = new Set();
+        if (userId && articles.length > 0) {
+            const articleIds = articles.map(a => a.id);
+
+            const [likes, bookmarks] = await Promise.all([
+                MemberLike.findAll({
+                    where: {
+                        memberId: userId,
+                        targetType: 'article',
+                        targetId: { [Op.in]: articleIds },
+                    },
+                    attributes: ['targetId'],
+                }),
+                MemberBookmark.findAll({
+                    where: {
+                        memberId: userId,
+                        targetType: 'article',
+                        targetId: { [Op.in]: articleIds },
+                    },
+                    attributes: ['targetId'],
+                }),
+            ]);
+
+            likedSet = new Set(likes.map(l => l.targetId));
+            bookmarkedSet = new Set(bookmarks.map(b => b.targetId));
+        }
+        /*const result = articles.map(article => {
             const plain = article.toJSON();
 
             // Tags 是数组，不需要 JSON.parse
@@ -522,15 +705,24 @@ async function getRecentArticles(req, res, next) {
                     // 不是 JSON，保持原样
                 }
             }
-
             // 如需计算阅读时长
             if (plain.content) {
                 plain.readTime = calcReadTime(plain.content);
             }
 
             return plain;
-        });
+        });*/
 
+        const result = articles.map(article => {
+            const plain = article.toJSON();
+            // 先触发 readTime 计算
+            plain.readTime = article.readTime;
+            // 再删除 content
+            delete plain.content;
+            plain.isLiked = likedSet.has(article.id);
+            plain.isBookmarked = bookmarkedSet.has(article.id);
+            return plain;
+        });
         res.json({ code: 1, message: 'Articles retrieved successfully', count: articles.length, data: result });
     } catch (error) {
         console.error('Error in getRecentArticles:', error);
@@ -597,7 +789,7 @@ async function getPinnedArticles(req, res, next) {
             limit: Number(limit),
             offset: 0,
             order,
-            distinct: true   // ✅ 避免 include 导致条数重复
+            //distinct: true   // ✅ 避免 include 导致条数重复
         });
 
         // ✅ 空数组判断（不是 !articles）
@@ -605,7 +797,7 @@ async function getPinnedArticles(req, res, next) {
             return res.status(404).json({ code: -1, message: 'Article not found' });
         }
 
-        const result = articles.map(article => {
+        /*const result = articles.map(article => {
             const plain = article.toJSON();
 
             // Tags 是数组，不需要 JSON.parse
@@ -624,9 +816,41 @@ async function getPinnedArticles(req, res, next) {
             }
 
             return plain;
-        });
+        });*/
+        const result = articles[0].toJSON()
+        const userId = req.user ? req.user.toJSON().id : null;
+        
+        let likedSet = new Set();
+        let bookmarkedSet = new Set();
+        const articleId = result.id;
+        if (userId) {
+            const [likes, bookmarks] = await Promise.all([
+                MemberLike.findAll({
+                    where: {
+                        memberId: userId,
+                        targetType: 'article',
+                        targetId: articleId,
+                    },
+                    attributes: ['targetId'],
+                }),
+                MemberBookmark.findAll({
+                    where: {
+                        memberId: userId,
+                        targetType: 'article',
+                        targetId: articleId,
+                    },
+                    attributes: ['targetId'],
+                }),
+            ]);
 
-        res.json({ code: 1, message: 'Article retrieved successfully', data: result[0] });
+            likedSet = new Set(likes.map(l => l.targetId));
+            bookmarkedSet = new Set(bookmarks.map(b => b.targetId));
+        }
+        result.isLiked = likedSet.has(articleId);
+        result.isBookmarked = bookmarkedSet.has(articleId);
+        result.readTime = calcReadTime(result.content);
+        delete result.content
+        res.json({ code: 1, message: 'Article retrieved successfully', data: result });
     } catch (error) {
         console.log('error = ', error);
         next(error);
@@ -636,8 +860,7 @@ async function getArticleById(req, res, next) {
     try {
         const { id } = req.params || req.query;
         if (!id) return res.status(404).json({ code: -1, message: '缺少参数' });
-
-        const where = { id };
+        const userId = req.user ? req.user.toJSON().id : null;  // ✅ 从 optionalAuth 中间件获取
 
         // ✅ include 改为数组 + 加 as
         const include = [
@@ -670,11 +893,11 @@ async function getArticleById(req, res, next) {
             exclude: ['subCid', 'articleView', 'source', 'status']
         };
 
-        const article = await Article.findOne({
+        const article = await Article.findByPk(id, {
             attributes,
-            where,
+            //where,
             include,
-            distinct: true
+            //distinct: true
         });
 
         if (!article) {
@@ -683,6 +906,34 @@ async function getArticleById(req, res, next) {
 
         const plain = article.toJSON();
 
+        // 2. ✅ 计算 isLiked 和 isBookmarked（仅登录用户）
+        let isLiked = false;
+        let isBookmarked = false;
+        if (userId) {
+            // ✅ 并行查询关联表
+            const [likeRecord, bookmarkRecord] = await Promise.all([
+                MemberLike.findOne({
+                    where: {
+                        memberId: userId,
+                        targetType: 'article',
+                        targetId: id,
+                    },
+                    attributes: ['id'],  // 只查 ID，减少数据传输
+                    raw: true,
+                }),
+                MemberBookmark.findOne({
+                    where: {
+                        memberId: userId,
+                        targetType: 'article',
+                        targetId: id,
+                    },
+                    attributes: ['id'],
+                    raw: true,
+                }),
+            ]);
+            isLiked = !!likeRecord;
+            isBookmarked = !!bookmarkRecord;
+        }
         // Tags 是数组，不需要 JSON.parse
         // 只有 author 可能是 JSON 字符串
         if (plain.author && typeof plain.author === 'string') {
@@ -697,8 +948,8 @@ async function getArticleById(req, res, next) {
         if (plain.content) {
             plain.readTime = calcReadTime(plain.content);
         }
-
-        res.json({ code: 1, message: 'Article retrieved successfully', article: plain });
+        const data = { ...plain, isLiked, isBookmarked, }
+        res.json({ code: 1, message: 'Article retrieved successfully', article: data });
     } catch (error) {
         console.error('Error in getArticleById:', error);
         next(error);
@@ -724,18 +975,17 @@ async function incrementViewCount(req, res, next) {
     }
 }
 /**
- * 文章点赞/取消点赞
+ * 文章点赞/取消点赞（需登录）
  * POST /api/articles/:id/like
- * 
- * Body: { action: 'like' | 'unlike' }
  */
 async function toggleLike(req, res) {
     try {
         const { id } = req.params;
         const { action = 'like' } = req.body;
-
-        if (!id) {
-            return res.json({ code: -1, message: '缺少文章 ID' });
+        const userId = req.user ? req.user.toJSON().id : null;
+        // ✅ 必须登录
+        if (!userId) {
+            return res.status(401).json({ code: 401, message: '请先登录', });
         }
 
         const article = await Article.findByPk(id, {
@@ -746,49 +996,57 @@ async function toggleLike(req, res) {
             return res.json({ code: -1, message: '文章不存在' });
         }
 
-        const currentLikes = article.likes || 0;
-        let newLikes;
+        // ✅ 检查是否已点赞
+        const existing = await MemberLike.findOne({
+            where: { memberId: userId, targetType: 'article', targetId: id },
+        });
 
         if (action === 'unlike') {
-            // ✅ 取消点赞：-1（不低于 0）
-            newLikes = Math.max(0, currentLikes - 1);
-            await Article.update(
-                { likes: newLikes },
-                { where: { id } }
-            );
+            // 取消点赞
+            if (existing) {
+                await existing.destroy();
+                await Article.decrement('likes', { where: { id } });
+            }
         } else {
-            // ✅ 点赞：+1（原子操作）
+            // 点赞
+            if (existing) {
+                const data = { id: existing.id, likes: article.likes, isLiked: action !== 'unlike', }
+                return res.json({ code: 2, message: '您已点过赞啦！', data: data });
+            }
+
+            await MemberLike.create({
+                memberId: userId,
+                targetType: 'article',
+                targetId: id,
+            });
+
             await Article.increment('likes', { where: { id } });
-            newLikes = currentLikes + 1;
         }
 
-        res.json({
-            code: 1,
-            message: 'success',
-            data: {
-                id: article.id,
-                likes: newLikes,
-                action,
-            },
+        // 返回最新
+        const updated = await Article.findByPk(id, {
+            attributes: ['id', 'likes'],
         });
+
+        res.json({ code: 1, message: 'success', data: { id: updated.id, likes: updated.likes, isLiked: action !== 'unlike', }, });
     } catch (error) {
         console.error('toggleLike error:', error);
         res.json({ code: -1, message: error.message });
     }
 }
 /**
- * 文章收藏/取消收藏
+ * 文章收藏/取消收藏（需登录）
  * POST /api/articles/:id/bookmark
- * 
- * Body: { action: 'bookmark' | 'unbookmark' }
  */
 async function toggleBookmark(req, res) {
     try {
         const { id } = req.params;
         const { action = 'bookmark' } = req.body;
+        const userId = req.user ? req.user.toJSON().id : null;
 
-        if (!id) {
-            return res.json({ code: -1, message: '缺少文章 ID' });
+        // ✅ 必须登录
+        if (!userId) {
+            return res.status(401).json({ code: 401, message: '请先登录', });
         }
 
         const article = await Article.findByPk(id, {
@@ -799,23 +1057,34 @@ async function toggleBookmark(req, res) {
             return res.json({ code: -1, message: '文章不存在' });
         }
 
-        const currentMarked = article.marked || 0;
-        let newMarked;
+        const existing = await MemberBookmark.findOne({
+            where: { memberId: userId, targetType: 'article', targetId: id },
+        });
 
         if (action === 'unbookmark') {
-            // ✅ 取消收藏：-1（不低于 0）
-            newMarked = Math.max(0, currentMarked - 1);
-            await Article.update(
-                { marked: newMarked },
-                { where: { id } }
-            );
+            if (existing) {
+                await existing.destroy();
+                await Article.decrement('marked', { where: { id } });
+            }
         } else {
-            // ✅ 收藏：+1
+            if (existing) {
+                return res.json({ code: -1, message: '已收藏' });
+            }
+
+            await MemberBookmark.create({
+                memberId: userId,
+                targetType: 'article',
+                targetId: id,
+            });
+
             await Article.increment('marked', { where: { id } });
-            newMarked = currentMarked + 1;
         }
 
-        res.json({ code: 1, message: 'success', data: { id: article.id, marked: newMarked, action, }, });
+        const updated = await Article.findByPk(id, {
+            attributes: ['id', 'marked'],
+        });
+
+        res.json({ code: 1, message: 'success', data: { id: updated.id, marked: updated.marked, isBookmarked: action !== 'unbookmark', }, });
     } catch (error) {
         console.error('toggleBookmark error:', error);
         res.json({ code: -1, message: error.message });
@@ -868,7 +1137,7 @@ async function getPopularArticles(req, res, next) {
             limit: Number(limit),
             offset: Number(offset),
             order,
-            distinct: true   // ✅ 避免 include 导致条数重复
+            //distinct: true   // ✅ 避免 include 导致条数重复
         });
 
         const result = articles.map(article => {
@@ -948,7 +1217,7 @@ async function getFeaturedArticles(req, res, next) {
             limit,
             offset: 0,
             order,
-            distinct: true   // 避免 include 导致条数不准
+            //distinct: true   // 避免 include 导致条数不准
         });
 
         if (!articles || articles.length === 0) {
@@ -1017,7 +1286,7 @@ async function getArticlesByTag(req, res, next) {
             limit: Number(limit),
             offset: Number(offset),
             order: [['createdAt', 'DESC']],
-            distinct: true   // ✅ 避免 include 导致 count 不准
+            //distinct: true   // ✅ 避免 include 导致 count 不准
         });
 
         const result = rows.map(article => {
@@ -1109,7 +1378,7 @@ async function getRelatedArticlesById(req, res, next) {
             include,
             limit: Number(limit),
             order: [['createdAt', 'DESC']],
-            distinct: true   // ✅ 避免 include 导致 count 不准
+            //distinct: true   // ✅ 避免 include 导致 count 不准
         });
 
         const result = rows.map(article => {
@@ -1204,7 +1473,7 @@ async function getRelatedArticles(req, res, next) {
             order,
             limit: Number(limit),
             offset,
-            distinct: true   // ✅ 避免 include 导致 count 不准
+            //distinct: true   // ✅ 避免 include 导致 count 不准
         });
 
         const result = rows.map(article => {
@@ -1238,6 +1507,7 @@ module.exports = {
     test,
     getArticles,
     searchArticles,
+    searchArticlesTest,
     getPinnedArticles,
     getRecentArticles,
     getArticleById,

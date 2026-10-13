@@ -1,40 +1,40 @@
 // app/downloads/[id]/DownloadDetailClient.tsx
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import Header from '@/components/frontend/Header';
 import Footer from '@/components/frontend/Footer';
 import Sidebar from '@/components/frontend/Sidebar';
 import CoverImage from '@/components/frontend/CoverImage';
 import DownloadDetailSkeleton from '@/components/frontend/DownloadDetailSkeleton';
 import LoadingProgress from '@/components/frontend/LoadingProgress';
-import PaymentModal from '@/components/frontend/PaymentModal';  // ✅ 导入
+import PaymentModal from '@/components/frontend/PaymentModal';
+import ShareButtons from '@/components/frontend/ShareButtons';
+import LikeButton from '@/components/frontend/LikeButton';
+import BookmarkButton from '@/components/frontend/BookmarkButton';
 import { useDownloadDetail } from '@/hooks/useDownloads';
 import { useSidebarData } from '@/hooks/useCommonData';
 import { useDownloadViewCounter } from '@/hooks/useDownloadViewCounter';
 import { formatFileSize, formatTimestamp } from '@/config/constants';
 import { API_BASE_URL } from '@/config/env';
 import { API_ENDPOINTS } from '@/config/routes';
-import ShareButtons from '@/components/frontend/ShareButtons'
-import LikeButton from '@/components/frontend/LikeButton';
-import BookmarkButton from '@/components/frontend/BookmarkButton';
-import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface DownloadDetailClientProps {
     id: string;
 }
 
 export default function DownloadDetailClient({ id }: DownloadDetailClientProps) {
+    const { isLoggedIn, isLoading: authLoading, token } = useAuth();
+
     const { item, isLoading, error } = useDownloadDetail(id);
     const [isDownloading, setIsDownloading] = useState(false);
-    // ✅ 支付模态框状态
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-    const [isBookmarked, setIsBookmarked] = useState(false);
 
     // ✅ 浏览计数
     const { views } = useDownloadViewCounter({
         fsId: id,
-        enabled: !!item,  // 数据加载完成后再计数
+        enabled: !!item,
         initialViews: item?.views || 0,
     });
 
@@ -48,7 +48,7 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
     const completed = Object.values(loadingStates).filter(Boolean).length;
     const total = Object.values(loadingStates).length;
     const progress = Math.round((completed / total) * 100);
-    const isAllLoaded = completed === total;
+    const isAllLoaded = (completed === total) && !authLoading;
 
     const loadingMessage = useMemo(() => {
         const pending: string[] = [];
@@ -61,9 +61,28 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
         return `正在加载：${pending.join('、')}...`;
     }, [loadingStates]);
 
-    // ✅ 点击"立即下载"→ 打开支付模态框
+    // ✅ 统一构造请求头（每次调用时实时构造，避免 token 为 null）
+    const getAuthHeaders = useCallback((): Record<string, string> => {
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+        };
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        return headers;
+    }, [token]);
+
+    // ✅ 点击"立即下载"
     const handleDownloadClick = () => {
         if (!item) return;
+
+        // ✅ 未登录检查
+        if (!isLoggedIn) {
+            alert('请先登录');
+            return;
+        }
 
         // 免费文件：直接下载
         if (item.isSell === 0 || item.price === 0) {
@@ -75,10 +94,9 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
         setIsPaymentModalOpen(true);
     };
 
-    // ✅ 确认下载（支付模态框里的"立即下载"按钮）
+    // ✅ 确认下载
     const handleConfirmDownload = async () => {
         await handleDirectDownload();
-        // 下载成功后关闭模态框
         setIsPaymentModalOpen(false);
     };
 
@@ -88,21 +106,36 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
 
         setIsDownloading(true);
         try {
-            const downUrl = `${API_BASE_URL}${API_ENDPOINTS.FORMULA_DETAIL(item.fs_id)}/download`
-            const res = await fetch(downUrl);
+            const downUrl = `${API_BASE_URL}${API_ENDPOINTS.FORMULA_DETAIL(item.fs_id)}/download`;
+
+            // ✅ 实时构造 headers
+            const headers = getAuthHeaders();
+
+            const res = await fetch(downUrl, { headers });
+
+            // ✅ 401 处理
+            if (res.status === 401) {
+                alert('登录已失效，请重新登录');
+                return;
+            }
+
             const data = await res.json();
 
-            if (data.code === 1 && data.url) {
-                // ✅ 记录下载次数（可选）
+            if (data.code === 1 && (data.url || data.data?.downloadUrl)) {
+                // ✅ 记录下载次数
                 try {
                     await fetch(
                         `${API_BASE_URL}/formulas/${item.fs_id}/downloadcount`,
-                        { method: 'POST' }
+                        {
+                            method: 'POST',
+                            headers: getAuthHeaders(),
+                        }
                     );
                 } catch (e) {
                     console.warn('记录下载次数失败:', e);
                 }
-                window.open(data.url, '_blank');
+
+                window.open(data.url || data.data.downloadUrl, '_blank');
             } else {
                 alert(data.message || '获取下载链接失败');
             }
@@ -132,8 +165,8 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
                             </div>
                             <div className="w-full lg:w-80 flex-shrink-0">
                                 <div className="space-y-6">
-                                    {[1, 2, 3].map((item) => (
-                                        <div key={item} className="bg-white rounded-xl border border-gray-200 p-5">
+                                    {[1, 2, 3].map((i) => (
+                                        <div key={i} className="bg-white rounded-xl border border-gray-200 p-5">
                                             <div className="h-5 bg-gray-200 rounded w-24 mb-4 animate-pulse" />
                                             <div className="space-y-2">
                                                 <div className="h-4 bg-gray-200 rounded w-full animate-pulse" />
@@ -238,7 +271,7 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
                                         <div>
                                             <div className="text-xs text-gray-400 mb-1">浏览次数</div>
                                             <div className="text-sm font-medium text-gray-700">
-                                                {item.views}
+                                                {views}
                                             </div>
                                         </div>
                                         <div>
@@ -264,7 +297,6 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
                                     )}
 
                                     <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-100">
-                                        {/* ✅ 点击打开支付模态框 */}
                                         <button
                                             onClick={handleDownloadClick}
                                             disabled={isDownloading}
@@ -301,30 +333,30 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
                                 </div>
 
                                 {/* 操作按钮 */}
-                                <div className="flex items-center justify-between flex-wrap gap-3 mt-6 pt-6 border-t border-gray-100">
+                                <div className="flex items-center justify-between flex-wrap gap-3 mt-6 pt-6 border-t border-gray-100 px-6 pb-6">
                                     <div className="flex items-center space-x-3">
-                                        {/* ✅ 用 LikeButton 组件 */}
                                         <LikeButton
                                             target="formula"
                                             id={item.fs_id}
                                             initialLikes={item.likes || 0}
+                                            initialIsLiked={item.isLiked || false}
                                             size="md"
                                             showLabel
                                         />
 
-                                        {/* 收藏按钮 */}
                                         <BookmarkButton
                                             target="formula"
                                             id={item.fs_id}
                                             initialMarked={item.marked || 0}
+                                            initialIsBookmarked={item.isBookmarked || false}
                                             size="md"
                                             showLabel
                                         />
                                     </div>
 
                                     <ShareButtons
-                                        title={item.summary}
-                                        url={`/articles/${item.fs_id}`}
+                                        title={item.server_filename}
+                                        url={`/downloads/${item.fs_id}`}
                                     />
                                 </div>
                             </article>
@@ -340,7 +372,7 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
 
             <Footer />
 
-            {/* ✅ 支付模态框 */}
+            {/* 支付模态框 */}
             <PaymentModal
                 isOpen={isPaymentModalOpen}
                 onClose={() => setIsPaymentModalOpen(false)}

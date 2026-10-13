@@ -1,5 +1,5 @@
 // controllers/MemberController.js
-const Member = require('../models/Member');
+const {Article,Formula, Member, MemberLike, MemberBookmark, MemberDownload } = require('../models');
 const { generateToken } = require('../common/jwt');
 const { Op } = require('sequelize');
 const PasswordReset = require('../models/PasswordReset');
@@ -432,34 +432,139 @@ async function resetPassword(req, res) {
         res.json({ code: -1, message: error.message, });
     }
 }
-async function getMyBookmarks(req, res) {
-    const { targetType } = req.query;
 
-    const bookmarks = await UserBookmark.findAll({
-        where: {
-            userId: req.user.id,
-            ...(targetType ? { targetType } : {}),
-        },
-        order: [['createdAt', 'DESC']],
-    });
+/**
+ * 获取我的点赞
+ * GET /api/member/likes?targetType=article&page=1&limit=10
+ */
+async function getMyLikes(req, res) {
+    try {
+        const userId = req.user.id;
+        const { targetType, page = 1, limit = 10 } = req.query;
 
-    // 根据 targetType 查询详情
-    const results = await Promise.all(
-        bookmarks.map(async (bm) => {
-            if (bm.targetType === 'article') {
-                const article = await Article.findByPk(bm.targetId);
-                return { ...bm.toJSON(), article };
-            } else {
-                const formula = await Formula.findOne({
-                    where: { fs_id: bm.targetId },
-                });
-                return { ...bm.toJSON(), formula };
-            }
-        })
-    );
+        const where = { memberId: userId };
+        if (targetType) where.targetType = targetType;
 
-    res.json({ code: 1, data: results });
+        const { count, rows } = await MemberLike.findAndCountAll({
+            where,
+            order: [['createdAt', 'DESC']],
+            limit: parseInt(limit),
+            offset: (parseInt(page) - 1) * parseInt(limit),
+        });
+
+        // ✅ 批量查询详情
+        const data = await enrichWithDetails(rows);
+
+        res.json({ code: 1, count, data });
+    } catch (error) {
+        console.error('getMyLikes error:', error);
+        res.json({ code: -1, message: error.message });
+    }
 }
+
+/**
+ * 获取我的收藏
+ * GET /api/member/bookmarks?targetType=article&page=1&limit=10
+ */
+async function getMyBookmarks(req, res) {
+    try {
+        const userId = req.user.id;
+        const { targetType, page = 1, limit = 10 } = req.query;
+
+        const where = { memberId: userId };
+        if (targetType) where.targetType = targetType;
+
+        const { count, rows } = await MemberBookmark.findAndCountAll({
+            where,
+            order: [['createdAt', 'DESC']],
+            limit: parseInt(limit),
+            offset: (parseInt(page) - 1) * parseInt(limit),
+        });
+
+        const data = await enrichWithDetails(rows);
+
+        res.json({ code: 1, count, data });
+    } catch (error) {
+        console.error('getMyBookmarks error:', error);
+        res.json({ code: -1, message: error.message });
+    }
+}
+
+/**
+ * 获取我的下载
+ * GET /api/member/downloads?page=1&limit=10
+ */
+async function getMyDownloads(req, res) {
+    try {
+        const userId = req.user.id;
+        const { page = 1, limit = 10 } = req.query;
+
+        const { count, rows } = await MemberDownload.findAndCountAll({
+            where: { memberId: userId },
+            order: [['lastDownloadAt', 'DESC']],
+            limit: parseInt(limit),
+            offset: (parseInt(page) - 1) * parseInt(limit),
+        });
+
+        const data = await enrichWithDetails(rows);
+
+        res.json({ code: 1, count, data });
+    } catch (error) {
+        console.error('getMyDownloads error:', error);
+        res.json({ code: -1, message: error.message });
+    }
+}
+
+/**
+ * 辅助函数：批量查询详情
+ */
+async function enrichWithDetails(records) {
+    const articleIds = records
+        .filter(r => r.targetType === 'article')
+        .map(r => r.targetId);
+
+    const formulaIds = records
+        .filter(r => r.targetType === 'formula')
+        .map(r => r.targetId);
+
+    const [articles, formulas] = await Promise.all([
+        articleIds.length
+            ? Article.findAll({
+                where: { id: articleIds },
+                attributes: ['id', 'title', 'img', 'description', 'pv', 'likes', 'marked'],
+            })
+            : [],
+        formulaIds.length
+            ? Formula.findAll({
+                where: { fs_id: formulaIds },
+                attributes: ['fs_id', 'server_filename', 'img', 'summary', 'size', 'price', 'views', 'likes', 'marked'],
+            })
+            : [],
+    ]);
+
+    const articleMap = {};
+    articles.forEach(a => { articleMap[a.id] = a; });
+
+    const formulaMap = {};
+    formulas.forEach(f => { formulaMap[f.fs_id] = f; });
+
+    return records.map(record => {
+        const plain = record.get ? record.get({ plain: true }) : record;
+
+        return {
+            id: plain.id,
+            targetType: plain.targetType,
+            targetId: plain.targetId,
+            createdAt: plain.createdAt,
+            lastDownloadAt: plain.lastDownloadAt,
+            downloadCount: plain.downloadCount,
+            // ✅ 关联详情
+            article: plain.targetType === 'article' ? articleMap[plain.targetId] : null,
+            formula: plain.targetType === 'formula' ? formulaMap[plain.targetId] : null,
+        };
+    });
+}
+
 module.exports = {
     register,
     login,
@@ -469,5 +574,7 @@ module.exports = {
     forgotPassword,
     verifyResetToken,
     resetPassword,
+    getMyLikes,
     getMyBookmarks,
+    getMyDownloads,
 };

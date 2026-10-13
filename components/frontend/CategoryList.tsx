@@ -2,13 +2,13 @@
 'use client';
 
 import Link from 'next/link';
-import { Category1 } from '@/types/frontend';
+import { Category } from '@/types/frontend';
 import { cn } from '@/lib/utils';
 import Sidebar from './Sidebar'
 import CategoryCard from './CategoryCard'
 import { useCategories } from '@/hooks/useCommonData'
 interface CategoryCardProps {
-    category: Category1;
+    category: Category;
     articleCount: number;
     index?: number;
 }

@@ -1,10 +1,10 @@
 // components/frontend/HeroSection.tsx
-import { FrontendArticle1 } from '@/types/frontend';
+import { FrontendArticle } from '@/types/frontend';
 import SafeImage from './SafeImage';
 import { calcReadTime } from '@/lib/utils';
 
 interface HeroSectionProps {
-    article?: FrontendArticle1 | null;
+    article?: FrontendArticle | null;
 }
 
 export default function HeroSection({ article }: HeroSectionProps) {
@@ -57,12 +57,44 @@ export default function HeroSection({ article }: HeroSectionProps) {
                         </div>
                         <span className="text-gray-500">•</span>
                         <span>{article.createdAt.substring(0, 10)}</span>
-                        <span><span className="text-gray-500 mr-1">🕒</span>{calcReadTime(article.content)} 分钟阅读</span>
+                        {/*<span><span className="text-gray-500 mr-1">🕒</span>{calcReadTime(article.content)} 分钟阅读</span>
                         <span className="flex items-center space-x-1">
                             <span><span className="text-gray-500 mr-1">👁️</span>{article.pv} 次阅读</span>
                         </span>
                         <span className="flex items-center space-x-1">
                             <span><span className="text-gray-500 mr-1">👍</span>{article.likes ? article.likes : 0} 次点赞</span>
+                        </span>*/}
+                        {/* 阅读时长 */}
+                        <span className="flex items-center space-x-1 whitespace-nowrap">
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>{article.readTime || 0}分钟</span>
+                        </span>
+
+                        {/* 浏览量 */}
+                        <span className="flex items-center space-x-1 whitespace-nowrap">
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <span>{article.pv || 0}</span>
+                        </span>
+
+                        {/* 点赞数 */}
+                        <span className="flex items-center space-x-1 whitespace-nowrap">
+                            <svg className="w-3.5 h-3.5" fill={article.isLiked ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                            <span>{article.likes || 0}</span>
+                        </span>
+
+                        {/* 收藏数 */}
+                        <span className="flex items-center space-x-1 whitespace-nowrap">
+                            <svg className="w-3.5 h-3.5" fill={article.isBookmarked ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                            </svg>
+                            <span>{article.marked || 0}</span>
                         </span>
                     </div>
 

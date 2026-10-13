@@ -10,12 +10,14 @@ import ArticleSkeleton from '@/components/frontend/ArticleSkeleton';
 import ArticleLoadingProgress from '@/components/frontend/ArticleLoadingProgress';
 import { useArticle } from '@/hooks/useArticle';
 import { useViewCounter } from '@/hooks/useViewCounter'; 
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ArticleClientProps {
     articleId: number;
 }
 
 export default function ArticleClient({ articleId }: ArticleClientProps) {
+    const { isLoading: authLoading } = useAuth();
     const { article, relatedArticles, isLoading, error } = useArticle(articleId);
 
     // ✅ 模拟加载进度（基于真实加载状态驱动）
@@ -52,7 +54,7 @@ export default function ArticleClient({ articleId }: ArticleClientProps) {
     }, [isLoading]);
 
     // ========== 加载中 ==========
-    if (isLoading) {
+    if (isLoading || authLoading) {
         return (
             <div className="min-h-screen bg-gray-50 flex flex-col">
                 <Header />

@@ -1,6 +1,6 @@
 import sequelize from '../common/db';  // 导入 sequelize 实例
 import { DateAdd, dateFormat } from '../common/utils'
-const { Formula, Token } = require('../models');
+const { Formula, Token, MemberDownload } = require('../models');
 const { Op } = require('sequelize');
 const request = require('sync-request');
 
@@ -102,7 +102,6 @@ async function getBaiduAuthCode(req, res, next) {
         var client_id = process.env.PAN_APIKEY;
         var client_secret = process.env.PAN_SECRETKEY;
         var redirect_uri = process.env.PAN_REDIRECT_URI;
-        console.log('client_id = ', client_id, '    client_secret = ', client_secret, '   redirect_uri = ', redirect_uri);
 
         var reqUrl = `https://openapi.baidu.com/oauth/2.0/token?grant_type=authorization_code&code=${code}&client_id=${client_id}&client_secret=${client_secret}&redirect_uri=${redirect_uri}`;
         var header = { 'User-Agent': 'pan.baidu.com' };
@@ -190,6 +189,16 @@ async function getToken(req, res, next) {
 }
 async function getDownloadUrl(req, res, next) {
     try {
+        const fs_id = req.params.id;
+        if (!fs_id) {
+            res.status(400).json({ code: -5, msg: '缺少参数 fs_id！', data: {} });
+            return;
+        }
+        // ✅ 必须登录
+        const userId = req.user ? req.user.toJSON().id : null;
+        if (!userId) {
+            return res.status(401).json({ code: 401, message: '请先登录', });
+        }
         const token = await getAccessTokenWithRefresh();
         if (token.code !== 200) {
             res.status(500).json({ code: -1, msg: '获取百度网盘Token失败！', data: {} });
@@ -208,11 +217,7 @@ async function getDownloadUrl(req, res, next) {
             res.status(500).json({ code: -4, msg: '百度网盘Access Token已过期！', data: {} });
             return;
         }
-        const fs_id = req.params.id;
-        if (!fs_id) {
-            res.status(400).json({ code: -5, msg: '缺少参数 fs_id！', data: {} });
-            return;
-        }
+
         const file = await Formula.findByPk(fs_id, { raw: true });
         if (!file) {
             res.status(404).json({ code: -6, msg: '未找到对应的文件信息！', data: {} });
@@ -222,7 +227,6 @@ async function getDownloadUrl(req, res, next) {
             res.status(400).json({ code: -8, msg: '该文件是目录，无法获取文件信息！', data: {} });
             return;
         }
-        console.log('file = ', file);
         if (!file.path) {
             res.status(500).json({ code: -7, msg: '文件路径不存在！', data: {} });
             return;
@@ -233,7 +237,6 @@ async function getDownloadUrl(req, res, next) {
         const options = { headers: header };
         const ret = request("GET", url, options);
         const pan_res = JSON.parse(ret.getBody('utf8'));
-        //console.log('pan_res = ', pan_res);
         if (!pan_res || !pan_res.list || pan_res.list.length === 0) {
             res.status(404).json({ code: -9, msg: '未获取到文件信息！', data: {} });
             return;
@@ -245,6 +248,28 @@ async function getDownloadUrl(req, res, next) {
         }
         const fileUrl = `${fileInfo.dlink}&access_token=${access_token}`;// fileInfo.dlink + "&access_token={0}".format(access_token);
 
+        // ✅ 记录下载历史
+        const [record, created] = await MemberDownload.findOrCreate({
+            where: {
+                memberId: userId,
+                targetType: 'formula',
+                targetId: fs_id,
+            },
+            defaults: {
+                memberId: userId,
+                targetType: 'formula',
+                targetId: fs_id,
+                downloadCount: 1,
+                lastDownloadAt: new Date(),
+            },
+        });
+
+        if (!created) {
+            await record.update({
+                downloadCount: record.downloadCount + 1,
+                lastDownloadAt: new Date(),
+            });
+        }
         let result = {};
         const body = request("GET", fileUrl, header);
         if (body && body.statusCode === 200) result = { code: 1, state: 'successed', msg: '获取文件成功！', url: body.url };

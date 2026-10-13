@@ -11,7 +11,7 @@ PasswordReset.init(
             autoIncrement: true,
             primaryKey: true,
         },
-        userId: {
+        memberId: {
             type: DataTypes.INTEGER,
             allowNull: false,
             comment: '用户 ID',
@@ -36,7 +36,7 @@ PasswordReset.init(
     {
         sequelize,
         timestamps: true,
-        tableName: 'cms_resetPwd',
+        tableName: 'cms_member_resetPwd',
         comment: '密码重置记录表',
     }
 );

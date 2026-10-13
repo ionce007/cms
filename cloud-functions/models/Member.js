@@ -23,7 +23,7 @@ Member.init(
             type: DataTypes.STRING(50),
             allowNull: false,
             unique: true,
-            comment: '用户名',
+            comment: '会员名',
         },
         email: {
             type: DataTypes.STRING(100),
@@ -69,18 +69,18 @@ Member.init(
         sequelize,
         timestamps: true,
         tableName: 'cms_member',
-        comment: '用户表',
+        comment: '会员表',
         hooks: {
             // ✅ 创建前加密密码
-            beforeCreate: async (user) => {
-                if (user.password) {
-                    user.password = await bcrypt.hash(user.password, 10);
+            beforeCreate: async (member) => {
+                if (member.password) {
+                    member.password = await bcrypt.hash(member.password, 10);
                 }
             },
             // ✅ 更新前加密密码
-            beforeUpdate: async (user) => {
-                if (user.changed('password')) {
-                    user.password = await bcrypt.hash(user.password, 10);
+            beforeUpdate: async (member) => {
+                if (member.changed('password')) {
+                    member.password = await bcrypt.hash(member.password, 10);
                 }
             },
         },
@@ -93,8 +93,8 @@ Member.prototype.toJSON = function () {
     delete values.password;
     return values;
 };
-// ✅ 建立关联
-PasswordReset.belongsTo(Member, { foreignKey: 'userId' });
-Member.hasMany(PasswordReset, { foreignKey: 'userId' });
+// ✅ 建立关联,移到 index.js 中定义
+/*PasswordReset.belongsTo(Member, { foreignKey: 'memberId' });
+Member.hasMany(PasswordReset, { foreignKey: 'memberId' });*/
 
 module.exports = Member;

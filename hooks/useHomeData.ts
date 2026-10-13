@@ -2,9 +2,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { defaultArticle, FrontendArticle1 } from '@/types/frontend';
+import { defaultArticle, FrontendArticle } from '@/types/frontend';
 import { useSidebarData } from './useCommonData';
 import { API_BASE_URL, API_ENDPOINTS } from '@/config';
+import { useAuth } from '@/contexts/AuthContext';
 
 const pinnedurl = `${API_BASE_URL}${API_ENDPOINTS.ARTICLES_PINNED}`;
 const recentUrl = `${API_BASE_URL}${API_ENDPOINTS.ARTICLES_RECENT}`;
@@ -12,8 +13,8 @@ const recentUrl = `${API_BASE_URL}${API_ENDPOINTS.ARTICLES_RECENT}`;
 //const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
 
 interface UseHomeDataResult {
-    featuredArticle: FrontendArticle1 | null;
-    recentArticles: FrontendArticle1[];
+    featuredArticle: FrontendArticle | null;
+    recentArticles: FrontendArticle[];
     isLoading: boolean;
     isLoaded: boolean;
     progress: number;
@@ -28,9 +29,11 @@ interface UseHomeDataResult {
  * 同时请求：置顶文章 + 最新文章 + 侧边栏数据
  */
 export function useHomeData(): UseHomeDataResult {
+    const { token, isLoading: authLoading } = useAuth();
+
     // 首页专属数据
-    const [featuredArticle, setFeaturedArticle] = useState<FrontendArticle1 | null>(null);
-    const [recentArticles, setRecentArticles] = useState<FrontendArticle1[]>([]);
+    const [featuredArticle, setFeaturedArticle] = useState<FrontendArticle | null>(null);
+    const [recentArticles, setRecentArticles] = useState<FrontendArticle[]>([]);
     const [featuredLoaded, setFeaturedLoaded] = useState(false);
     const [recentLoaded, setRecentLoaded] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -43,17 +46,21 @@ export function useHomeData(): UseHomeDataResult {
         setFeaturedLoaded(false);
         setRecentLoaded(false);
 
+        const headers: Record<string, string> = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
         // ✅ 并行请求两个 API
         const [featuredResult, recentResult] = await Promise.allSettled([
-            fetch(pinnedurl, { cache: 'no-store' }),
-            fetch(recentUrl, { cache: 'no-store' }),
+            fetch(pinnedurl, { headers }),
+            fetch(recentUrl, { headers }),
         ]);
 
         // 处理置顶文章
         try {
             if (featuredResult.status === 'fulfilled' && featuredResult.value.ok) {
                 const json = await featuredResult.value.json();
-                const article: FrontendArticle1 = {
+                const article: FrontendArticle = {
                     ...json.data,
                     Category: json.data.category || (json.data as any).Category,
                     Tags: json.data.tags,
@@ -83,11 +90,11 @@ export function useHomeData(): UseHomeDataResult {
         } finally {
             setRecentLoaded(true);
         }
-    }, []);
+    }, [token]);
 
     useEffect(() => {
         fetchData();
-    }, [fetchData]);
+    }, [fetchData, token]);
 
     // ✅ 组合所有加载状态（首页 2 项 + 侧边栏 4 项 = 6 项）
     const loadingStates: Record<string, boolean> = {

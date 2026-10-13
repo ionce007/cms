@@ -2,7 +2,7 @@
 import type { Metadata } from 'next';
 //import { categories } from '@/data/articlesData';
 import CategoryClient from './CategoryClient';
-import { defaultCategory, Category1 } from '@/types/frontend';
+import { defaultCategory, Category } from '@/types/frontend';
 import { API_BASE_URL } from '@/config/env';
 
 //const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
@@ -11,10 +11,7 @@ interface CategoryPageProps {
     params: Promise<{ slug: string }>;
 }
 
-async function getCategories(): Promise<Category1[]> {
-    /*const categoryRes = useCategories();
-    console.log('categoryRes = ', categoryRes)
-    return categoryRes.data || [];*/
+async function getCategories(): Promise<Category[]> {
     const [CategoryResult] = await Promise.allSettled([
         fetch(`${API_BASE_URL}/categories`),
     ]);
@@ -23,7 +20,7 @@ async function getCategories(): Promise<Category1[]> {
         return [];
     }
 
-    const result = (await CategoryResult.value.json()) as { data?: Category1[] };
+    const result = (await CategoryResult.value.json()) as { data?: Category[] };
     return result.data ?? [];
 }
 

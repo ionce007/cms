@@ -1,7 +1,7 @@
 // app/tag/[slug]/articles/[id]/page.tsx
 import type { Metadata } from 'next';
 //import { tags, allArticles } from '@/data/articlesData';
-import { FrontendArticle1, Tag } from '@/types/frontend';
+import { FrontendArticle, Tag } from '@/types/frontend';
 import TagArticleClient from './TagArticleClient';
 import { API_BASE_URL } from '@/config/env';
 
@@ -30,7 +30,7 @@ async function getArticle(id: number) {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { id } = await params;
     //const article = allArticles.find(a => a.id === parseInt(id));
-    const article: FrontendArticle1 = await getArticle(parseInt(id));
+    const article: FrontendArticle = await getArticle(parseInt(id));
 
     return {
         title: article ? article.title : '文章未找到',

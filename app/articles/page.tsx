@@ -12,15 +12,15 @@ import ArticleFilters from '@/components/frontend/ArticleFilters';
 import Pagination from '@/components/frontend/Pagination';
 import LoadingProgress from '@/components/frontend/LoadingProgress';
 import { useSidebarData } from '@/hooks/useCommonData';
-import { ArticleFilters as FilterType, FrontendArticle1 } from '@/types/frontend';
+import { ArticleFilters as FilterType, FrontendArticle } from '@/types/frontend';
 import { API_BASE_URL } from '@/config/env';
+import { useAuth } from '@/contexts/AuthContext';
 
 const ITEMS_PER_PAGE = 6;
-//const baseUrl = API_BASE_URL;//process.env.API_URL || 'https://blog.foryet.com/api';
 
 export default function ArticlesPage() {
-    // ✅ 使用 SWR Hook 获取侧边栏数据 + 进度
     const { progress, loadingMessage, loadingStates, isAllLoaded, categories, tags } = useSidebarData();
+    const { token, isLoading: authLoading } = useAuth();
 
     const [filters, setFilters] = useState<FilterType>({
         category: '',
@@ -34,8 +34,7 @@ export default function ArticlesPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
-    // 文章列表数据
-    const [paginatedArticles, setPaginatedArticles] = useState<FrontendArticle1[]>([]);
+    const [paginatedArticles, setPaginatedArticles] = useState<FrontendArticle[]>([]);
     const [totalArticles, setTotalArticles] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [articlesLoading, setArticlesLoading] = useState(true);
@@ -61,13 +60,22 @@ export default function ArticlesPage() {
                     page: currentPage,
                     limit: ITEMS_PER_PAGE,
                 };
+
+                const headers: Record<string, string> = {
+                    'Content-Type': 'application/json',
+                };
+                if (token) {
+                    headers.Authorization = `Bearer ${token}`;
+                }
+
                 const response = await fetch(`${API_BASE_URL}/articles/search`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers,
                     body: JSON.stringify(params),
                 });
 
                 const data = await response.json();
+
                 if (data && data.code === 1) {
                     setPaginatedArticles(data.data || []);
                     const count = data.count || 0;
@@ -87,9 +95,8 @@ export default function ArticlesPage() {
         }
 
         fetchArticles();
-    }, [currentPage, filters, searchTerm]);
+    }, [currentPage, filters, searchTerm, token]);
 
-    // ✅ 整体加载状态 = 侧边栏加载 + 文章加载
     const isOverallLoading = !isAllLoaded || articlesLoading;
 
     // 从 localStorage 读取视图偏好
@@ -114,9 +121,7 @@ export default function ArticlesPage() {
         setCurrentPage(page);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
-    useEffect(()=>{
-        console.log('articles loaded!')
-    },[paginatedArticles])
+
     if (error) {
         return (
             <div className="min-h-screen text-center bg-gray-50 flex flex-col items-center justify-center">
@@ -134,19 +139,20 @@ export default function ArticlesPage() {
             <main className="flex-1">
                 {/* 页面标题 */}
                 <div className="bg-white border-b border-gray-200">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                        <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
                             所有文章
                         </h1>
-                        <p className="text-gray-600">共 {totalArticles} 篇文章</p>
+                        <p className="text-sm sm:text-base text-gray-600">
+                            共 {totalArticles} 篇文章
+                        </p>
                     </div>
                 </div>
 
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
                     {isOverallLoading ? (
                         /* ========== 加载中 ========== */
                         <div>
-                            {/* ✅ 进度显示 - 使用 SWR 提供的真实进度 */}
                             <LoadingProgress
                                 progress={progress}
                                 loadingMessage={loadingMessage}
@@ -161,7 +167,10 @@ export default function ArticlesPage() {
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         {[1, 2, 3, 4].map((item) => (
-                                            <div key={item} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                                            <div
+                                                key={item}
+                                                className="bg-white rounded-xl border border-gray-200 overflow-hidden"
+                                            >
                                                 <div className="aspect-video bg-gray-200 animate-pulse" />
                                                 <div className="p-5 space-y-3">
                                                     <div className="h-5 bg-gray-200 rounded w-3/4 animate-pulse" />
@@ -175,7 +184,10 @@ export default function ArticlesPage() {
                                 <div className="w-full lg:w-80 flex-shrink-0">
                                     <div className="space-y-6">
                                         {[1, 2, 3].map((item) => (
-                                            <div key={item} className="bg-white rounded-xl border border-gray-200 p-5">
+                                            <div
+                                                key={item}
+                                                className="bg-white rounded-xl border border-gray-200 p-5"
+                                            >
                                                 <div className="h-5 bg-gray-200 rounded w-24 mb-4 animate-pulse" />
                                                 <div className="space-y-2">
                                                     <div className="h-4 bg-gray-200 rounded w-full animate-pulse" />
@@ -189,11 +201,12 @@ export default function ArticlesPage() {
                         </div>
                     ) : (
                         /* ========== 正常内容 ========== */
-                        <div className="flex flex-col lg:flex-row gap-8">
+                        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
                             <div className="flex-1 min-w-0">
-                                {/* 筛选 + 视图切换在同一行 */}
-                                <div className="flex flex-col sm:flex-row sm:items-start gap-3">
-                                    <div className="flex-1">
+                                {/* ✅ 关键改动：items-start 顶部对齐 + 视图切换 mt-4 */}
+                                <div className="flex items-start gap-2 sm:gap-3 mb-6">
+                                    {/* 筛选条件 */}
+                                    <div className="flex-1 min-w-0">
                                         <ArticleFilters
                                             filters={filters}
                                             categories={categories}
@@ -201,7 +214,9 @@ export default function ArticlesPage() {
                                             onFilterChange={handleFilterChange}
                                         />
                                     </div>
-                                    <div className="flex-shrink-0 sm:mt-2">
+
+                                    {/* ✅ 视图切换：顶部对齐（mt-4 匹配筛选标题高度） */}
+                                    <div className="flex-shrink-0 mt-4">
                                         <ViewToggle
                                             viewMode={viewMode}
                                             onViewModeChange={handleViewModeChange}
@@ -209,18 +224,27 @@ export default function ArticlesPage() {
                                     </div>
                                 </div>
 
+                                {/* 文章列表 */}
                                 {paginatedArticles.length > 0 ? (
                                     <>
                                         {viewMode === 'grid' ? (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
                                                 {paginatedArticles.map((article, index) => (
-                                                    <ArticleCard key={index + 1} article={article} index={index} />
+                                                    <ArticleCard
+                                                        key={article.id}
+                                                        article={article}
+                                                        index={index}
+                                                    />
                                                 ))}
                                             </div>
                                         ) : (
-                                            <div className="space-y-4 mt-6">
+                                            <div className="space-y-3 lg:space-y-4">
                                                 {paginatedArticles.map((article, index) => (
-                                                    <ArticleListItem key={article.id} article={article} index={index} />
+                                                    <ArticleListItem
+                                                        key={article.id}
+                                                        article={article}
+                                                        index={index}
+                                                    />
                                                 ))}
                                             </div>
                                         )}
@@ -239,13 +263,14 @@ export default function ArticlesPage() {
                                         <h3 className="text-xl font-semibold text-gray-800 mb-2">
                                             未找到相关文章
                                         </h3>
-                                        <p className="text-gray-600">尝试调整筛选条件或搜索关键词</p>
+                                        <p className="text-gray-600">
+                                            尝试调整筛选条件或搜索关键词
+                                        </p>
                                     </div>
                                 )}
                             </div>
 
                             <div className="w-full lg:w-80 flex-shrink-0">
-                                {/* ✅ Sidebar 自动使用 SWR 数据 */}
                                 <Sidebar />
                             </div>
                         </div>

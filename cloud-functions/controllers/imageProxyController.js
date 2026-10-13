@@ -101,7 +101,6 @@ async function proxyImage(req, res, next) {
 async function imgProxy(req, res, next) {
     try {
         const { url, format } = req.query;
-        console.log('url = ', url, '     format = ', format);
         const { stream, headers } = await imageProxy.getImageStream(url);
 
         const contentType = headers['content-type'] || 'image/jpeg';

@@ -2,12 +2,12 @@
 'use client';
 
 import { useState } from 'react';
-import { ArticleFilters as FilterType, Category1, Tag } from '@/types/frontend';
+import { ArticleFilters as FilterType, Category, Tag } from '@/types/frontend';
 import { cn } from '@/lib/utils';
 
 interface ArticleFiltersProps {
     filters: FilterType;
-    categories: Category1[];
+    categories: Category[];
     tags: Tag[];
     onFilterChange: (filters: FilterType) => void;
 }

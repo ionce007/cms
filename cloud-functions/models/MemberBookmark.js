@@ -12,10 +12,10 @@ MemberBookmark.init(
             primaryKey: true,
             comment: '主键 ID',
         },
-        userId: {
+        memberId: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            comment: '用户 ID',
+            comment: '会员 ID',
             references: {
                 model: 'cms_member',
                 key: 'id',
@@ -27,7 +27,7 @@ MemberBookmark.init(
             comment: '收藏目标类型：article / formula',
         },
         targetId: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.STRING(50),
             allowNull: false,
             comment: '收藏目标 ID（文章 ID 或文件 fs_id）',
         },
@@ -41,23 +41,23 @@ MemberBookmark.init(
         sequelize,
         timestamps: true,
         updatedAt: false,  // ✅ 收藏记录不需要 updatedAt
-        tableName: 'cms_user_bookmark',
+        tableName: 'cms_member_bookmark',
         comment: '用户收藏关联表',
         indexes: [
             {
                 // ✅ 唯一索引：同一用户不能重复收藏同一对象
-                name: 'unique_user_target',
+                name: 'unique_user_bookmark_target',
                 unique: true,
-                fields: ['userId', 'targetType', 'targetId'],
+                fields: ['memberId', 'targetType', 'targetId'],
             },
             {
                 // ✅ 普通索引：加快"我的收藏"查询
                 name: 'idx_user',
-                fields: ['userId'],
+                fields: ['memberId'],
             },
             {
                 // ✅ 普通索引：加快按对象查收藏用户
-                name: 'idx_target',
+                name: 'idx_bookmark_target',
                 fields: ['targetType', 'targetId'],
             },
         ],

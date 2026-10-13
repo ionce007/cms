@@ -1,4 +1,4 @@
-import { FrontendArticle1 } from "./frontend";
+import { FrontendArticle } from "./frontend";
 
 // ========== 基础类型 ==========
 export type ContentStatus = 'published' | 'draft' | 'archived';
@@ -130,7 +130,7 @@ export interface ContentSectionProps {
 
 export interface ArticleCardProps {
     //article: Article;
-    article: FrontendArticle1;
+    article: FrontendArticle;
 }
 
 export interface MediaCardProps {

@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { API_BASE_URL } from '@/config/env';
 import { API_ENDPOINTS } from '@/config/routes';
+import { useAuth } from '@/contexts/AuthContext';
 
 export type SortOption = 'latest' | 'oldest' | 'popular' | 'likes' | 'price_asc' | 'price_desc';
 
@@ -24,6 +25,7 @@ export function useDownloads(options: UseDownloadsOptions = {}) {
         search = '',
         sort = 'latest',
     } = options;
+    const { token, isLoading: authLoading } = useAuth();
 
     const [items, setItems] = useState<any[]>([]);
     const [totalItems, setTotalItems] = useState(0);
@@ -50,8 +52,11 @@ export function useDownloads(options: UseDownloadsOptions = {}) {
             //if (kind) params.append('kind', kind);
             if (search) params.append('search', search);
 
+            const headers: Record<string, string> = {};
+            if (token) headers['Authorization'] = `Bearer ${token}`;
             const url = `${API_BASE_URL}${API_ENDPOINTS.FORMULAS}?${params}`;
-            const res = await fetch(url);
+            const res = await fetch(url, { headers });
+
 
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
@@ -74,7 +79,7 @@ export function useDownloads(options: UseDownloadsOptions = {}) {
             setIsLoading(false);
             setIsLoaded(true);
         }
-    }, [page, limit, kind, search, sort]);
+    }, [page, limit, kind, search, sort, token]);
 
     useEffect(() => {
         fetchData();
@@ -94,16 +99,23 @@ export function useDownloads(options: UseDownloadsOptions = {}) {
 /**
  * 获取文件详情
  */
-export function useDownloadDetail(id: number | string | undefined) {
+export function useDownloadDetail(fsId: number | string | undefined) {
+    const { token, isLoading: authLoading } = useAuth();  // ✅ 获取 token
+
     const [item, setItem] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoaded, setIsLoaded] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const fetchData = useCallback(async () => {
-        if (!id) {
+        if (!fsId) {
             setIsLoading(false);
             setIsLoaded(true);
+            return;
+        }
+
+        // ✅ 认证初始化未完成时，不发请求
+        if (authLoading) {
             return;
         }
 
@@ -112,28 +124,44 @@ export function useDownloadDetail(id: number | string | undefined) {
         setError(null);
 
         try {
-            const url = `${API_BASE_URL}${API_ENDPOINTS.FORMULA_DETAIL(id)}`;
-            const res = await fetch(url);
+            // ✅ 构造请求头
+            const headers: Record<string, string> = {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
 
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const res = await fetch(`${API_BASE_URL}/formulas/${fsId}`, {
+                headers,
+            });
 
-            const json = await res.json();
+            // ✅ 401 处理
+            if (res.status === 401) {
+                setError('登录已失效，请重新登录');
+                setItem(null);
+                return;
+            }
 
-            if (json.code === 1 && json.data) {
-                setItem(json.data);
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+            }
+
+            const data = await res.json();
+
+            if (data.code === 1) {
+                setItem(data.data || data.formula || null);
             } else {
-                setError(json.message || '文件不存在');
+                setError(data.message || '文件不存在');
                 setItem(null);
             }
         } catch (err) {
-            console.error('获取文件详情失败:', err);
+            console.error('获取下载详情失败:', err);
             setError(err instanceof Error ? err.message : '加载失败');
             setItem(null);
         } finally {
             setIsLoading(false);
             setIsLoaded(true);
         }
-    }, [id]);
+    }, [fsId, token, authLoading]);
 
     useEffect(() => {
         fetchData();
@@ -141,8 +169,8 @@ export function useDownloadDetail(id: number | string | undefined) {
 
     return {
         item,
-        isLoading,
-        isLoaded,
+        isLoading: isLoading || authLoading,
+        isLoaded: isLoaded && !authLoading,
         error,
         refresh: fetchData,
     };

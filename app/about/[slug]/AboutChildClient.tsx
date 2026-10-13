@@ -15,7 +15,6 @@ type AboutClientProps = {
 };
 
 export default function AboutChildClient({ slug }: AboutClientProps) {
-    console.log('AboutChildClient')
     // ✅ 从 cms_frag 表读取 mark = 'aboutus' 的 HTML 内容
     const { frag, isLoading, error } = useFrag(slug);
     const processedContent = useMemo(() => {

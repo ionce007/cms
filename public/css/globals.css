@@ -75,6 +75,7 @@ body {
 .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -82,6 +83,7 @@ body {
 .line-clamp-3 {
     display: -webkit-box;
     -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -300,6 +302,15 @@ body {
     margin: 1rem 0;
 }
 
+.icon-display{
+    display:flex;
+    flex-wrap: nowrap;
+    margin-left:1px;
+}
+.mt-ml-2{
+    margin-top:-10px;
+    margin-left:2px;
+}
 /* app/globals.css */
 
 /* ========== 关于页面 HTML 内容样式 ========== */

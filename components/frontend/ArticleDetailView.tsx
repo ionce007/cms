@@ -6,7 +6,7 @@ import Link from 'next/link';
 import ArticleContent from './ArticleContent';
 import ShareButtons from './ShareButtons';
 import ArticleBreadcrumb from './ArticleBreadcrumb';
-import { FrontendArticle1 } from '@/types/frontend';
+import { FrontendArticle } from '@/types/frontend';
 import { calcReadTime, cn } from '@/lib/utils';
 import SafeImage from './SafeImage';
 import CoverImage from './CoverImage';
@@ -14,8 +14,8 @@ import LikeButton from './LikeButton';
 import BookmarkButton from './BookmarkButton';
 
 interface ArticleDetailViewProps {
-    article: FrontendArticle1;
-    relatedArticles?: FrontendArticle1[];  // ✅ 新增
+    article: FrontendArticle;
+    relatedArticles?: FrontendArticle[];  // ✅ 新增
     breadcrumbItems?: { label: string; href?: string; icon?: string }[];
     backLink?: { label: string; href: string };
     /** 关联文章的链接前缀（分类/标签页传入） */
@@ -29,9 +29,6 @@ export default function ArticleDetailView({
     backLink,
     relatedLinkPrefix = '/articles',
 }: ArticleDetailViewProps) {
-    //const [isLiked, setIsLiked] = useState(false);
-    //const [isBookmarked, setIsBookmarked] = useState(false);
-
     return (
         <article className="bg-white rounded-xl border border-gray-200 overflow-hidden">
             {/* 面包屑 */}
@@ -109,8 +106,19 @@ export default function ArticleDetailView({
                 <div className="flex items-center space-x-4 text-sm text-gray-500">
                     <span><span className="mr-1">⏱️</span>{calcReadTime(article.content)}分钟</span>
                     <span><span className="mr-1">👁️</span>{article.pv}</span>
-                    <span><span className="mr-1">👍</span>{article.likes ? article.likes : 0}</span>
-                    <span><span className="mr-1">🔖</span>{article.marked ? article.marked : 0}</span>
+                    <span className='icon-display'>
+                        <svg className={cn('w-4 h-4 flex-shrink-0 transition-all duration-200',
+                                article.isBookmarked ? 'scale-110' : ''
+                            )} fill={ article.isBookmarked ? "currentColor" : "none" } viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                        </svg>
+                        <span>{article.likes ? article.likes : 0}</span>
+                    </span>
+                    <span className='icon-display'>
+                        <svg className={cn('w-4 h-4 flex-shrink-0 transition-all duration-200',
+                                article.isBookmarked ? 'scale-110' : ''
+                            )} fill={ article.isBookmarked ? "currentColor" : "none" } viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"></path>
+                        </svg><span>{article.marked ? article.marked : 0}</span></span>
                 </div>
             </div>
 
@@ -139,8 +147,10 @@ export default function ArticleDetailView({
                             target="article"
                             id={article.id}
                             initialLikes={article.likes || 0}
+                            initialIsLiked={article.isLiked || false}
                             size="md"
                             showLabel
+                            variant="default"  // ✅ 默认 variant="default"
                         />
 
                         {/* ✅ 收藏 - 用 BookmarkButton */}
@@ -148,6 +158,7 @@ export default function ArticleDetailView({
                             target="article"
                             id={article.id}
                             initialMarked={article.marked || 0}
+                            initialIsBookmarked={article.isBookmarked || false}
                             size="md"
                             showLabel
                         />

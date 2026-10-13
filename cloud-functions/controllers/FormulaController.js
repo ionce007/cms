@@ -1,25 +1,19 @@
 // controllers/formulaController.js
 const { Op } = require('sequelize');
-const Formula = require('../models/Formula');
+const { Formula, MemberLike, MemberBookmark, MemberDownload } = require('../models');
 /**
  * 获取下载列表
  * GET /api/formulas?page=1&limit=12&category=&kind=&search=&sort=
  */
 async function getFormulas(req, res) {
     try {
-        const {
-            page = 1,
-            limit = 6,
-            kind,
-            search,
-            sort = 'latest',
-        } = req.query;
+        const { page = 1, limit = 6, kind, search, sort = 'latest', } = req.query;
 
         const pageNum = parseInt(page);
         const limitNum = parseInt(limit);
         const offset = (pageNum - 1) * limitNum;
 
-        // ✅ 查询条件：只显示可下载的文件（status = 0，非目录）
+        // ✅ 查询条件：只显示可下载的文件（status = 1，非目录）
         const where = {
             status: 1,
             isdir: 0,
@@ -53,27 +47,62 @@ async function getFormulas(req, res) {
             attributes: [
                 'fs_id', 'server_filename', 'size', 'category', 'kind',
                 'img', 'summary', 'price', 'isSell', 'views', 'likes',
-                'server_ctime', 'server_mtime',
+                'server_ctime', 'server_mtime', 'marked', 'downloads'
             ],
         });
 
-        // ✅ 格式化数据
-        const data = rows.map(item => formatFormula(item, false));
+        let likedSet = new Set();
+        let bookmarkedSet = new Set();
+        let downloadedSet = new Set();
+        const userId = req.user ? req.user.toJSON().id : null;
 
-        res.json({
-            code: 1,
-            message: 'success',
-            count,
-            data,
-        });
+        if (userId && rows.length > 0) {
+            const formulaIds = rows.map(a => a.fs_id);
+
+            const [likes, bookmarks, downloads] = await Promise.all([
+                MemberLike.findAll({
+                    where: {
+                        memberId: userId,
+                        targetType: 'formula',
+                        targetId: { [Op.in]: formulaIds },
+                    },
+                    attributes: ['targetId'],
+                }),
+                MemberBookmark.findAll({
+                    where: {
+                        memberId: userId,
+                        targetType: 'formula',
+                        targetId: { [Op.in]: formulaIds },
+                    },
+                    attributes: ['targetId'],
+                }),
+                MemberDownload.findAll({
+                    where: {
+                        memberId: userId,
+                        targetType: 'formula',
+                        targetId: { [Op.in]: formulaIds },
+                    },
+                    attributes: ['targetId'],
+                }),
+            ]);
+
+            likedSet = new Set(likes.map(l => l.targetId));
+            bookmarkedSet = new Set(bookmarks.map(b => b.targetId));
+            downloadedSet = new Set(downloads.map(d => d.targetId));
+        }
+        // ✅ 格式化数据
+        //const data = rows.map(item => formatFormula(item, false));
+        const result = rows.map(item => ({
+            ...formatFormula(item, false),
+            isLiked: likedSet.has(item.fs_id),
+            isBookmarked: bookmarkedSet.has(item.fs_id),
+            isDownloaded: downloadedSet.has(item.fs_id),
+        }));
+
+        res.json({ code: 1, message: 'success', count, data: result, });
     } catch (error) {
         console.error('getFormulas error:', error);
-        res.json({
-            code: -1,
-            message: error.message,
-            count: 0,
-            data: [],
-        });
+        res.json({ code: -1, message: error.message, count: 0, data: [], });
     }
 }
 
@@ -91,31 +120,42 @@ async function getFormulaById(req, res) {
                 status: 1,
                 isdir: 0,
             },
+            raw: true
         });
-
         if (!formula) {
-            return res.json({
-                code: -1,
-                message: '文件不存在',
-                data: null,
-            });
+            return res.json({ code: -1, message: '文件不存在', data: null, });
         }
 
         // ✅ 增加浏览次数
-        await formula.increment('views');
+        //await formula.increment('views');
 
-        res.json({
-            code: 1,
-            message: 'success',
-            data: formatFormula(formula, true),
-        });
+        let isLiked = false;
+        let isBookmarked = false;
+        let isDownloaded = false;
+        const userId = req.user ? req.user.toJSON().id : null;
+
+        if (userId) {
+            const [like, bookmark, download] = await Promise.all([
+                MemberLike.findOne({
+                    where: { memberId: userId, targetType: 'formula', targetId: id },
+                }),
+                MemberBookmark.findOne({
+                    where: { memberId: userId, targetType: 'formula', targetId: id },
+                }),
+                MemberDownload.findOne({
+                    where: { memberId: userId, targetType: 'formula', targetId: id },
+                }),
+            ]);
+            isLiked = !!like;
+            isBookmarked = !!bookmark;
+            isDownloaded = !!download;
+        }
+        const data = formatFormula(formula, true);
+        const result = { ...data, isLiked, isBookmarked, isDownloaded }
+        res.json({ code: 1, message: 'success', data: result, });
     } catch (error) {
         console.error('getFormulaById error:', error);
-        res.json({
-            code: -1,
-            message: error.message,
-            data: null,
-        });
+        res.json({ code: -1, message: error.message, data: null, });
     }
 }
 async function incrementViewCount(req, res) {
@@ -177,16 +217,16 @@ async function incrementDownloadCount(req, res) {
     }
 }
 /**
- * 下载文件点赞/取消点赞
- * POST /api/formulas/:id/like
+ * 下载文件点赞（需登录）
  */
 async function toggleLike(req, res) {
     try {
         const { id } = req.params;
         const { action = 'like' } = req.body;
+        const userId = req.user ? req.user.toJSON().id : null;
 
-        if (!id) {
-            return res.json({ code: -1, message: '缺少文件 ID' });
+        if (!userId) {
+            return res.status(401).json({ code: 401, message: '请先登录', });
         }
 
         const formula = await Formula.findOne({
@@ -198,41 +238,56 @@ async function toggleLike(req, res) {
             return res.json({ code: -1, message: '文件不存在' });
         }
 
-        const currentLikes = formula.likes || 0;
-        let newLikes;
+        const existing = await MemberLike.findOne({
+            where: { memberId: userId, targetType: 'formula', targetId: id },
+        });
 
         if (action === 'unlike') {
-            newLikes = Math.max(0, currentLikes - 1);
-            await Formula.update(
-                { likes: newLikes },
-                { where: { fs_id: id } }
-            );
+            if (existing) {
+                await existing.destroy();
+                await Formula.decrement('likes', { where: { fs_id: id } });
+            }
         } else {
+            if (existing) {
+                return res.json({ code: 2, message: '您已点赞！' });
+            }
+
+            await MemberLike.create({
+                memberId: userId,
+                targetType: 'formula',
+                targetId: id,
+            });
+
             await Formula.increment('likes', { where: { fs_id: id } });
-            newLikes = currentLikes + 1;
         }
 
-        res.json({
-            code: 1,
-            message: 'success',
-            data: { fs_id: formula.fs_id, likes: newLikes, action, },
+        const updated = await Formula.findOne({
+            where: { fs_id: id },
+            attributes: ['fs_id', 'likes'],
         });
+
+        res.json({ code: 1, message: 'success', data: { fs_id: updated.fs_id, likes: updated.likes, isLiked: action !== 'unlike', }, });
     } catch (error) {
         console.error('toggleLike error:', error);
         res.json({ code: -1, message: error.message });
     }
 }
+
+/**
+ * 下载文件收藏（需登录）
+ */
 async function toggleBookmark(req, res) {
     try {
         const { id } = req.params;
         const { action = 'bookmark' } = req.body;
+        const userId = req.user ? req.user.toJSON().id : null;
 
-        if (!id) {
-            return res.json({ code: -1, message: '缺少文件 ID' });
+        if (!userId) {
+            return res.status(401).json({ code: 401, message: '请先登录', });
         }
 
         const formula = await Formula.findOne({
-            where: { fs_id: id, status: 0, isdir: 0 },
+            where: { fs_id: id, status: 1, isdir: 0 },
             attributes: ['fs_id', 'marked'],
         });
 
@@ -240,21 +295,35 @@ async function toggleBookmark(req, res) {
             return res.json({ code: -1, message: '文件不存在' });
         }
 
-        const currentMarked = formula.marked || 0;
-        let newMarked;
+        const existing = await MemberBookmark.findOne({
+            where: { memberId: userId, targetType: 'formula', targetId: id },
+        });
 
         if (action === 'unbookmark') {
-            newMarked = Math.max(0, currentMarked - 1);
-            await Formula.update(
-                { marked: newMarked },
-                { where: { fs_id: id } }
-            );
+            if (existing) {
+                await existing.destroy();
+                await Formula.decrement('marked', { where: { fs_id: id } });
+            }
         } else {
+            if (existing) {
+                return res.json({ code: 2, message: '您已收藏' });
+            }
+
+            await MemberBookmark.create({
+                memberId: userId,
+                targetType: 'formula',
+                targetId: id,
+            });
+
             await Formula.increment('marked', { where: { fs_id: id } });
-            newMarked = currentMarked + 1;
         }
 
-        res.json({ code: 1, message: 'success', data: { fs_id: formula.fs_id, marked: newMarked, action, }, });
+        const updated = await Formula.findOne({
+            where: { fs_id: id },
+            attributes: ['fs_id', 'marked'],
+        });
+
+        res.json({ code: 1, message: 'success', data: { fs_id: updated.fs_id, marked: updated.marked, isBookmarked: action !== 'unbookmark', }, });
     } catch (error) {
         console.error('toggleBookmark error:', error);
         res.json({ code: -1, message: error.message });
@@ -308,18 +377,8 @@ async function getDownloadUrl(req, res) {
 
         // 方案B 示例（推荐，更安全）：
         // const downloadUrl = await baiduPanAPI.getDownloadUrl(formula.fs_id);
-
-        res.json({
-            code: 1,
-            message: 'success',
-            data: {
-                downloadUrl,
-                filename: formula.server_filename,
-                size: formula.size,
-                isSell: formula.isSell,
-                price: formula.price,
-            },
-        });
+        const data = { downloadUrl, filename: formula.server_filename, size: formula.size, isSell: formula.isSell, price: formula.price, }
+        res.json({ code: 1, message: 'success', data: data, });
     } catch (error) {
         res.json({ code: -1, message: error.message });
     }

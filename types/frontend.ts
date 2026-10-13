@@ -1,7 +1,6 @@
 // types/frontend.ts
 
 // ========== 文章筛选 ==========
-
 export interface ArticleFilters {
     category: string;
     tag: string;
@@ -17,7 +16,7 @@ export interface ButtonProps {
     onClick?: () => void;
 }
 // ========== 文章 ==========
-export interface FrontendArticle1 {
+export interface FrontendArticle {
     id: number;
     cid: number;
     subCid: string;
@@ -35,17 +34,18 @@ export interface FrontendArticle1 {
     pv: number;
     link: string;
     createdAt: string;
-    Category: Category1;
+    Category: Category;
     updatedAt: string;
     readTime: number;
     likes: number;
     marked: number;
+    isLiked?: boolean;        // ✅ 加这一行
+    isBookmarked?: boolean;   // ✅ 加这一行
     Tags: { id: number; name: string; path: string; }[];
     featured?: boolean;
 }
 
 // ========== 评论 ==========
-
 export interface Comment {
     id: number;
     articleId: number;
@@ -66,7 +66,7 @@ export interface TableOfContentsItem {
 };
 // ========== 文章详情 ==========
 
-export interface ArticleDetail extends FrontendArticle1 {
+export interface ArticleDetail extends FrontendArticle {
     content: string;
     comments: Comment[];
     tableOfContents?: TableOfContentsItem[];
@@ -92,7 +92,7 @@ export interface ArticleDetail extends FrontendArticle1 {
     pv: number;
     link: string;
     createdAt: string;
-    category: Category1;
+    category: Category;
     updatedAt: string;
     readTime: number;
     likes: number;
@@ -102,15 +102,7 @@ export interface ArticleDetail extends FrontendArticle1 {
 }
 
 // ========== 分类 ==========
-
-/*export interface Category {
-    id: number;
-    name: string;
-    slug: string;
-    count: number;
-    icon: string;
-}*/
-export interface Category1 {
+export interface Category {
     id: number;
     pid: number;
     seoTitle: string;
@@ -135,8 +127,6 @@ export interface Category1 {
     platform: string;
 }
 // ========== 标签 ==========
-
-
 export interface Tag {
     id: number;
     name: string;
@@ -145,29 +135,6 @@ export interface Tag {
     articleCount: number;
 }
 
-// ========== 热门文章 ==========
-
-export interface PopularPost {
-    id: number;
-    title: string;
-    date: string;
-    views: number;
-    thumbnail?: string;
-}
-
-// ========== 网站信息 ==========
-/*
-export interface SiteInfo1 {
-    name: string;
-    description: string;
-    logo: string;
-    socialLinks: {
-        github?: string;
-        twitter?: string;
-        weibo?: string;
-        email?: string;
-    };
-}*/
 export interface FragInfo {
     id: number;
     name: string;
@@ -177,6 +144,7 @@ export interface FragInfo {
     createdAt: string;
     updatedAt: string;
 }
+// ========== 网站信息 ==========
 export interface SiteInfo {
     id: number;
     name: string;
@@ -238,7 +206,7 @@ export const defaultFragInfo: FragInfo = {
     updatedAt: '',
 };
 
-export const defaultCategory: Category1 = {
+export const defaultCategory: Category = {
     id: 0,
     pid: 0,
     seoTitle: '',
@@ -262,7 +230,7 @@ export const defaultCategory: Category1 = {
     icon: '',
     platform: ''
 };
-export const defaultArticle: FrontendArticle1 = {
+export const defaultArticle: FrontendArticle = {
     id: 0,
     cid: 0,
     subCid: '',
@@ -272,7 +240,7 @@ export const defaultArticle: FrontendArticle1 = {
     attr: '',
     articleView: '',
     source: '',
-    author: {  name: '缠说・股经', avatar: '/img/avatar.jpg'  },
+    author: { name: '缠说・股经', avatar: '/img/avatar.jpg' },
     description: '',
     img: '',
     content: '',
@@ -285,6 +253,8 @@ export const defaultArticle: FrontendArticle1 = {
     readTime: 0,
     likes: 0,
     marked: 0,
+    isLiked: false,        // ✅ 加这一行
+    isBookmarked: false,   // ✅ 加这一行
     Tags: [],
     featured: false
 }

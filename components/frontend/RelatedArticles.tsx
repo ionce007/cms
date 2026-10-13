@@ -1,9 +1,9 @@
 // components/frontend/RelatedArticles.tsx
-import { FrontendArticle1 } from '@/types/frontend';
+import { FrontendArticle } from '@/types/frontend';
 import SafeImage from './SafeImage';
 
 interface RelatedArticlesProps {
-    articles: FrontendArticle1[];
+    articles: FrontendArticle[];
 }
 
 export default function RelatedArticles({ articles }: RelatedArticlesProps) {

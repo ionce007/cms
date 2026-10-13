@@ -1,9 +1,9 @@
 // components/frontend/AuthorCard.tsx
-import { FrontendArticle1 } from '@/types/frontend';
+import { FrontendArticle } from '@/types/frontend';
 import SafeImage from './SafeImage';
 
 interface AuthorCardProps {
-    author: FrontendArticle1['author'];
+    author: FrontendArticle['author'];
 }
 
 export default function AuthorCard({ author }: AuthorCardProps) {

@@ -1,18 +1,16 @@
 {
-  "cloudFunctions": {
-    "nodejs": {
-      "externalNodeModules": [
-        "dotenv",
-        "mysql2",
-        "pg-hstore",
-        "express",
-        "sequelize",
-        "axios",
-        "sync-request",
-        "bcryptjs",
-        "jsonwebtoken",
-        "nodemailer"
-      ]
+    "cloudFunctions": {
+        "externalNodeModules": [
+            "dotenv",
+            "mysql2",
+            "pg-hstore",
+            "express",
+            "sequelize",
+            "axios",
+            "sync-request",
+            "bcryptjs",
+            "jsonwebtoken",
+            "nodemailer"
+        ]
     }
-  }
 }

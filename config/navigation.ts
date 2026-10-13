@@ -47,6 +47,17 @@ export const FRIENDLY_LINKS = [
     { label: '今日头条', href: 'https://www.toutiao.com/c/user/token/MS4wLjABAAAA6Euco2XAvUHBjHIRHalEqKWAoQcDaifAFF7orbNNiEM/', icon: '📰', title: '今日头条', external: true },
 ];
 /**
+ * 前端 会员中心 右侧导航菜单
+ */
+export const MEMBER_MENUS = [
+    { href: '/member', label: '概览', icon: '📊', exact: true },
+    { href: '/member/likes', label: '我的点赞', icon: '❤️' },
+    { href: '/member/bookmarks', label: '我的收藏', icon: '🔖' },
+    { href: '/member/downloads', label: '我的下载', icon: '📥' },
+    { href: '/member/settings', label: '账号设置', icon: '⚙️' },
+    { href: '/member/password', label: '修改密码', icon: '🔒' },
+];
+/**
  * 管理后台导航
  */
 export const ADMIN_NAV_ITEMS: NavItem[] = [
