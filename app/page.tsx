@@ -28,7 +28,6 @@ export async function generateMetadata(): Promise<Metadata> {
         },
     };
 }
-
 /*export const metadata: Metadata = {
     title: 'TechBlog - 技术博客',
     description: '分享技术知识，记录开发心得，探索前沿科技',
