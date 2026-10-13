@@ -157,12 +157,13 @@ export default function Header() {
                             </svg>
                         </button>
 
-                        {/* RSS */}
+                        {/* RSS - 桌面端 */}
                         <a
                             href="/rss.xml"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="hidden md:flex p-2 rounded-lg text-gray-600 hover:bg-orange-50 hover:text-orange-500 transition-colors"
+                            className="hidden md:flex p-2 rounded-lg text-gray-600 
+            hover:bg-orange-50 hover:text-orange-500 transition-colors"
                             title="RSS 订阅"
                             aria-label="RSS 订阅"
                         >
@@ -171,18 +172,21 @@ export default function Header() {
                             </svg>
                         </a>
 
-                        {/* 登录/用户菜单 */}
+                        {/* ✅ 登录/用户菜单 - 手机端也显示 */}
                         {isLoggedIn ? (
                             <Link
                                 href="/member"
-                                className="hidden sm:flex items-center space-x-2 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                                className="flex items-center space-x-1.5 p-1 rounded-lg 
+                hover:bg-gray-100 transition-colors flex-shrink-0"
                             >
                                 <img
                                     src={user?.avatar || '/img/avatar-default.png'}
                                     alt={user?.nickname || user?.username || '用户'}
-                                    className="w-8 h-8 rounded-full object-cover ring-2 ring-white shadow-sm"
+                                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover 
+                    ring-2 ring-white shadow-sm flex-shrink-0"
                                 />
-                                <span className="hidden md:block text-sm font-medium text-gray-700 max-w-[80px] truncate">
+                                <span className="text-xs sm:text-sm font-medium text-gray-700 
+                max-w-[60px] sm:max-w-[80px] truncate">
                                     {user?.nickname || user?.username}
                                 </span>
                             </Link>
@@ -190,7 +194,8 @@ export default function Header() {
                             <div className="hidden sm:flex items-center space-x-1">
                                 <Link
                                     href="/login"
-                                    className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                                    className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 
+                    hover:bg-gray-100 rounded-lg transition-colors"
                                 >
                                     登录
                                 </Link>
@@ -203,7 +208,7 @@ export default function Header() {
                             </div>
                         )}
 
-                        {/* 汉堡按钮 */}
+                        {/* 汉堡按钮 - 仅手机 */}
                         <button
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                             className="lg:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"

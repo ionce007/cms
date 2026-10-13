@@ -27,16 +27,12 @@ export default function MemberClient() {
 
         async function fetchStats() {
             try {
+                const headers = { Authorization: `Bearer ${token}` };
+
                 const [likesRes, bookmarksRes, downloadsRes] = await Promise.all([
-                    fetch(`${API_BASE_URL}/member/likes?limit=1`, {
-                        headers: { Authorization: `Bearer ${token}` },
-                    }),
-                    fetch(`${API_BASE_URL}/member/bookmarks?limit=1`, {
-                        headers: { Authorization: `Bearer ${token}` },
-                    }),
-                    fetch(`${API_BASE_URL}/member/downloads?limit=1`, {
-                        headers: { Authorization: `Bearer ${token}` },
-                    }),
+                    fetch(`${API_BASE_URL}/member/likes?limit=1`, { headers }),
+                    fetch(`${API_BASE_URL}/member/bookmarks?limit=1`, { headers }),
+                    fetch(`${API_BASE_URL}/member/downloads?limit=1`, { headers }),
                 ]);
 
                 const [likesData, bookmarksData, downloadsData] = await Promise.all([
@@ -88,59 +84,83 @@ export default function MemberClient() {
     ];
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
             {/* ✅ 欢迎卡片 */}
-            <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-xl p-6 text-white">
-                <h2 className="text-xl sm:text-2xl font-bold mb-2">
+            <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-xl p-4 sm:p-6 text-white">
+                <h2 className="text-lg sm:text-2xl font-bold mb-1 sm:mb-2">
                     欢迎回来，{user?.nickname || user?.username}！
                 </h2>
-                <p className="text-primary-100 text-sm">
+                <p className="text-primary-100 text-xs sm:text-sm">
                     在这里管理您的点赞、收藏和下载记录
                 </p>
             </div>
 
-            {/* ✅ 统计卡片 */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* ✅ 统计卡片：手机端 3 列并排 */}
+            <div className="grid grid-cols-3 gap-2 sm:gap-4">
                 {menuItems.map((item) => (
                     <Link
                         key={item.href}
                         href={item.href}
-                        className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-primary-200 transition-all group"
+                        className="bg-white rounded-xl border border-gray-200 
+                            p-3 sm:p-5 hover:shadow-lg hover:border-primary-200 
+                            transition-all group flex flex-col"
                     >
-                        <div className="flex items-center justify-between mb-3">
+                        {/* 图标 */}
+                        <div className="flex items-center justify-between mb-2 sm:mb-3">
                             <div
-                                className={`w-10 h-10 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center text-white text-lg`}
+                                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg 
+                                    bg-gradient-to-br ${item.color} 
+                                    flex items-center justify-center text-white 
+                                    text-base sm:text-lg flex-shrink-0`}
                             >
                                 {item.icon}
                             </div>
                             <svg
-                                className="w-5 h-5 text-gray-300 group-hover:text-primary-500 group-hover:translate-x-1 transition-all"
+                                className="w-3 h-3 sm:w-5 sm:h-5 text-gray-300 
+                                    group-hover:text-primary-500 
+                                    group-hover:translate-x-1 transition-all 
+                                    hidden sm:block"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
                             >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M9 5l7 7-7 7"
+                                />
                             </svg>
                         </div>
-                        <div className="text-2xl font-bold text-gray-800 mb-1">
+
+                        {/* 数字 */}
+                        <div className="text-xl sm:text-2xl font-bold text-gray-800 mb-1">
                             {isLoading ? (
-                                <span className="inline-block w-8 h-6 bg-gray-200 rounded animate-pulse" />
+                                <span className="inline-block w-6 h-5 bg-gray-200 rounded animate-pulse" />
                             ) : (
                                 item.count
                             )}
                         </div>
-                        <div className="text-sm font-medium text-gray-700 mb-1">
+
+                        {/* 标题 */}
+                        <div className="text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
                             {item.title}
                         </div>
-                        <div className="text-xs text-gray-500">{item.desc}</div>
+
+                        {/* 描述：手机端隐藏 */}
+                        <div className="hidden sm:block text-xs text-gray-500">
+                            {item.desc}
+                        </div>
                     </Link>
                 ))}
             </div>
 
             {/* ✅ 快捷入口 */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-4">快捷操作</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">
+                    快捷操作
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                     {[
                         { label: '浏览文章', href: '/articles', icon: '📄' },
                         { label: '下载文件', href: '/downloads', icon: '📦' },
@@ -150,10 +170,17 @@ export default function MemberClient() {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className="flex flex-col items-center justify-center p-4 rounded-lg border border-gray-200 hover:border-primary-200 hover:bg-primary-50/50 transition-all group"
+                            className="flex flex-col items-center justify-center 
+                                p-3 sm:p-4 rounded-lg border border-gray-200 
+                                hover:border-primary-200 hover:bg-primary-50/50 
+                                transition-all group"
                         >
-                            <span className="text-2xl mb-2">{item.icon}</span>
-                            <span className="text-xs text-gray-700 group-hover:text-primary-600 transition-colors">
+                            <span className="text-xl sm:text-2xl mb-1 sm:mb-2">
+                                {item.icon}
+                            </span>
+                            <span className="text-[10px] sm:text-xs text-gray-700 
+                                group-hover:text-primary-600 transition-colors 
+                                text-center">
                                 {item.label}
                             </span>
                         </Link>
