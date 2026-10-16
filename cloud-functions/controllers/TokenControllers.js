@@ -28,7 +28,7 @@ async function getPanFiles(req, res, next) {
     catch (error) {
         json.status = false;
         json.msg = error.message;
-        console.log('error = ' + error);
+        console.log('error = ' , error);
     }
     res.json(json);
 }

@@ -3,9 +3,9 @@
 
 import { useState } from 'react';
 import { ArticleDetail as ArticleDetailType, Comment } from '@/types/frontend';
-import AuthorCard from './AuthorCard';
-import CommentSection from './CommentSection';
-import RelatedArticles from './RelatedArticles';
+//import AuthorCard from './AuthorCard';
+//import CommentSection from './CommentSection';
+//import RelatedArticles from './RelatedArticles';
 import ShareButtons from './ShareButtons';
 import SafeImage from './SafeImage';
 import CoverImage from './CoverImage';

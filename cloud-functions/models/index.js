@@ -20,6 +20,7 @@ const PasswordReset = require('./PasswordReset')
 const MemberBookmark = require('./MemberBookmark')
 const MemberLike = require('./MemberLike')
 const MemberDownload = require('./MemberDownload')
+const Comment = require('./Comment');
 
 const sequelize = require('../common/db');
 let isInitialized = false;
@@ -50,8 +51,51 @@ function initAssociations() {
     // ✅ 会员表建立关联
     PasswordReset.belongsTo(Member, { foreignKey: 'memberId' });
     Member.hasMany(PasswordReset, { foreignKey: 'memberId' });
-    //Article.belongsToMany(Tag, { through: ArticleTag });
-    //Tag.belongsToMany(Article, { through: ArticleTag });
+
+    // ============ Comment 关联 ============
+    Comment.belongsTo(Article, {
+        foreignKey: 'targetId',
+        as: 'Article',
+        constraints: false,
+        //scope: { targetType: 'article' },
+    });
+
+    Comment.belongsTo(Comment, { foreignKey: 'parentId', as: 'Parent' });
+    Comment.hasMany(Comment, { foreignKey: 'parentId', as: 'Replies' });
+
+    Comment.belongsTo(Member, { foreignKey: 'memberId', as: 'Member' });
+    Member.hasMany(Comment, { foreignKey: 'memberId', as: 'Comments' });
+
+    // ============ MemberLike 关联 ============
+    MemberLike.belongsTo(Article, {
+        foreignKey: 'targetId',
+        as: 'Article',
+        constraints: false,
+        //scope: { targetType: 'article' },
+    });
+    MemberLike.belongsTo(Member, { foreignKey: 'memberId', as: 'Member' });
+    Member.hasMany(MemberLike, { foreignKey: 'memberId', as: 'Likes' });
+
+    // ============ MemberBookmark 关联 ============
+    MemberBookmark.belongsTo(Article, {
+        foreignKey: 'targetId',
+        as: 'Article',
+        constraints: false,
+        //scope: { targetType: 'article' },
+    });
+    MemberBookmark.belongsTo(Member, { foreignKey: 'memberId', as: 'Member' });
+    Member.hasMany(MemberBookmark, { foreignKey: 'memberId', as: 'Bookmarks' });
+
+    // ============ MemberDownload 关联 ============
+    MemberDownload.belongsTo(Article, {
+        foreignKey: 'targetId',
+        as: 'Article',
+        constraints: false,
+        //scope: { targetType: 'article' },
+    });
+    MemberDownload.belongsTo(Member, { foreignKey: 'memberId', as: 'Member' });
+    Member.hasMany(MemberDownload, { foreignKey: 'memberId', as: 'Downloads' });
+
 };
 
 async function initializeDatabase() {
@@ -97,3 +141,4 @@ exports.PasswordReset = PasswordReset;
 exports.MemberBookmark = MemberBookmark;
 exports.MemberLike = MemberLike;
 exports.MemberDownload = MemberDownload;
+exports.Comment = Comment;

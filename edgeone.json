@@ -10,7 +10,9 @@
             "sync-request",
             "bcryptjs",
             "jsonwebtoken",
-            "nodemailer"
+            "nodemailer",
+            "sanitize-html",
+            "qiniu"
         ]
     }
 }

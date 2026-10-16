@@ -50,7 +50,7 @@ export default function ArticleContent({ content }: ArticleContentProps) {
                 rehypePlugins={[rehypeRaw]}
                 components={{
                     img: ({ src, alt }) => {
-                        if (!src ) {
+                        if (!src) {
                             return (
                                 <img
                                     src={src}
@@ -60,7 +60,10 @@ export default function ArticleContent({ content }: ArticleContentProps) {
                                 />
                             )
                         }
-                        const finalSrc = getProxiedImageUrl(src);
+                        const finalSrc = typeof src === 'string' ? getProxiedImageUrl(src) : '';
+                        // 无有效 src 直接不渲染
+                        if (!finalSrc) return null;
+                        //const finalSrc = getProxiedImageUrl(src);
                         return (
                             <img
                                 src={finalSrc}

@@ -23,7 +23,7 @@ Config.init(
     },
     {
         sequelize,
-        tableName: 'cms_config',  // 指定表名
+        tableName: 'sys_config',  // 指定表名
         comment: '网站配置表'  // 表注释
     }
 );

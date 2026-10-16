@@ -21,8 +21,12 @@ export default function Header() {
     const [searchTerm, setSearchTerm] = useState('');
     const [isMounted, setIsMounted] = useState(false);
 
+    // ✅ 用户下拉菜单状态
+    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
     const searchInputRef = useRef<HTMLInputElement>(null);
     const headerRef = useRef<HTMLElement>(null);
+    const userMenuRef = useRef<HTMLDivElement>(null); // ✅ 用户菜单 ref
 
     // 滚动监听
     useEffect(() => {
@@ -33,11 +37,26 @@ export default function Header() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // 路由变化关闭移动菜单
+    // ✅ 点击外部关闭用户菜单
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                userMenuRef.current &&
+                !userMenuRef.current.contains(event.target as Node)
+            ) {
+                setIsUserMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // 路由变化关闭移动菜单 + 用户菜单
     useEffect(() => {
         setIsMobileMenuOpen(false);
         setIsSearchOpen(false);
         setSearchTerm('');
+        setIsUserMenuOpen(false); // ✅ 路由变化也关闭用户菜单
     }, [pathname]);
 
     // 打开菜单时锁定滚动
@@ -63,6 +82,7 @@ export default function Header() {
             if (e.key === 'Escape') {
                 setIsSearchOpen(false);
                 setIsMobileMenuOpen(false);
+                setIsUserMenuOpen(false); // ✅ Esc 也关闭用户菜单
             }
         };
         document.addEventListener('keydown', handleKeyDown);
@@ -81,9 +101,17 @@ export default function Header() {
         }
     };
 
-    const handleLogout = () => {
-        logout();
+    // ✅ 登出处理
+    const handleLogout = async () => {
+        setIsUserMenuOpen(false);
         setIsMobileMenuOpen(false);
+
+        try {
+            await logout();
+        } catch (err) {
+            console.error('登出失败:', err);
+        }
+
         router.push('/');
     };
 
@@ -100,7 +128,6 @@ export default function Header() {
             <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-14 sm:h-16">
                     {/* ==================== 左侧：Logo + 导航 ==================== */}
-                    {/* ✅ 关键1：flex-1 撑开，让导航紧挨 Logo */}
                     <div className="flex items-center gap-3 sm:gap-6 lg:gap-10 flex-1 min-w-0">
                         {/* Logo */}
                         <Link
@@ -117,7 +144,7 @@ export default function Header() {
                             </span>
                         </Link>
 
-                        {/* ✅ 关键2：导航紧跟 Logo，不居中 */}
+                        {/* 桌面端导航 */}
                         <nav className="hidden lg:flex items-center space-x-1 flex-shrink-0">
                             {NAV_ITEMS.map((item) => {
                                 const active = isNavActive(pathname, item);
@@ -163,7 +190,7 @@ export default function Header() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="hidden md:flex p-2 rounded-lg text-gray-600 
-            hover:bg-orange-50 hover:text-orange-500 transition-colors"
+                         hover:bg-orange-50 hover:text-orange-500 transition-colors"
                             title="RSS 订阅"
                             aria-label="RSS 订阅"
                         >
@@ -172,36 +199,159 @@ export default function Header() {
                             </svg>
                         </a>
 
-                        {/* ✅ 登录/用户菜单 - 手机端也显示 */}
+                        {/* ✅ 会员下拉菜单 / 登录注册按钮 */}
                         {isLoggedIn ? (
-                            <Link
-                                href="/member"
-                                className="flex items-center space-x-1.5 p-1 rounded-lg 
-                hover:bg-gray-100 transition-colors flex-shrink-0"
-                            >
-                                <img
-                                    src={user?.avatar || '/img/avatar-default.png'}
-                                    alt={user?.nickname || user?.username || '用户'}
-                                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover 
-                    ring-2 ring-white shadow-sm flex-shrink-0"
-                                />
-                                <span className="text-xs sm:text-sm font-medium text-gray-700 
-                max-w-[60px] sm:max-w-[80px] truncate">
-                                    {user?.nickname || user?.username}
-                                </span>
-                            </Link>
+                            <div className="relative" ref={userMenuRef}>
+                                {/* 触发按钮 */}
+                                <button
+                                    type="button"
+                                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                                    className={cn(
+                                        'flex items-center space-x-1.5 p-1 rounded-lg transition-colors flex-shrink-0',
+                                        isUserMenuOpen
+                                            ? 'bg-gray-100'
+                                            : 'hover:bg-gray-100'
+                                    )}
+                                    aria-expanded={isUserMenuOpen}
+                                    aria-haspopup="true"
+                                >
+                                    <img
+                                        src={user?.avatar || '/img/avatar-default.png'}
+                                        alt={user?.nickname || user?.username || '用户'}
+                                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover 
+                               ring-2 ring-white shadow-sm flex-shrink-0"
+                                    />
+                                    <span className="hidden sm:inline text-xs sm:text-sm font-medium text-gray-700 
+                                   max-w-[80px] truncate">
+                                        {user?.nickname || user?.username}
+                                    </span>
+                                    {/* ✅ 下拉箭头 */}
+                                    <svg
+                                        className={cn(
+                                            'hidden sm:block w-3.5 h-3.5 text-gray-400 transition-transform',
+                                            isUserMenuOpen && 'rotate-180'
+                                        )}
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M19 9l-7 7-7-7"
+                                        />
+                                    </svg>
+                                </button>
+
+                                {/* ✅ 下拉菜单 */}
+                                {isUserMenuOpen && (
+                                    <div
+                                        className={cn(
+                                            'absolute right-0 top-full mt-2 w-56 bg-white rounded-xl',
+                                            'shadow-lg border border-gray-200 py-1 z-50',
+                                            'animate-fade-in'
+                                        )}
+                                        role="menu"
+                                    >
+                                        {/* 用户信息 */}
+                                        <div className="px-4 py-3 border-b border-gray-100">
+                                            <div className="flex items-center gap-3">
+                                                <img
+                                                    src={user?.avatar || '/img/avatar-default.png'}
+                                                    alt={user?.nickname || user?.username || '用户'}
+                                                    className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                                                />
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="text-sm font-semibold text-gray-800 truncate">
+                                                        {user?.nickname || user?.username}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500 truncate">
+                                                        {user?.email || ''}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* ✅ 菜单项 */}
+                                        <div className="py-1">
+                                            <Link
+                                                href="/member"
+                                                onClick={() => setIsUserMenuOpen(false)}
+                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 
+                                   hover:bg-gray-50 transition-colors"
+                                                role="menuitem"
+                                            >
+                                                <span className="text-base">👤</span>
+                                                <span>会员中心</span>
+                                            </Link>
+
+                                            <Link
+                                                href="/member/password"
+                                                onClick={() => setIsUserMenuOpen(false)}
+                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 
+                                   hover:bg-gray-50 transition-colors"
+                                                role="menuitem"
+                                            >
+                                                <span className="text-base">🔒</span>
+                                                <span>修改密码</span>
+                                            </Link>
+
+                                            <Link
+                                                href="/member/settings"
+                                                onClick={() => setIsUserMenuOpen(false)}
+                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 
+                                   hover:bg-gray-50 transition-colors"
+                                                role="menuitem"
+                                            >
+                                                <span className="text-base">⚙️</span>
+                                                <span>个人设置</span>
+                                            </Link>
+
+                                            {/* 管理员专属入口 */}
+                                            {user?.role === 'admin' && (
+                                                <Link
+                                                    href="/admin"
+                                                    onClick={() => setIsUserMenuOpen(false)}
+                                                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 
+                                     hover:bg-gray-50 transition-colors"
+                                                    role="menuitem"
+                                                >
+                                                    <span className="text-base">🛠️</span>
+                                                    <span>管理后台</span>
+                                                </Link>
+                                            )}
+                                        </div>
+
+                                        {/* ✅ 退出登录 */}
+                                        <div className="border-t border-gray-100 pt-1">
+                                            <button
+                                                type="button"
+                                                onClick={handleLogout}
+                                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm 
+                                   text-red-600 hover:bg-red-50 transition-colors text-left"
+                                                role="menuitem"
+                                            >
+                                                <span className="text-base">🚪</span>
+                                                <span>取消登录</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         ) : (
                             <div className="hidden sm:flex items-center space-x-1">
                                 <Link
                                     href="/login"
                                     className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 
-                    hover:bg-gray-100 rounded-lg transition-colors"
+                             hover:bg-gray-100 rounded-lg transition-colors"
                                 >
                                     登录
                                 </Link>
                                 <Link
                                     href="/register"
-                                    className="px-3 py-1.5 text-sm bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors shadow-sm"
+                                    className="px-3 py-1.5 text-sm bg-primary-600 text-white rounded-lg 
+                             font-medium hover:bg-primary-700 transition-colors shadow-sm"
                                 >
                                     注册
                                 </Link>
@@ -240,7 +390,8 @@ export default function Header() {
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 placeholder="搜索文章、标签、作者..."
-                                className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg text-sm 
+                           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                             />
                             <svg
                                 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
@@ -266,16 +417,16 @@ export default function Header() {
                 </div>
             )}
 
-            {/* ==================== 移动端菜单（绝对定位，不遮挡） ==================== */}
+            {/* ==================== 移动端菜单 ==================== */}
             {isMobileMenuOpen && (
                 <>
-                    {/* ✅ 关键1：遮罩用 fixed inset-0，但通过 z-index 层级避免遮挡 */}
+                    {/* 遮罩 */}
                     <div
                         className="lg:hidden fixed inset-0 bg-black/50 z-40 animate-fade-in"
                         onClick={() => setIsMobileMenuOpen(false)}
                     />
 
-                    {/* ✅ 关键2：抽屉用 absolute top-full，相对 header 底部 */}
+                    {/* 抽屉 */}
                     <div className="lg:hidden absolute top-full left-0 right-0 bg-white z-50 overflow-y-auto animate-slide-down max-h-[calc(100vh-3.5rem)] sm:max-h-[calc(100vh-4rem)] shadow-lg">
                         <div className="p-4 space-y-1">
                             {/* 导航菜单 */}
@@ -306,7 +457,8 @@ export default function Header() {
                                     href="/rss.xml"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                                    className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium 
+                             text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
                                 >
                                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                                         <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19 7.38 20 6.18 20C5 20 4 19 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z" />
@@ -317,41 +469,72 @@ export default function Header() {
                                 {/* 用户区 */}
                                 {isLoggedIn ? (
                                     <>
-                                        <Link
-                                            href="/member"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 transition-colors"
-                                        >
+                                        {/* 用户信息 */}
+                                        <div className="flex items-center gap-3 px-4 py-3 mb-1 bg-gray-50 rounded-lg">
                                             <img
                                                 src={user?.avatar || '/img/avatar-default.png'}
                                                 alt={user?.nickname || user?.username || '用户'}
-                                                className="w-5 h-5 rounded-full object-cover"
+                                                className="w-9 h-9 rounded-full object-cover flex-shrink-0"
                                             />
+                                            <div className="min-w-0 flex-1">
+                                                <div className="text-sm font-semibold text-gray-800 truncate">
+                                                    {user?.nickname || user?.username}
+                                                </div>
+                                                <div className="text-xs text-gray-500 truncate">
+                                                    {user?.email || ''}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <Link
+                                            href="/member"
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base 
+                                 font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                                        >
+                                            <span className="text-lg">👤</span>
                                             <span>会员中心</span>
+                                        </Link>
+
+                                        <Link
+                                            href="/member/password"
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base 
+                                 font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                                        >
+                                            <span className="text-lg">🔒</span>
+                                            <span>修改密码</span>
+                                        </Link>
+
+                                        <Link
+                                            href="/member/settings"
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base 
+                                 font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                                        >
+                                            <span className="text-lg">⚙️</span>
+                                            <span>个人设置</span>
                                         </Link>
 
                                         {user?.role === 'admin' && (
                                             <Link
                                                 href="/admin"
                                                 onClick={() => setIsMobileMenuOpen(false)}
-                                                className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                                                className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base 
+                                   font-medium text-gray-700 hover:bg-gray-100 transition-colors"
                                             >
-                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                </svg>
+                                                <span className="text-lg">🛠️</span>
                                                 <span>管理后台</span>
                                             </Link>
                                         )}
 
                                         <button
                                             onClick={handleLogout}
-                                            className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-red-600 hover:bg-red-50 transition-colors"
+                                            className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg 
+                                 text-base font-medium text-red-600 hover:bg-red-50 transition-colors"
                                         >
-                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                            </svg>
-                                            <span>退出登录</span>
+                                            <span className="text-lg">🚪</span>
+                                            <span>取消登录</span>
                                         </button>
                                     </>
                                 ) : (
@@ -359,7 +542,8 @@ export default function Header() {
                                         <Link
                                             href="/login"
                                             onClick={() => setIsMobileMenuOpen(false)}
-                                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base 
+                                 font-medium text-gray-700 hover:bg-gray-100 transition-colors"
                                         >
                                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -370,7 +554,8 @@ export default function Header() {
                                         <Link
                                             href="/register"
                                             onClick={() => setIsMobileMenuOpen(false)}
-                                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-white bg-primary-600 hover:bg-primary-700 transition-colors"
+                                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base 
+                                 font-medium text-white bg-primary-600 hover:bg-primary-700 transition-colors"
                                         >
                                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />

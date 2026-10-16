@@ -9,6 +9,8 @@ const BaiduAuthController = require('./baidu/AuthController')
 const TokenController = require('./TokenControllers')
 const FormulaController = require('./FormulaController')
 const MemberController = require('./MemberController')
+const CommentController = require('./CommentController')
+const UploadController = require('./UploadController')
 //exports.Article = ArticleController;
 
 module.exports = {
@@ -22,4 +24,6 @@ module.exports = {
     BaiduToken: TokenController,
     Formula: FormulaController,
     Member: MemberController,
+    Comment: CommentController,
+    Upload: UploadController,
 }

@@ -12,7 +12,7 @@ interface ViewToggleProps {
 
 export default function ViewToggle({ viewMode, onViewModeChange }: ViewToggleProps) {
     return (
-        <div className="flex mt-ml-2 items-center bg-gray-100 rounded-lg p-1">
+        <div className="flex mt-ml-2 mt-0-12 items-center bg-gray-100 rounded-lg p-1">
             {/* 网格视图 */}
             <button
                 onClick={() => onViewModeChange('grid')}

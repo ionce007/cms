@@ -1,12 +1,17 @@
 const { Op } = require('sequelize');
 import sequelize from '../common/db';  // 导入 sequelize 实例
-const { Category, Article, Tag, MemberLike, MemberBookmark } = require('../models');
+const { Category, Article, Tag, MemberLike, MemberBookmark, Config } = require('../models');
 import { calcReadTime } from '../common/utils';
 
 
 //import { getAllCategories, getAllTags, getAllFrags, getSiteConfig, filterByIds } from './cache/DataCache';
 
 async function test(req, res, next) {
+    const count = await Article.count({ where: { cid: 3 } })
+    return res.json({ code: 1, message: 'success', data: count });
+    const attributes =  ['accessKey', 'secretKey', 'domain', 'bucket'] ;
+    const config = await Config.findOne({ attributes, raw: true });
+    return res.json({ code: 1, message: 'success', data: config });
     //const siteInfo = await getSiteConfig();
     //return res.json({ site: siteInfo });
     /*
@@ -819,7 +824,7 @@ async function getPinnedArticles(req, res, next) {
         });*/
         const result = articles[0].toJSON()
         const userId = req.user ? req.user.toJSON().id : null;
-        
+
         let likedSet = new Set();
         let bookmarkedSet = new Set();
         const articleId = result.id;

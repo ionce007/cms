@@ -90,8 +90,11 @@ app.get('/bdpan/auth', controllers.BaiduToken.getBaiduAuthCode)
 app.get('/bdpan/token', controllers.BaiduToken.getToken)
 app.get('/bdpan/:id/download', requireAuth, controllers.BaiduToken.getDownloadUrl)
 
-//app.get('/formulas', getFormulas);
-//app.get('/formulas', getFormulas);
+app.get('/comments', controllers.Comment.getComments);
+app.post('/comments', optionalAuth, controllers.Comment.createComment);
+app.get('/comments/my', requireAuth, controllers.Comment.getMyComments);
+app.delete('/comments/:id', requireAuth, controllers.Comment.deleteComment);
+app.post('/upload/qiniu-token', optionalAuth, controllers.Upload.getQiniuToken);
 
 app.post('/member/register', controllers.Member.register);
 app.post('/member/login', controllers.Member.login);
@@ -108,5 +111,15 @@ app.put('/member/password', requireAuth, controllers.Member.changePassword);
 app.get('/member/likes', requireAuth, controllers.Member.getMyLikes);
 app.get('/member/bookmarks', requireAuth, controllers.Member.getMyBookmarks);
 app.get('/member/downloads', requireAuth, controllers.Member.getMyDownloads);
+
+app.get('/member/stats', requireAuth, controllers.Member.getMemberStats);
+
+// 个人资料
+app.get('/member/profile', requireAuth, controllers.Member.getMemberProfile);
+app.put('/member/profile', requireAuth, controllers.Member.updateMemberProfile);
+
+// 我的评论
+app.get('/member/comments', requireAuth, controllers.Member.getMyComments);
+app.delete('/member/comments/:id', requireAuth, controllers.Member.deleteMyComment);
 // 导出处理函数
 export default app;

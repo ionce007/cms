@@ -54,6 +54,7 @@ export const MEMBER_MENUS = [
     { href: '/member/likes', label: '我的点赞', icon: '❤️' },
     { href: '/member/bookmarks', label: '我的收藏', icon: '🔖' },
     { href: '/member/downloads', label: '我的下载', icon: '📥' },
+    { href: '/member/comments', label: '我的评论', icon: '💬' },  // ✅ 新增
     { href: '/member/settings', label: '账号设置', icon: '⚙️' },
     { href: '/member/password', label: '修改密码', icon: '🔒' },
 ];

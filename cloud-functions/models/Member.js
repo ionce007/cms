@@ -42,7 +42,7 @@ Member.init(
         },
         avatar: {
             type: DataTypes.STRING,
-            defaultValue: '/img/avatar-default.png',
+            defaultValue: '/img/avatar-default-member.jpg',
             comment: '头像',
         },
         role: {

@@ -19,6 +19,7 @@ import { formatFileSize, formatTimestamp } from '@/config/constants';
 import { API_BASE_URL } from '@/config/env';
 import { API_ENDPOINTS } from '@/config/routes';
 import { useAuth } from '@/contexts/AuthContext';
+import CommentSection from '@/components/frontend/CommentSection';
 
 interface DownloadDetailClientProps {
     id: string;
@@ -360,6 +361,8 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
                                     />
                                 </div>
                             </article>
+                            {/* 评论 */}
+                            <CommentSection targetType="formula" targetId={item.fs_id} />
                         </div>
 
                         {/* 侧边栏 */}

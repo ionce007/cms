@@ -218,11 +218,14 @@ export default function ArticleDetailContent({ article, relatedArticles }: Artic
             </article>
 
             {/* 评论区 */}
-            <CommentSection
+            {/*<CommentSection
                 comments={article.comments}
                 articleId={article.id}
+            />*/}
+            <CommentSection
+                targetType="article"
+                targetId={String(article.id)}
             />
-
             {/* 相关文章 */}
             {relatedArticles.length > 0 && (
                 <RelatedArticles articles={relatedArticles} />
