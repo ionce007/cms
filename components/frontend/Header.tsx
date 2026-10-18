@@ -289,8 +289,7 @@ export default function Header() {
                                             <Link
                                                 href="/member"
                                                 onClick={() => setIsUserMenuOpen(false)}
-                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 
-                                   hover:bg-gray-50 transition-colors"
+                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                                 role="menuitem"
                                             >
                                                 <span className="text-base">👤</span>
@@ -300,8 +299,7 @@ export default function Header() {
                                             <Link
                                                 href="/member/password"
                                                 onClick={() => setIsUserMenuOpen(false)}
-                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 
-                                   hover:bg-gray-50 transition-colors"
+                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                                 role="menuitem"
                                             >
                                                 <span className="text-base">🔒</span>
@@ -311,8 +309,7 @@ export default function Header() {
                                             <Link
                                                 href="/member/settings"
                                                 onClick={() => setIsUserMenuOpen(false)}
-                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 
-                                   hover:bg-gray-50 transition-colors"
+                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                                 role="menuitem"
                                             >
                                                 <span className="text-base">⚙️</span>
@@ -324,8 +321,7 @@ export default function Header() {
                                                 <Link
                                                     href="/admin"
                                                     onClick={() => setIsUserMenuOpen(false)}
-                                                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 
-                                     hover:bg-gray-50 transition-colors"
+                                                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                                     role="menuitem"
                                                 >
                                                     <span className="text-base">🛠️</span>
@@ -339,8 +335,7 @@ export default function Header() {
                                             <button
                                                 type="button"
                                                 onClick={handleLogout}
-                                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm 
-                                   text-red-600 hover:bg-red-50 transition-colors text-left"
+                                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
                                                 role="menuitem"
                                             >
                                                 <span className="text-base">🚪</span>
@@ -354,15 +349,13 @@ export default function Header() {
                             <div className="hidden sm:flex items-center space-x-1">
                                 <Link
                                     href="/login"
-                                    className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 
-                             hover:bg-gray-100 rounded-lg transition-colors"
+                                    className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                                 >
                                     登录
                                 </Link>
                                 <Link
                                     href="/register"
-                                    className="px-3 py-1.5 text-sm bg-primary-600 text-white rounded-lg 
-                             font-medium hover:bg-primary-700 transition-colors shadow-sm"
+                                    className="px-3 py-1.5 text-sm bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors shadow-sm"
                                 >
                                     注册
                                 </Link>
@@ -450,9 +443,7 @@ export default function Header() {
                                         onClick={() => setIsMobileMenuOpen(false)}
                                         className={cn(
                                             'flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium transition-colors',
-                                            active
-                                                ? 'bg-primary-50 text-primary-700'
-                                                : 'text-gray-700 hover:bg-gray-100'
+                                            active ? 'bg-primary-50 text-primary-700' : 'text-gray-700 hover:bg-gray-100'
                                         )}
                                     >
                                         {item.icon && <span className="text-lg">{item.icon}</span>}
@@ -468,8 +459,7 @@ export default function Header() {
                                     href="/rss.xml"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium 
-                             text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                                    className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
                                 >
                                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                                         <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19 7.38 20 6.18 20C5 20 4 19 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z" />
@@ -480,18 +470,12 @@ export default function Header() {
                                 {/* 用户区 */}
                                 {isLoggedIn ? (
                                     <>
-                                        {/* 用户信息 */}
-                                        <div className="flex items-center gap-3 px-4 py-3 mb-1 bg-gray-50 rounded-lg">
-                                            {/*<img
-                                                src={user?.avatar || '/img/avatar-default.png'}
+                                        {/*<div className="flex items-center gap-3 px-4 py-3 mb-1 bg-gray-50 rounded-lg">
+                                            <SafeImage
+                                                src={user?.avatar || '/img/avatar-default-member.png'}
                                                 alt={user?.nickname || user?.username || '用户'}
                                                 className="w-9 h-9 rounded-full object-cover flex-shrink-0"
-                                            />*/}
-                                            <SafeImage
-                                                    src={user?.avatar || '/img/avatar-default-member.png'}
-                                                    alt={user?.nickname || user?.username || '用户'}
-                                                    className="w-9 h-9 rounded-full object-cover flex-shrink-0"
-                                                />
+                                            />
                                             <div className="min-w-0 flex-1">
                                                 <div className="text-sm font-semibold text-gray-800 truncate">
                                                     {user?.nickname || user?.username}
@@ -505,8 +489,7 @@ export default function Header() {
                                         <Link
                                             href="/member"
                                             onClick={() => setIsMobileMenuOpen(false)}
-                                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base 
-                                 font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 transition-colors"
                                         >
                                             <span className="text-lg">👤</span>
                                             <span>会员中心</span>
@@ -515,8 +498,7 @@ export default function Header() {
                                         <Link
                                             href="/member/password"
                                             onClick={() => setIsMobileMenuOpen(false)}
-                                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base 
-                                 font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 transition-colors"
                                         >
                                             <span className="text-lg">🔒</span>
                                             <span>修改密码</span>
@@ -525,8 +507,7 @@ export default function Header() {
                                         <Link
                                             href="/member/settings"
                                             onClick={() => setIsMobileMenuOpen(false)}
-                                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base 
-                                 font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 transition-colors"
                                         >
                                             <span className="text-lg">⚙️</span>
                                             <span>个人设置</span>
@@ -536,8 +517,7 @@ export default function Header() {
                                             <Link
                                                 href="/admin"
                                                 onClick={() => setIsMobileMenuOpen(false)}
-                                                className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base 
-                                   font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                                                className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 transition-colors"
                                             >
                                                 <span className="text-lg">🛠️</span>
                                                 <span>管理后台</span>
@@ -546,20 +526,18 @@ export default function Header() {
 
                                         <button
                                             onClick={handleLogout}
-                                            className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg 
-                                 text-base font-medium text-red-600 hover:bg-red-50 transition-colors"
+                                            className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-red-600 hover:bg-red-50 transition-colors"
                                         >
                                             <span className="text-lg">🚪</span>
                                             <span>取消登录</span>
-                                        </button>
+                                        </button>*/}
                                     </>
                                 ) : (
                                     <>
                                         <Link
                                             href="/login"
                                             onClick={() => setIsMobileMenuOpen(false)}
-                                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base 
-                                 font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 transition-colors"
                                         >
                                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -570,8 +548,7 @@ export default function Header() {
                                         <Link
                                             href="/register"
                                             onClick={() => setIsMobileMenuOpen(false)}
-                                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base 
-                                 font-medium text-white bg-primary-600 hover:bg-primary-700 transition-colors"
+                                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-white bg-primary-600 hover:bg-primary-700 transition-colors"
                                         >
                                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
