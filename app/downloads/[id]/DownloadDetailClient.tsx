@@ -20,6 +20,10 @@ import { API_BASE_URL } from '@/config/env';
 import { API_ENDPOINTS } from '@/config/routes';
 import { useAuth } from '@/contexts/AuthContext';
 import CommentSection from '@/components/frontend/CommentSection';
+import { cn } from '@/lib/utils';
+import { getProxiedImageUrl } from '@/lib/imageProxy';
+import { processHtmlImages } from '@/lib/htmlProcessor';
+import { useLightbox } from '@/components/frontend/ImageLightbox';
 
 interface DownloadDetailClientProps {
     id: string;
@@ -27,6 +31,8 @@ interface DownloadDetailClientProps {
 
 export default function DownloadDetailClient({ id }: DownloadDetailClientProps) {
     const { isLoggedIn, isLoading: authLoading, token } = useAuth();
+
+    const { openLightbox } = useLightbox();
 
     const { item, isLoading, error } = useDownloadDetail(id);
     const [isDownloading, setIsDownloading] = useState(false);
@@ -61,6 +67,21 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
         if (pending.length === 0) return '加载完成！';
         return `正在加载：${pending.join('、')}...`;
     }, [loadingStates]);
+
+    const handleCoverClick = (e: React.MouseEvent, src?: string) => {
+        if (!src) return;
+        const proxyImgSrc = getProxiedImageUrl(src);
+        e.preventDefault();
+        e.stopPropagation();
+        openLightbox([proxyImgSrc]);
+    };
+    // ✅ 提取点击图片的公共逻辑
+    const handleImageClick = (e: React.MouseEvent, src: string) => {
+        if (!src) return;
+        e.preventDefault();
+        e.stopPropagation();
+        openLightbox([src]); // 打开灯箱
+    };
 
     // ✅ 统一构造请求头（每次调用时实时构造，避免 token 为 null）
     const getAuthHeaders = useCallback((): Record<string, string> => {
@@ -207,7 +228,12 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
             </div>
         );
     }
-
+/*
+    // ✅ 处理 HTML 中的 HTTP 图片
+    const processedContent = useMemo(() => {
+        return processHtmlImages(item.content);
+    }, [item]);
+*/
     // ========== 正常内容 ==========
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -232,7 +258,12 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
                             <article className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                                 {/* 封面图 */}
                                 {item.img && (
-                                    <div className="relative aspect-video overflow-hidden">
+                                    <div className={cn(
+                                        "relative aspect-video overflow-hidden",
+                                        item.img && "cursor-zoom-in" // 如果有图，显示放大镜光标
+                                    )}
+                                        onClick={(e) => handleCoverClick(e, item.img)}
+                                    >
                                         <CoverImage
                                             src={item.img}
                                             alt={item.server_filename}
@@ -292,7 +323,17 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
                                             </h2>
                                             <div
                                                 className="article-html-content prose prose-gray max-w-none"
-                                                dangerouslySetInnerHTML={{ __html: item.content }}
+                                                onClick={(e) => {
+                                                    // ✅ 利用事件委托，捕获 HTML 内容内的图片点击
+                                                    const target = e.target as HTMLElement;
+                                                    if (target.tagName === 'IMG') {
+                                                        const img = target as HTMLImageElement;
+                                                        // 优先取 data-original-src 作为原图地址
+                                                        const src = img.getAttribute('data-original-src') || img.src;
+                                                        handleImageClick(e, src);
+                                                    }
+                                                }}
+                                                dangerouslySetInnerHTML={{ __html: processHtmlImages(item.content) }}
                                             />
                                         </div>
                                     )}

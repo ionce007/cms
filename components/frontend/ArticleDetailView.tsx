@@ -13,6 +13,7 @@ import CoverImage from './CoverImage';
 import LikeButton from './LikeButton';
 import BookmarkButton from './BookmarkButton';
 import CommentSection from './CommentSection';
+import { getProxiedImageUrl } from '@/lib/imageProxy';
 // ✅ 引入 useLightbox
 import { useLightbox } from '@/components/frontend/ImageLightbox';
 
@@ -37,9 +38,10 @@ export default function ArticleDetailView({
     // ✅ 处理封面图点击：阻止冒泡，打开灯箱
     const handleCoverClick = (e: React.MouseEvent, src?: string) => {
         if (!src) return;
+        const proxyImgSrc = getProxiedImageUrl(src);
         e.preventDefault();
         e.stopPropagation();
-        openLightbox([src]);
+        openLightbox([proxyImgSrc]);
     };
 
     return (
