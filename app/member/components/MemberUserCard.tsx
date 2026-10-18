@@ -3,6 +3,7 @@
 
 import { cn } from '@/lib/utils';
 import { useMemberUser } from '../MemberLayoutClient';
+import SafeImage from '@/components/frontend/SafeImage';
 
 interface MemberUserCardProps {
     /** 紧凑模式（窄屏横向一行显示） */
@@ -45,9 +46,14 @@ export default function MemberUserCard({ compact = false }: MemberUserCardProps)
     if (compact) {
         return (
             <div className="bg-white rounded-xl border border-gray-200 p-3 flex items-center gap-3">
-                <img
+                {/*<img
                     src={user.avatar || '/img/avatar-default-member.jpg'}
                     alt={user.nickname}
+                    className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                />*/}
+                <SafeImage
+                    src={user?.avatar || '/img/avatar-default-member.png'}
+                    alt={user?.nickname || user?.username || '用户'}
                     className="w-10 h-10 rounded-full object-cover flex-shrink-0"
                 />
                 <div className="flex-1 min-w-0">
@@ -76,9 +82,14 @@ export default function MemberUserCard({ compact = false }: MemberUserCardProps)
     return (
         <div className="bg-white rounded-xl border border-gray-200 p-4">
             <div className="flex items-center gap-3 mb-3">
-                <img
+                {/*<img
                     src={user.avatar || '/img/avatar-default-member.jpg'}
                     alt={user.nickname}
+                    className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                />*/}
+                <SafeImage
+                    src={user?.avatar || '/img/avatar-default-member.png'}
+                    alt={user?.nickname || user?.username || '用户'}
                     className="w-12 h-12 rounded-full object-cover flex-shrink-0"
                 />
                 <div className="min-w-0">

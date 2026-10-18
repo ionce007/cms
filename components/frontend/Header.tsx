@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import SafeImage from './SafeImage';
 import { cn } from '@/lib/utils';
 import { useSiteConfig } from '@/hooks/useSiteConfig';
 import { useAuth } from '@/contexts/AuthContext';
@@ -215,11 +216,16 @@ export default function Header() {
                                     aria-expanded={isUserMenuOpen}
                                     aria-haspopup="true"
                                 >
-                                    <img
+                                    {/*<img
                                         src={user?.avatar || '/img/avatar-default.png'}
                                         alt={user?.nickname || user?.username || '用户'}
                                         className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover 
                                ring-2 ring-white shadow-sm flex-shrink-0"
+                                    />*/}
+                                    <SafeImage
+                                        src={user?.avatar || '/img/avatar-default-member.png'}
+                                        alt={user?.nickname || user?.username || '用户'}
+                                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover ring-2 ring-white shadow-sm flex-shrink-0"
                                     />
                                     <span className="hidden sm:inline text-xs sm:text-sm font-medium text-gray-700 
                                    max-w-[80px] truncate">
@@ -257,8 +263,13 @@ export default function Header() {
                                         {/* 用户信息 */}
                                         <div className="px-4 py-3 border-b border-gray-100">
                                             <div className="flex items-center gap-3">
-                                                <img
+                                                {/*<img
                                                     src={user?.avatar || '/img/avatar-default.png'}
+                                                    alt={user?.nickname || user?.username || '用户'}
+                                                    className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                                                />*/}
+                                                <SafeImage
+                                                    src={user?.avatar || '/img/avatar-default-member.png'}
                                                     alt={user?.nickname || user?.username || '用户'}
                                                     className="w-10 h-10 rounded-full object-cover flex-shrink-0"
                                                 />
@@ -471,11 +482,16 @@ export default function Header() {
                                     <>
                                         {/* 用户信息 */}
                                         <div className="flex items-center gap-3 px-4 py-3 mb-1 bg-gray-50 rounded-lg">
-                                            <img
+                                            {/*<img
                                                 src={user?.avatar || '/img/avatar-default.png'}
                                                 alt={user?.nickname || user?.username || '用户'}
                                                 className="w-9 h-9 rounded-full object-cover flex-shrink-0"
-                                            />
+                                            />*/}
+                                            <SafeImage
+                                                    src={user?.avatar || '/img/avatar-default-member.png'}
+                                                    alt={user?.nickname || user?.username || '用户'}
+                                                    className="w-9 h-9 rounded-full object-cover flex-shrink-0"
+                                                />
                                             <div className="min-w-0 flex-1">
                                                 <div className="text-sm font-semibold text-gray-800 truncate">
                                                     {user?.nickname || user?.username}
