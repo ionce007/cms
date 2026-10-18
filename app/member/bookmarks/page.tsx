@@ -5,9 +5,7 @@ import { useState, useEffect } from 'react';
 import EmptyState from '../components/EmptyState';
 import Pagination from '@/components/frontend/Pagination';
 import TargetTypeTabs, { TargetType } from '../components/TargetTypeTabs';
-import MixedContentListItem, {
-    MixedContentRecord,
-} from '../components/MixedContentListItem';
+import MixedContentListItem, { MixedContentRecord, } from '../components/MixedContentListItem';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMemberFetch } from '@/hooks/useMemberFetch';
 

@@ -13,13 +13,14 @@ import CoverImage from './CoverImage';
 import LikeButton from './LikeButton';
 import BookmarkButton from './BookmarkButton';
 import CommentSection from './CommentSection';
+// ✅ 引入 useLightbox
+import { useLightbox } from '@/components/frontend/ImageLightbox';
 
 interface ArticleDetailViewProps {
     article: FrontendArticle;
-    relatedArticles?: FrontendArticle[];  // ✅ 新增
+    relatedArticles?: FrontendArticle[];
     breadcrumbItems?: { label: string; href?: string; icon?: string }[];
     backLink?: { label: string; href: string };
-    /** 关联文章的链接前缀（分类/标签页传入） */
     relatedLinkPrefix?: string;
 }
 
@@ -30,6 +31,17 @@ export default function ArticleDetailView({
     backLink,
     relatedLinkPrefix = '/articles',
 }: ArticleDetailViewProps) {
+    // ✅ 获取灯箱的打开方法
+    const { openLightbox } = useLightbox();
+
+    // ✅ 处理封面图点击：阻止冒泡，打开灯箱
+    const handleCoverClick = (e: React.MouseEvent, src?: string) => {
+        if (!src) return;
+        e.preventDefault();
+        e.stopPropagation();
+        openLightbox([src]);
+    };
+
     return (
         <article className="bg-white rounded-xl border border-gray-200 overflow-hidden">
             {/* 面包屑 */}
@@ -54,8 +66,14 @@ export default function ArticleDetailView({
                 </div>
             )}
 
-            {/* 封面图 */}
-            <div className="relative h-64 sm:h-80 lg:h-96 overflow-hidden mt-4">
+            {/* ✅ 封面图：增加点击放大功能 */}
+            <div
+                className={cn(
+                    "relative h-64 sm:h-80 lg:h-96 overflow-hidden mt-4",
+                    article.img && "cursor-zoom-in" // 如果有图，显示放大镜光标
+                )}
+                onClick={(e) => handleCoverClick(e, article.img)}
+            >
                 <CoverImage
                     src={article.img}
                     alt={article.title}
@@ -64,19 +82,24 @@ export default function ArticleDetailView({
                     useBlurBackground={true}
                     fallbackIcon="📄"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-6">
+
+                {/* ✅ 渐变遮罩和文字：设置 pointer-events-none 防止挡住图片点击 */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
+
+                <div className="absolute bottom-0 left-0 right-0 p-6 pointer-events-none">
                     <div className="flex items-center flex-wrap gap-2 mb-2">
+                        {/* 分类标签需要点击跳转，所以单独恢复 pointer-events-auto */}
                         {article.Category && (
                             <Link
                                 href={`/category/${article.Category.path}`}
-                                className="px-3 py-1 bg-white/90 text-gray-700 text-xs font-medium rounded-full hover:bg-white transition-colors"
+                                className="pointer-events-auto px-3 py-1 bg-white/90 text-gray-700 text-xs font-medium rounded-full hover:bg-white transition-colors"
+                                onClick={(e) => e.stopPropagation()}
                             >
                                 {article.Category.name}
                             </Link>
                         )}
                         {article.featured && (
-                            <span className="px-3 py-1 bg-yellow-400/90 text-yellow-900 text-xs font-medium rounded-full">
+                            <span className="pointer-events-auto px-3 py-1 bg-yellow-400/90 text-yellow-900 text-xs font-medium rounded-full">
                                 🔥 精选
                             </span>
                         )}
@@ -123,7 +146,7 @@ export default function ArticleDetailView({
                 </div>
             </div>
 
-            {/* 正文 */}
+            {/* ✅ 正文：内部 ArticleContent 已经处理了内容图片的点击放大 */}
             <div className="px-6 py-8">
                 <ArticleContent content={article.content} />
 
@@ -143,7 +166,6 @@ export default function ArticleDetailView({
                 {/* 操作按钮 */}
                 <div className="flex items-center justify-between flex-wrap gap-3 mt-6 pt-6 border-t border-gray-100">
                     <div className="flex items-center space-x-3">
-                        {/* ✅ 用 LikeButton 组件 */}
                         <LikeButton
                             target="article"
                             id={article.id}
@@ -151,10 +173,9 @@ export default function ArticleDetailView({
                             initialIsLiked={article.isLiked || false}
                             size="md"
                             showLabel
-                            variant="default"  // ✅ 默认 variant="default"
+                            variant="default"
                         />
 
-                        {/* ✅ 收藏 - 用 BookmarkButton */}
                         <BookmarkButton
                             target="article"
                             id={article.id}
@@ -192,12 +213,6 @@ export default function ArticleDetailView({
                                     className="group block bg-gray-50 rounded-lg overflow-hidden hover:shadow-md transition-all"
                                 >
                                     <div className="aspect-video overflow-hidden">
-
-                                        {/*<SafeImage
-                                            src={article.img}
-                                            alt={article.title}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                        />*/}
                                         <CoverImage
                                             src={item.img}
                                             alt={item.title}

@@ -127,7 +127,7 @@ export default function TagArticleClient({
                             <ArticleDetailView
                                 article={{ ...article, pv }}  // ✅ 覆盖 pv
                                 relatedArticles={relatedArticles}
-                                relatedLinkPrefix={`/tags/${slug}`}  // ✅
+                                relatedLinkPrefix={`/tags/${slug}/articles`}  // ✅
                                 breadcrumbItems={[
                                     { label: '首页', href: '/', icon: '🏠' },
                                     { label: '标签', href: '/tags' },

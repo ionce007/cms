@@ -126,7 +126,7 @@ export default function CategoryArticleClient({
                             <ArticleDetailView
                                 article={{ ...article, pv }}  // ✅ 覆盖 pv
                                 relatedArticles={relatedArticles}  // ✅ 传递关联文章
-                                relatedLinkPrefix={`/categories/${slug}`}  // ✅ 关联文章链接保持在分类下
+                                relatedLinkPrefix={`/categories/${slug}/articles`}  // ✅ 关联文章链接保持在分类下
                                 breadcrumbItems={[
                                     { label: '首页', href: '/', icon: '🏠' },
                                     { label: '分类', href: '/categories' },

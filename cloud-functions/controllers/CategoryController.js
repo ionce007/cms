@@ -33,7 +33,19 @@ async function getCategories(req, res, next) {
 async function getCategoryById(req, res, next) {
     try {
         const { id } = req.params;
-        const category = await Category.findByPk(id);
+        const category = await Category.findByPk(Number(id));
+        if (!category) {
+            return res.json({ code: -1, message: 'Category not found' });
+        }
+        res.json({ code: 1, message: 'Category retrieved successfully', data: category });
+    } catch (error) {
+        return res.status(404).json({ code: -1, message: error.message });
+    }
+}
+async function getCategoryBySlug(req, res, next) {
+    try {
+        const { slug } = req.params;
+        const category = await Category.findOne({ where: { pinyin: slug } });
         if (!category) {
             return res.json({ code: -1, message: 'Category not found' });
         }
@@ -59,5 +71,6 @@ async function getCategoryArticlePairs(req, res, next) {
 module.exports = {
     getCategories,
     getCategoryById,
-    getCategoryArticlePairs
+    getCategoryArticlePairs,
+    getCategoryBySlug
 }

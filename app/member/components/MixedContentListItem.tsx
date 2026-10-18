@@ -165,14 +165,6 @@ export default function MixedContentListItem({
             {/* ============ 左侧封面 ============ */}
             <div className="sm:w-40 lg:w-48 flex-shrink-0 relative">
                 <div className="aspect-video sm:aspect-auto sm:h-full min-h-[120px]">
-                    {/*<CoverImage
-                        src={cover}
-                        alt={title}
-                        className="w-full h-full"
-                        fit="cover"
-                        fallbackIcon={isFormula ? '∑' : '📄'}
-                        useProxy={true}
-                    />*/}
                     <CoverImage
                         src={cover}
                         alt={title}

@@ -7,6 +7,8 @@ import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { processHtmlImages } from '@/lib/htmlProcessor';
 import { getProxiedImageUrl } from '@/lib/imageProxy';
+// ✅ 引入 useLightbox
+import { useLightbox } from '@/components/frontend/ImageLightbox';
 
 interface ArticleContentProps {
     content: string;
@@ -26,29 +28,50 @@ function detectContentType(content: string): 'html' | 'markdown' {
 
 export default function ArticleContent({ content }: ArticleContentProps) {
     const contentType = detectContentType(content);
+    // ✅ 获取灯箱方法
+    const { openLightbox } = useLightbox();
 
     // ✅ 处理 HTML 中的 HTTP 图片
     const processedContent = useMemo(() => {
         return processHtmlImages(content);
     }, [content]);
 
-    // HTML 内容
+    // ✅ 提取点击图片的公共逻辑
+    const handleImageClick = (e: React.MouseEvent, src: string) => {
+        if (!src) return;
+        e.preventDefault();
+        e.stopPropagation();
+        openLightbox([src]); // 打开灯箱
+    };
+
+    // ============ HTML 内容 ============
     if (contentType === 'html') {
         return (
             <div
                 className="article-html-content"
+                onClick={(e) => {
+                    // ✅ 利用事件委托，捕获 HTML 内容内的图片点击
+                    const target = e.target as HTMLElement;
+                    if (target.tagName === 'IMG') {
+                        const img = target as HTMLImageElement;
+                        // 优先取 data-original-src 作为原图地址
+                        const src = img.getAttribute('data-original-src') || img.src;
+                        handleImageClick(e, src);
+                    }
+                }}
                 dangerouslySetInnerHTML={{ __html: processedContent }}
             />
         );
     }
 
-    // Markdown 内容
+    // ============ Markdown 内容 ============
     return (
         <div className="article-markdown-content">
             <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeRaw]}
                 components={{
+                    // ✅ 修改 img 组件，绑定点击事件
                     img: ({ src, alt }) => {
                         if (!src) {
                             return (
@@ -58,18 +81,23 @@ export default function ArticleContent({ content }: ArticleContentProps) {
                                     className="rounded-lg my-4 max-w-full h-auto"
                                     loading="lazy"
                                 />
-                            )
+                            );
                         }
-                        const finalSrc = typeof src === 'string' ? getProxiedImageUrl(src) : '';
+
+                        const originalSrc = typeof src === 'string' ? src : '';
+                        const finalSrc = originalSrc ? getProxiedImageUrl(originalSrc) : '';
+
                         // 无有效 src 直接不渲染
                         if (!finalSrc) return null;
-                        //const finalSrc = getProxiedImageUrl(src);
+
                         return (
                             <img
                                 src={finalSrc}
                                 alt={alt || ''}
-                                className="rounded-lg my-4 max-w-full h-auto"
+                                className="rounded-lg my-4 max-w-full h-auto cursor-zoom-in"
                                 loading="lazy"
+                                data-original-src={originalSrc}
+                                onClick={(e) => handleImageClick(e, originalSrc)}
                             />
                         );
                     },

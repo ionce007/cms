@@ -12,6 +12,8 @@ import {
 } from '@/lib/sanitizeHtml';
 import { proxyHtmlImageUrls } from '@/lib/imageProxy';
 import { cn } from '@/lib/utils';
+// ✅ 引入 useLightbox
+import { useLightbox } from '@/components/frontend/ImageLightbox';
 
 interface CommentItemProps {
     comment: CommentItemType;
@@ -34,6 +36,9 @@ export default function CommentItem({
     level = 1,
 }: CommentItemProps) {
     const { user } = useAuth();
+    // ✅ 获取灯箱方法
+    const { openLightbox } = useLightbox();
+    
     const [showReplyForm, setShowReplyForm] = useState(false);
     const [showAllReplies, setShowAllReplies] = useState(false);
 
@@ -55,6 +60,22 @@ export default function CommentItem({
         // ✅ XSS 清洗（保留 img、table 等富文本标签）
         return sanitizeHtml(html);
     }, [comment.content]);
+
+    // ✅ 处理评论内容中的图片点击放大
+    const handleContentClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        const target = e.target as HTMLElement;
+        // 判断点击的是不是图片
+        if (target.tagName === 'IMG') {
+            const img = target as HTMLImageElement;
+            // 优先取 data-original-src（如果有），否则取 src
+            const src = img.getAttribute('data-original-src') || img.src;
+            if (src) {
+                e.preventDefault();
+                e.stopPropagation();
+                openLightbox([src]); // 打开灯箱
+            }
+        }
+    };
 
     // ✅ 格式化时间
     const formatTime = (date: string) => {
@@ -122,9 +143,10 @@ export default function CommentItem({
                             </span>
                         </div>
 
-                        {/* ✅ 富文本内容：HTTP 图片已被代理为 HTTPS */}
+                        {/* ✅ 富文本内容：绑定点击事件，支持图片放大 */}
                         <div
                             className="comment-content text-sm text-gray-700 mb-2"
+                            onClick={handleContentClick}
                             dangerouslySetInnerHTML={{ __html: safeHtml }}
                         />
 

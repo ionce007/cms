@@ -44,7 +44,7 @@ export default function ArticleClient({ articleId }: ArticleClientProps) {
                     const increment = Math.floor(Math.random() * 15) + 5;
                     return Math.min(prev + increment, 90);
                 });
-            }, 150);
+            }, 100);
 
             return () => clearInterval(interval);
         } else {

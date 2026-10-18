@@ -40,8 +40,9 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
     const category = categories.find(c => c.pinyin === slug);
 
     return {
-        title: category ? `${category.name} - 文章分类` : '分类未找到',
-        description: category ? `浏览${category.name}相关的所有文章` : undefined,
+        title: category && category.seoTitle ? category.seoTitle : `文章分类`,
+        description: category && category.seoDescription ? category.seoDescription : '',
+        keywords: category && category.seoKeywords ? category.seoKeywords : '',
     };
 }
 

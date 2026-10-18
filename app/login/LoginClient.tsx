@@ -24,7 +24,14 @@ export default function LoginClient() {
 
         try {
             await login(username, password);
-            router.push('/');
+            // ✅ 核心：读取拦截器记录的现场，如果有就跳回去，没有就回首页
+            const redirectUrl = sessionStorage.getItem('login_redirect_url') || '/';
+            // 清理现场记录（避免下次登录乱跳）
+            sessionStorage.removeItem('login_redirect_url');
+            // ✅ 登录成功，跳转到原页面
+            router.push(redirectUrl);
+            router.refresh(); // 可选：刷新服务端组件
+            //router.push('/');
         } catch (err) {
             setError(err instanceof Error ? err.message : '登录失败');
         } finally {

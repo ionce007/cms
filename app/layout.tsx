@@ -4,6 +4,8 @@ import { getSiteConfig } from '@/lib/siteConfig';
 import { SITE_URL } from '@/config/env';
 import BaiduAnalytics from '@/components/frontend/BaiduAnalytics';
 import { AuthProvider } from '@/contexts/AuthContext';
+// ✅ 1. 引入我们封装的 LightboxProvider
+import { LightboxProvider } from '@/components/frontend/ImageLightbox';
 import '@/public/css/globals.css';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -40,7 +42,12 @@ export default function RootLayout({ children, }: { children: React.ReactNode; }
     return (
         <html lang="zh-CN">
             <body>
-                <AuthProvider>{children}</AuthProvider>
+                <AuthProvider>
+                    {/* ✅ 2. 将 LightboxProvider 包裹在应用最外层（或包裹 children） */}
+                    <LightboxProvider>
+                        {children}
+                    </LightboxProvider>
+                </AuthProvider>
                 <BaiduAnalytics />
             </body>
         </html>

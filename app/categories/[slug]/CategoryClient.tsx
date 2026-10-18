@@ -16,7 +16,6 @@ import { FrontendArticle } from '@/types/frontend';
 import { API_BASE_URL } from '@/config/env';
 
 const ITEMS_PER_PAGE = 6;
-//const baseUrl = process.env.API_URL || 'https://blog.foryet.com/api';
 
 interface CategoryClientProps {
     slug: string;

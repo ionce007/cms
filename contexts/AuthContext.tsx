@@ -1,14 +1,9 @@
 // contexts/AuthContext.tsx
 'use client';
 
-import {
-    createContext,
-    useContext,
-    useState,
-    useEffect,
-    useCallback,
-    ReactNode,
-} from 'react';
+
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode, } from 'react';
+import { usePathname } from 'next/navigation';
 import { API_BASE_URL } from '@/config/env';
 
 interface User {
@@ -45,10 +40,21 @@ const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'auth_user';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+    const pathname = usePathname();
+
     const [user, setUser] = useState<User | null>(null);
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
+    // ✅ 拦截器：自动记录当前页面（排除登录页本身和纯 API 页面）
+    useEffect(() => {
+        if (pathname && !pathname.startsWith('/login') && !pathname.startsWith('/register')) {
+            // 将当前路径和查询参数记录下来
+            const currentUrl = window.location.pathname + window.location.search;
+            sessionStorage.setItem('login_redirect_url', currentUrl);
+        }
+    }, [pathname]);
+    
     // ✅ 清理登录状态
     const clearAuth = useCallback(() => {
         setUser(null);

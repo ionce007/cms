@@ -64,10 +64,13 @@ app.post('/articles/:id/view', controllers.Article.incrementViewCount);
 app.post('/articles/:id/like', requireAuth, controllers.Article.toggleLike);
 app.post('/articles/:id/marked', requireAuth, controllers.Article.toggleBookmark);
 app.get('/articles/:id/related', controllers.Article.getRelatedArticlesById);
+
 app.get('/categories', controllers.Category.getCategories);
 app.get('/categories/articles', controllers.Article.getArticles);
 app.get('/categories/categoryarticles', controllers.Category.getCategoryArticlePairs);
+app.get('/categories/slug/:slug', controllers.Category.getCategoryBySlug);
 app.get('/categories/:id', controllers.Category.getCategoryById);
+
 app.get('/tags', controllers.Tag.getTags);
 app.get('/tags/tagarticles', controllers.Tag.getTagArticlePairs);
 app.get('/tags/:id', controllers.Tag.getTagById);
@@ -77,15 +80,13 @@ app.get('/frags/mark/:mark', controllers.Frag.getFragByMark);
 app.get('/siteinfo', controllers.Site.getSiteInfo);
 
 app.get('/formulas', optionalAuth, controllers.Formula.getFormulas);
-app.get('/formulas/:id', requireAuth, controllers.Formula.getFormulaById);
+app.get('/formulas/:id', optionalAuth, controllers.Formula.getFormulaById);
+app.get('/formulas/:id/meta', optionalAuth, controllers.Formula.getFormulaById);
 app.post('/formulas/:id/view', controllers.Formula.incrementViewCount);
 app.post('/formulas/:id/like', requireAuth, controllers.Formula.toggleLike);
 app.post('/formulas/:id/downloadcount', controllers.Formula.incrementDownloadCount);
 app.post('/formulas/:id/marked', requireAuth, controllers.Formula.toggleBookmark);
-//app.get('/formulas/:id/download', requireAuth, controllers.BaiduToken.getDownloadUrl)
-//app.get('/formulas/:id/download', controllers.Formula.getDownloadUrl);
 
-//app.get('/bdpan/list', controllers.BaiduToken.getPanFiles)
 app.get('/bdpan/auth', controllers.BaiduToken.getBaiduAuthCode)
 app.get('/bdpan/token', controllers.BaiduToken.getToken)
 app.get('/bdpan/:id/download', requireAuth, controllers.BaiduToken.getDownloadUrl)

@@ -31,6 +31,7 @@
         "qiniu-js": "^3.4.4",
         "react": "^19.2.8",
         "react-dom": "^19.2.8",
+        "react-easy-crop": "^6.2.4",
         "react-markdown": "^10.1.0",
         "rehype-raw": "^7.0.0",
         "remark-gfm": "^4.0.1",
@@ -38,7 +39,8 @@
         "sequelize": "^6.37.8",
         "swr": "^2.5.1",
         "sync-request": "^6.1.0",
-        "tailwind-merge": "^3.6.0"
+        "tailwind-merge": "^3.6.0",
+        "yet-another-react-lightbox": "^3.32.2"
     },
     "devDependencies": {
         "@types/dompurify": "^3.0.5",

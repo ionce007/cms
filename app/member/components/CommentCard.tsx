@@ -142,14 +142,6 @@ export default function CommentCard({ comment, onDelete }: CommentCardProps) {
             >
                 {/* ✅ 封面 - 使用 CoverImage 组件，自动走代理 */}
                 <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0">
-                    {/*<CoverImage
-                        src={targetCover}
-                        alt={targetTitle}
-                        className="w-full h-full"
-                        objectFit="cover"
-                        fallbackIcon={isFormula ? '∑' : '📄'}
-                        useProxy={true}
-                    />*/}
                     <CoverImage
                         src={targetCover}
                         alt={targetTitle}
