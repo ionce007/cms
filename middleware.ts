@@ -6,9 +6,9 @@ import { API_BASE_URL } from '@/config/env'
 // ✅ 你的 Express 后端 API 地址（从环境变量获取）
 //const EXPRESS_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088/api';
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
     const { pathname, search } = request.nextUrl;
-
+    console.log('middleware->request.headers = ', request.headers)
     // 1. 排除不需要记录的资源
     const isStatic = pathname.match(/\.(png|jpg|jpeg|gif|svg|css|js|ico|woff2?|ttf|map)$/i);
     const isInternal = pathname.startsWith('/_next') || pathname.startsWith('/api');
@@ -21,8 +21,8 @@ export async function proxy(request: NextRequest) {
     if (pathname === '/favicon.ico' || pathname === '/robots.txt') {
         return NextResponse.next();
     }
-//console.log('EO-Client-IP = ', request.headers.get('EO-Client-IP'),'    EO-Client-IPCountry = ', request.headers.get('EO-Client-IPCountry') )
-    console.log('request.headers = ',request.headers)
+    //console.log('EO-Client-IP = ', request.headers.get('EO-Client-IP'),'    EO-Client-IPCountry = ', request.headers.get('EO-Client-IPCountry') )
+    //console.log('request.headers = ',request.headers)
     // 3. 异步发送请求到 Express（不阻塞页面渲染）
     // 使用 Promise.resolve().then() 确保不阻塞当前请求流
     Promise.resolve().then(async () => {
