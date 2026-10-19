@@ -6,9 +6,10 @@ import { API_BASE_URL } from '@/config/env'
 // ✅ 你的 Express 后端 API 地址（从环境变量获取）
 //const EXPRESS_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088/api';
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
     const { pathname, search } = request.nextUrl;
-    console.log('proxy->request.headers = ', request.headers)
+    console.log('middleware log: BBBBBBBBB')
+    console.log('middleware->request.headers = ', request.headers)
     // 1. 排除不需要记录的资源
     const isStatic = pathname.match(/\.(png|jpg|jpeg|gif|svg|css|js|ico|woff2?|ttf|map)$/i);
     const isInternal = pathname.startsWith('/_next') || pathname.startsWith('/api');
