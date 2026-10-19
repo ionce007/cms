@@ -122,5 +122,7 @@ app.put('/member/profile', requireAuth, controllers.Member.updateMemberProfile);
 // 我的评论
 app.get('/member/comments', requireAuth, controllers.Member.getMyComments);
 app.delete('/member/comments/:id', requireAuth, controllers.Member.deleteMyComment);
+
+app.post('/logs/visit', optionalAuth, controllers.VisitLog.createVisitLog);
 // 导出处理函数
 export default app;

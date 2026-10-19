@@ -6,11 +6,13 @@ const FragController = require('./FragController');
 const SiteController = require('./SiteController');
 const ImageController = require('./imageProxyController');
 const BaiduAuthController = require('./baidu/AuthController')
-const TokenController = require('./TokenControllers')
+const TokenController = require('./TokenController')
 const FormulaController = require('./FormulaController')
 const MemberController = require('./MemberController')
 const CommentController = require('./CommentController')
 const UploadController = require('./UploadController')
+const VisitlogController = require('./VisitlogController');
+
 //exports.Article = ArticleController;
 
 module.exports = {
@@ -26,4 +28,5 @@ module.exports = {
     Member: MemberController,
     Comment: CommentController,
     Upload: UploadController,
+    VisitLog: VisitlogController,
 }

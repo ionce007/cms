@@ -12,7 +12,7 @@ Loginlog.init(
             primaryKey: true,
             comment: 'ID，关键字串类型，自动递增',
         },
-        uid: { type: DataTypes.INTEGER, comment: '用户ID' },
+        mid: { type: DataTypes.INTEGER, comment: '会员ID' },
         ip: { type: DataTypes.STRING(50), comment: '登录IP' },
         country: { type: DataTypes.STRING(255), comment: '登录地址' },
         prov: { type: DataTypes.STRING(50), comment: '省份' },
@@ -25,7 +25,7 @@ Loginlog.init(
     {
         sequelize,
         tableName: 'cms_loginlog',  // 指定表名
-        comment: '登录日志表'  // 表注释
+        comment: '会员登录日志表'  // 表注释
     }
 );
 

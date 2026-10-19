@@ -21,6 +21,7 @@ const MemberBookmark = require('./MemberBookmark')
 const MemberLike = require('./MemberLike')
 const MemberDownload = require('./MemberDownload')
 const Comment = require('./Comment');
+const VisitLog = require('./VisitLog');
 
 const sequelize = require('../common/db');
 let isInitialized = false;
@@ -96,6 +97,8 @@ function initAssociations() {
     MemberDownload.belongsTo(Member, { foreignKey: 'memberId', as: 'Member' });
     Member.hasMany(MemberDownload, { foreignKey: 'memberId', as: 'Downloads' });
 
+    User.belongsTo(Role, { foreignKey: 'role_id' });
+    Role.hasMany(User, { foreignKey: 'role_id' });
 };
 
 async function initializeDatabase() {
@@ -142,3 +145,4 @@ exports.MemberBookmark = MemberBookmark;
 exports.MemberLike = MemberLike;
 exports.MemberDownload = MemberDownload;
 exports.Comment = Comment;
+exports.VisitLog = VisitLog;

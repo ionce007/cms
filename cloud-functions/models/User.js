@@ -30,6 +30,5 @@ User.init({
     tableName: 'sys_user',
     comment: '系统用户表'
 });
-User.belongsTo(Role, { foreignKey: 'role_id' });
-Role.hasMany(User, { foreignKey: 'role_id' });
+
 module.exports = User;

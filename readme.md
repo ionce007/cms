@@ -136,7 +136,7 @@ cms-dashboard/
 **🛠️ 技术栈**
 
 | 技术 | 版本 | 用途 |
-| --- | --- | --- |
+| ---- | --- | ---- |
 | Next.js | 14.2 | React 全栈框架，App Router |
 | React | 18.3 | 用户界面库 |
 | TypeScript | 5.4 | 类型安全 |
