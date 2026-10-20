@@ -13,10 +13,10 @@ export const metadata: Metadata = {
 
 export default async function AboutChildPage({ params }: AboutPageProps) {
     const { slug } = await params;
-    let pageParam = 'aboutus'
+    /*let pageParam = 'aboutus'
     if (slug) {
         if (slug.trim().toLocaleLowerCase() === 'page-46.html') pageParam = 'donate'
         else if (slug.trim().toLocaleLowerCase() === 'page-47.html') pageParam = 'gratitude'
-    }
-    return <AboutChildClient slug={pageParam} />;
+    }*/
+    return <AboutChildClient slug={slug} />;
 }

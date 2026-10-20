@@ -8,8 +8,14 @@ import { API_BASE_URL } from '@/config/env'
 
 export async function proxy(request: NextRequest) {
     const { pathname, search } = request.nextUrl;
-    console.log('proxy log: BBBBBBBBB')
-    console.log('proxy->request.headers = ', request.headers)
+
+    console.log('pathname = ', pathname);
+    const path = pathname.trim().toLocaleLowerCase();
+    const url = request.nextUrl.clone();
+    if (path === '/about/page-46.html') { url.pathname = '/about/donate'; return NextResponse.redirect(url) }
+    if (path === '/about/page-47.html') { url.pathname = '/about/gratitude'; return NextResponse.redirect(url) }
+
+    //console.log('proxy->request.headers = ', request.headers)
     // 1. 排除不需要记录的资源
     const isStatic = pathname.match(/\.(png|jpg|jpeg|gif|svg|css|js|ico|woff2?|ttf|map)$/i);
     const isInternal = pathname.startsWith('/_next') || pathname.startsWith('/api');

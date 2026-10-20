@@ -28,7 +28,9 @@ export default function BaiduAnalytics() {
     useEffect(() => {
         if (typeof window === 'undefined') return;
         if (!(window as any)._hmt) return;
-
+        const host = window.location.host;
+        const local = ['localhost:8088','127.0.0.1:8080'];
+        if(local.indexOf(window.location.host)>=0) return;//本地调试，不进行统计
         // 百度统计的 SPA 页面浏览上报
         (window as any)._hmt.push(['_trackPageview', pathname]);
     }, [pathname]);
