@@ -15,8 +15,21 @@ export async function proxy(request: NextRequest) {
     if (path === '/about/page-46.html') { url.pathname = '/about/donate'; return NextResponse.redirect(url) }
     if (path === '/about/page-47.html') { url.pathname = '/about/gratitude'; return NextResponse.redirect(url) }
 
-    //console.log('proxy->request.headers = ', request.headers)
-    // 1. 排除不需要记录的资源
+    const referer = request.headers.get('referer');
+    if (referer) {
+        const part = pathname.split('/');
+        const page = part[part.length - 1];
+        const regex = /^article-\d+\.html$/;
+        if (regex.test(page)) {
+            const match = page.match(/article-(\d+)\.html/);
+            if (match) {
+                const numStr = match[1]; 
+                const newUrl = referer.replace(/(articles\/)\d+$/, `$1${numStr}`);
+                return NextResponse.redirect(newUrl)
+            }
+        }
+    }
+    /*// 1. 排除不需要记录的资源
     const isStatic = pathname.match(/\.(png|jpg|jpeg|gif|svg|css|js|ico|woff2?|ttf|map)$/i);
     const isInternal = pathname.startsWith('/_next') || pathname.startsWith('/api');
 
@@ -28,8 +41,6 @@ export async function proxy(request: NextRequest) {
     if (pathname === '/favicon.ico' || pathname === '/robots.txt') {
         return NextResponse.next();
     }
-    //console.log('EO-Client-IP = ', request.headers.get('EO-Client-IP'),'    EO-Client-IPCountry = ', request.headers.get('EO-Client-IPCountry') )
-    //console.log('request.headers = ',request.headers)
     // 3. 异步发送请求到 Express（不阻塞页面渲染）
     // 使用 Promise.resolve().then() 确保不阻塞当前请求流
     Promise.resolve().then(async () => {
@@ -85,7 +96,7 @@ export async function proxy(request: NextRequest) {
         } catch (err) {
             console.error('Middleware 记录页面访问失败:', err);
         }
-    });
+    });*/
 
     // 4. 立即放行请求，不等待日志写入完成
     return NextResponse.next();

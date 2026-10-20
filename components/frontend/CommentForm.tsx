@@ -12,6 +12,7 @@ import {
 } from '@/lib/sanitizeHtml';
 import { restoreOriginalImageUrls } from '@/lib/imageProxy';
 import { cn } from '@/lib/utils';
+import SafeImage from './SafeImage';
 
 interface CommentFormProps {
     onSubmit: (data: {
@@ -208,9 +209,14 @@ export default function CommentForm({
             {/* ✅ 已登录：显示用户身份 */}
             {isLoggedIn && user && (
                 <div className="flex items-center space-x-2 text-xs text-gray-600">
-                    <img
+                    {/*<img
                         src={user.avatar || '/img/avatar-default.png'}
                         alt={user.nickname || user.username}
+                        className="w-5 h-5 rounded-full object-cover"
+                    />*/}
+                    <SafeImage
+                        src={user?.avatar || '/img/avatar-default-member.png'}
+                        alt={user?.nickname || user?.username || '用户'}
                         className="w-5 h-5 rounded-full object-cover"
                     />
                     <span>

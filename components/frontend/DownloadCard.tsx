@@ -2,7 +2,6 @@
 'use client';
 
 import Link from 'next/link';
-//import SafeImage from './SafeImage';
 import CoverImage from './CoverImage';
 import { formatFileSize, formatTimestamp } from '@/config/constants';
 import { API_BASE_URL } from '@/config/env';
