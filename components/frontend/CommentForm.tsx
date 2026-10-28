@@ -4,23 +4,13 @@
 import { useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import RichTextEditor, { RichTextEditorHandle } from './RichTextEditor';
-import {
-    extractText,
-    sanitizeHtml,
-    hasImage,
-    isContentEmpty,
-} from '@/lib/sanitizeHtml';
+import { extractText, sanitizeHtml, hasImage, isContentEmpty, } from '@/lib/sanitizeHtml';
 import { restoreOriginalImageUrls } from '@/lib/imageProxy';
 import { cn } from '@/lib/utils';
 import SafeImage from './SafeImage';
 
 interface CommentFormProps {
-    onSubmit: (data: {
-        content: string;
-        nickname?: string;
-        email?: string;
-        parentId?: number;
-    }) => Promise<any>;
+    onSubmit: (data: { content: string; nickname?: string; email?: string; parentId?: number; }) => Promise<any>;
     isSubmitting: boolean;
     parentId?: number;
     replyTo?: string;
@@ -67,9 +57,8 @@ export default function CommentForm({
             setError('评论内容不能超过 5000 字');
             return;
         }
-
         // ✅ 未登录：检查昵称
-        if (!isLoggedIn && !nickname.trim()) {
+        if (!isLoggedIn && nickname.trim() === '') {
             setError('请填写昵称');
             return;
         }
@@ -116,7 +105,6 @@ export default function CommentForm({
 
             // ✅ 提交前再次清洗（防止注入）
             const cleanHtml = sanitizeHtml(finalHtml);
-
             // ✅ 提交
             await onSubmit({
                 content: cleanHtml,
@@ -230,14 +218,19 @@ export default function CommentForm({
             )}
 
             {/* ✅ 富文本编辑器 */}
-            <RichTextEditor
-                ref={editorRef}
-                placeholder={placeholder}
-                minHeight={compact ? 80 : 140}
-                maxLength={5000}
-                allowImage={true}
-                onChange={handleEditorChange}
-            />
+            <div className="max-h-[300px] overflow-y-auto">
+                <RichTextEditor
+                    ref={editorRef}
+                    placeholder={placeholder}
+                    minHeight={compact ? 80 : 140}
+                    maxLength={5000}
+                    allowImage={true}
+                    onChange={handleEditorChange}
+                    imgUploadPath='comments' 
+                    isAdmin={true} 
+                />
+            </div>
+
 
             {/* ✅ 错误提示 */}
             {error && (

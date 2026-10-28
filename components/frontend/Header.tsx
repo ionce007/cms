@@ -317,7 +317,7 @@ export default function Header() {
                                             </Link>
 
                                             {/* 管理员专属入口 */}
-                                            {user?.role === 'admin' && (
+                                            {user?.role === 'super' && (
                                                 <Link
                                                     href="/admin"
                                                     onClick={() => setIsUserMenuOpen(false)}
@@ -513,7 +513,7 @@ export default function Header() {
                                             <span>个人设置</span>
                                         </Link>
 
-                                        {user?.role === 'admin' && (
+                                        {user?.role === 'super' && (
                                             <Link
                                                 href="/admin"
                                                 onClick={() => setIsMobileMenuOpen(false)}

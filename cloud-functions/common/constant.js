@@ -33,5 +33,10 @@ const FORMULA_CATEGORY = {
   OTHERS: 6,
   SEEK: 7
 };
-
-module.exports = { PAGE_TYPES, PAGE_STATUS, FORMULA_KIND, FORMULA_CATEGORY };
+const defaultQiniuParams = {
+    accessKey: '_dzyx12scaLcXISGKnrfHTtRHpyDAZlgEbkgKgoY',
+    secretKey: 'Q0ndMWFnChD-eNI_csBXaT6Wo8RGp1XJ5fH4oAnU',
+    domain: 'img.foryet.com',
+    bucket: 'chancms'
+};
+module.exports = { PAGE_TYPES, PAGE_STATUS, FORMULA_KIND, FORMULA_CATEGORY, defaultQiniuParams };

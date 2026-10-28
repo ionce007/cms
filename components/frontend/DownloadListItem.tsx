@@ -19,7 +19,7 @@ export default function DownloadListItem({
     index = 0,
     linkPrefix = '/downloads',
 }: DownloadListItemProps) {
-    const hasDetail = item.hasContent === true;
+    const hasDetail = true;//item.hasContent === true;
     const detailUrl = `${linkPrefix}/${item.fs_id}`;
     const downloadUrl = `${API_BASE_URL}${API_ENDPOINTS.FORMULA_DETAIL(item.fs_id)}/download`;
     const isFree = item.isSell === 0 || item.price === 0 || !item.price;

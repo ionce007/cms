@@ -4,6 +4,14 @@ require('dotenv').config();
 const { Sequelize } = require('sequelize');
 
 let sequelize;
+const dbConfig = {
+    charset: 'utf8mb4',
+    timezone: '+08:00',
+    connectionLimit: 10,
+    acquireTimeout: 60000,
+    //timeout: 60000,
+    //reconnect: true
+};
 
 const cfg = {
     port: process.env.PORT || 3000,
@@ -18,28 +26,13 @@ const cfg = {
         pool: { max: 5, min: 0, acquire: 30000, idle: 3000 }
     }
 };
-/*
-if (!global.sequelize) {
-    global.sequelize = new Sequelize(
-        cfg.db.database,
-        cfg.db.username,
-        cfg.db.password,
-        {
-            host: cfg.db.host,
-            port: cfg.db.port,
-            dialect: cfg.db.dialect,
-            pool: cfg.db.pool,
-            logging: false
-        }
-    );
-    sequelize = global.sequelize;
-}
-*/
+
 sequelize = new Sequelize(
     cfg.db.database,
     cfg.db.username,
     cfg.db.password,
     {
+        ...dbConfig,
         host: cfg.db.host,
         port: cfg.db.port,
         dialect: cfg.db.dialect,

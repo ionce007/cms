@@ -3,25 +3,10 @@ import { FrontendArticle } from "./frontend";
 // ========== 基础类型 ==========
 export type ContentStatus = 'published' | 'draft' | 'archived';
 export type MediaType = 'image' | 'video' | 'document' | 'audio';
-export type UserRole = 'Admin' | 'Editor' | 'User' | 'Moderator';
+export type UserRole = 'Super' | 'Admin' | 'Editor' | 'User' | 'Moderator';
 export type StatColor = 'blue' | 'green' | 'purple' | 'orange' | 'red';
 export type ChangeType = 'increase' | 'decrease';
 
-// ========== 数据模型 ==========
-/*export interface Article {
-    id: number;
-    title: string;
-    category: string;
-    author: string;
-    date: string;
-    views: number;
-    status: ContentStatus;
-    excerpt?: string;
-    tags?: string[];
-    coverImage?: string;
-    readTime?: number;
-}
-*/
 export interface Media {
     id: number;
     title: string;

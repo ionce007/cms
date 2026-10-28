@@ -13,15 +13,20 @@ export interface UploadResult {
 
 export async function uploadImageToQiniu(
     file: File,
+    uploadPath: string,
+    isAdmin: Boolean,
     onProgress?: (percent: number) => void
 ): Promise<UploadResult> {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json', };
+    if(isAdmin) headers['Authorization'] = `Bearer ${localStorage.getItem('admin_token')}`
     // 1. 获取上传 Token
     const tokenRes = await fetch(`${API_BASE_URL}/upload/qiniu-token`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
             fileName: file.name,
             fileType: file.type,
+            path: uploadPath,
         }),
     });
 

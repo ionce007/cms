@@ -13,7 +13,6 @@ const CommentController = require('./CommentController')
 const UploadController = require('./UploadController')
 const VisitlogController = require('./VisitlogController');
 
-//exports.Article = ArticleController;
 
 module.exports = {
     Article: ArticleController,

@@ -8,8 +8,7 @@ class Formula extends Model { }
 Formula.init(
     {
         fs_id: {
-            type: DataTypes.INTEGER,
-            defaultValue: DataTypes.INTEGER,
+            type: DataTypes.STRING(60),
             primaryKey: true,
             comment: '指标公式编号，该字段从百度网盘获取',
         },

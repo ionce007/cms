@@ -105,7 +105,7 @@ async function initializeDatabase() {
     let result = { code: 0, message: 'Failed to initialize database.' };
     try {
         console.log('Database synchronization in progress, please wait......');
-        //initAssociations();
+        initAssociations();
         await sequelize.sync({ alter: true });
         //await sequelize.sync();
         console.log('Database configured.');

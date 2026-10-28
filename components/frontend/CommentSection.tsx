@@ -29,7 +29,7 @@ export default function CommentSection({
         email?: string;
         parentId?: number;
     }) => {
-        return await addComment(data.content, data.parentId);
+        return await addComment(data.content, data.nickname, data.email, data.parentId);
     };
 
     const handleDelete = async (id: number) => {

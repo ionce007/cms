@@ -17,14 +17,14 @@ app.use(express.urlencoded({ extended: true }));
 
 //import app from "../index.js"; // 导入 index.js 中的 Express 应用
 //defineAssociations();
-
+/*
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type');
     next();
 });
-
+*/
 // 添加日志中间件
 app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
@@ -87,8 +87,6 @@ app.post('/formulas/:id/like', requireAuth, controllers.Formula.toggleLike);
 app.post('/formulas/:id/downloadcount', controllers.Formula.incrementDownloadCount);
 app.post('/formulas/:id/marked', requireAuth, controllers.Formula.toggleBookmark);
 
-app.get('/bdpan/auth', controllers.BaiduToken.getBaiduAuthCode)
-app.get('/bdpan/token', controllers.BaiduToken.getToken)
 app.get('/bdpan/:id/download', requireAuth, controllers.BaiduToken.getDownloadUrl)
 
 app.get('/comments', controllers.Comment.getComments);
@@ -126,3 +124,4 @@ app.delete('/member/comments/:id', requireAuth, controllers.Member.deleteMyComme
 app.post('/logs/visit', optionalAuth, controllers.VisitLog.createVisitLog);
 // 导出处理函数
 export default app;
+//module.exports = { app }

@@ -107,10 +107,10 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
         }
 
         // 免费文件：直接下载
-        if (item.isSell === 0 || item.price === 0) {
+        /*if (item.isSell === 0 || item.price === 0) {
             handleDirectDownload();
             return;
-        }
+        }*/
 
         // 付费文件：弹出支付模态框
         setIsPaymentModalOpen(true);

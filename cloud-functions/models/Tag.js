@@ -9,7 +9,6 @@ Tag.init(
     {
         id: {
             type: DataTypes.INTEGER,
-            defaultValue: DataTypes.INTEGER,
             autoIncrement: true,
             primaryKey: true,
             comment: '标签ID，关键字串类型，自动递增',

@@ -44,7 +44,12 @@ body {
 .max-h-\[200px\] {
     max-height: 200px;
 }
-
+max-h-\[300px\] {
+    max-height: 300px;
+}
+max-h-\[350px\] {
+    max-height: 350px;
+}
 .horizonal-align {
     margin: auto 0;
 }
@@ -842,4 +847,9 @@ body {
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;                  /* Chrome/Safari */
+}
+/* app/globals.css */
+.rich-text-content img.image-selected {
+    outline: 3px solid #ef4444 !important; /* 红色粗边框 */
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
 }

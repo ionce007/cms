@@ -64,7 +64,7 @@ export default function MemberSettingsPage() {
             const compressed = await compressImage(file, 400, 400, 0.8);
 
             // 3. 上传至七牛云
-            const result = await uploadImageToQiniu(compressed, (percent) => {
+            const result = await uploadImageToQiniu(compressed, 'avatar', false, (percent) => {
                 setUploadProgress(Math.round(percent));
             });
 

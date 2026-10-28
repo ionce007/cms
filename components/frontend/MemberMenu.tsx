@@ -119,7 +119,7 @@ export default function UserMenu() {
                         <span>我的下载</span>
                     </Link>
 
-                    {user?.role === 'admin' && (
+                    {user?.role === 'super' && (
                         <Link
                             href="/admin"
                             onClick={() => setIsOpen(false)}

@@ -66,7 +66,7 @@ export function useComments({ targetType, targetId }: UseCommentsParams) {
 
     // ✅ 发表评论（顶级或回复）
     const addComment = useCallback(
-        async (content: string, parentId?: number) => {
+        async (content: string, nickname?: string, email?: string, parentId?: number) => {
             setSubmitting(true);
             try {
                 const res = await fetch(`${API_BASE_URL}/comments`, {
@@ -79,6 +79,8 @@ export function useComments({ targetType, targetId }: UseCommentsParams) {
                         targetType,
                         targetId,
                         content,
+                        nickname,
+                        email,
                         parentId,
                     }),
                 });

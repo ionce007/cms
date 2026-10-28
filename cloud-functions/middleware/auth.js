@@ -63,7 +63,7 @@ async function optionalAuth(req, res, next) {
  */
 async function requireAdmin(req, res, next) {
     await requireAuth(req, res, () => {
-        if (req.user.role !== 'admin') {
+        if (req.user.role !== 'super') {
             return res.status(403).json({ code: -1, message: '权限不足', });
         }
         next();

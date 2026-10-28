@@ -24,11 +24,14 @@ export interface RichTextEditorHandle {
 interface RichTextEditorProps {
     placeholder?: string;
     minHeight?: number;
+    maxHeight?: number; // ✅ 新增：控制最大高度
     maxLength?: number;
     className?: string;
     onChange?: (html: string) => void;
     onBlur?: () => void;
     allowImage?: boolean;
+    imgUploadPath?: string;
+    isAdmin?: boolean;
 }
 
 // ============ 预设配置 ============
@@ -107,11 +110,14 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
         {
             placeholder = '请输入内容...',
             minHeight = 200,
+            maxHeight = 600, // 默认最大高度
             maxLength = 5000,
             className,
             onChange,
             onBlur,
             allowImage = true,
+            imgUploadPath = 'uploads',
+            isAdmin = false
         },
         ref
     ) {
@@ -135,16 +141,13 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
         const [showTableMenu, setShowTableMenu] = useState(false);
 
         // 弹窗
-        const [dialogType, setDialogType] = useState<'link' | 'code' | null>(null);
+        const [dialogType, setDialogType] = useState<'link' | 'code' | 'imageUrl' | null>(null);
         const [dialogValue, setDialogValue] = useState('');
         const [dialogText, setDialogText] = useState('');
 
-        // ✅ 图片网址弹窗
-        const [showImageUrlDialog, setShowImageUrlDialog] = useState(false);
-        const [imageUrlForm, setImageUrlForm] = useState({
-            url: '',
-            alt: '',
-        });
+        // ✅ 图片替换弹窗
+        const [showReplaceImageDialog, setShowReplaceImageDialog] = useState(false);
+        const [replaceImageUrl, setReplaceImageUrl] = useState('');
 
         // 图片自定义尺寸弹窗
         const [showImageSizeDialog, setShowImageSizeDialog] = useState(false);
@@ -335,23 +338,6 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
             setShowTableMenu(false);
         };
 
-        // ============ 代码块 ============
-        const insertCodeBlock = () => {
-            const code = prompt('请输入代码内容：');
-            if (!code) return;
-
-            const escaped = code
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;');
-
-            const codeHtml = `<pre style="background: #1f2937; color: #f3f4f6; padding: 12px; border-radius: 8px; overflow-x: auto; margin: 12px 0; font-family: ui-monospace, monospace; font-size: 13px;"><code>${escaped}</code></pre><p><br /></p>`;
-
-            editorRef.current?.focus();
-            document.execCommand('insertHTML', false, codeHtml);
-            updateState();
-        };
-
         // ============ 代码示例弹窗 ============
         const openCodeDialog = () => {
             setDialogType('code');
@@ -494,69 +480,40 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
             updateState();
         };
 
-        // ============ ✅ 打开图片网址弹窗 ============
+        // ============ 打开图片网址弹窗 ============
         const openImageUrlDialog = () => {
-            setImageUrlForm({ url: '', alt: '' });
-            setShowImageUrlDialog(true);
+            setDialogValue('');
+            setDialogText('');
+            setDialogType('imageUrl');
             setShowImageSizeMenu(false);
         };
 
-        // ============ ✅ 校验图片 URL ============
         const validateImageUrl = (url: string): { valid: boolean; message?: string } => {
             const trimmed = url.trim();
+            if (!trimmed) return { valid: false, message: '请输入图片网址' };
+            if (trimmed.startsWith('//')) return { valid: true };
+            if (!/^https?:\/\//i.test(trimmed)) return { valid: false, message: '请输入有效的图片网址' };
 
-            if (!trimmed) {
-                return { valid: false, message: '请输入图片网址' };
-            }
-
-            // 协议相对 URL 支持
-            if (trimmed.startsWith('//')) {
-                return { valid: true };
-            }
-
-            // 必须以 http:// 或 https:// 开头
-            if (!/^https?:\/\//i.test(trimmed)) {
-                return {
-                    valid: false,
-                    message: '请输入有效的图片网址（以 http:// 或 https:// 开头）',
-                };
-            }
-
-            // 排除内网地址
             try {
                 const urlObj = new URL(trimmed);
                 const privateRegex = /^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|127\.|localhost|0\.0\.0\.0)/i;
-                if (privateRegex.test(urlObj.hostname)) {
-                    return { valid: false, message: '不允许使用内网地址' };
-                }
+                if (privateRegex.test(urlObj.hostname)) return { valid: false, message: '不允许使用内网地址' };
             } catch {
                 return { valid: false, message: '图片网址格式不正确' };
             }
-
             return { valid: true };
         };
 
-        // ============ ✅ 插入图片网址 ============
         const insertImageFromUrl = () => {
-            const url = imageUrlForm.url.trim();
-
-            // 校验
+            const url = dialogValue.trim();
             const validation = validateImageUrl(url);
-            if (!validation.valid) {
-                alert(validation.message || '图片网址无效');
-                return;
-            }
+            if (!validation.valid) return alert(validation.message || '图片网址无效');
 
-            // 补全协议
             let finalUrl = url;
-            if (url.startsWith('//')) {
-                finalUrl = `https:${url}`;
-            }
+            if (url.startsWith('//')) finalUrl = `https:${url}`;
 
-            // ✅ 显示时用代理 URL
             const displayUrl = getProxiedImageUrl(finalUrl, { forceProxy: true });
-
-            const alt = imageUrlForm.alt.trim() || '图片';
+            const alt = dialogText.trim() || '图片';
 
             const imgHtml = `<img src="${displayUrl}" data-original-src="${finalUrl}" alt="${alt}" style="width: 50%; max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0; display: block;" /><p><br /></p>`;
 
@@ -564,18 +521,44 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
             document.execCommand('insertHTML', false, imgHtml);
             updateState();
 
-            setShowImageUrlDialog(false);
-            setImageUrlForm({ url: '', alt: '' });
+            setDialogType(null);
+            setDialogValue('');
+            setDialogText('');
+        };
+
+        // ✅ 打开替换图片弹窗
+        const openReplaceImageDialog = () => {
+            if (!selectedImage) return;
+            setReplaceImageUrl(selectedImage.getAttribute('data-original-src') || selectedImage.src);
+            setShowReplaceImageDialog(true);
+        };
+
+        // ✅ 确认替换图片
+        const confirmReplaceImage = () => {
+            if (!selectedImage) return;
+            const url = replaceImageUrl.trim();
+            const validation = validateImageUrl(url);
+            if (!validation.valid) return alert(validation.message || '图片网址无效');
+
+            let finalUrl = url;
+            if (url.startsWith('//')) finalUrl = `https:${url}`;
+
+            const displayUrl = getProxiedImageUrl(finalUrl, { forceProxy: true });
+
+            // 替换 src 和 data-original-src
+            selectedImage.src = displayUrl;
+            selectedImage.setAttribute('data-original-src', finalUrl);
+
+            updateState();
+            setShowReplaceImageDialog(false);
         };
 
         // ============ 打开自定义图片尺寸弹窗 ============
         const openImageSizeDialog = () => {
             if (!selectedImage) return;
-
             const originalWidth = selectedImage.naturalWidth || 0;
             const originalHeight = selectedImage.naturalHeight || 0;
             const ratio = originalHeight > 0 ? originalWidth / originalHeight : 1;
-
             const currentWidth = selectedImage.clientWidth || originalWidth;
             const currentHeight = selectedImage.clientHeight || originalHeight;
 
@@ -592,65 +575,36 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
             setShowImageSizeMenu(false);
         };
 
-        // ============ 输入宽度（联动高度） ============
         const handleWidthChange = (value: string) => {
             const cleanValue = value.replace(/[^\d]/g, '');
-
             setImageSizeForm(prev => {
-                if (!prev.lockRatio) {
-                    return { ...prev, width: cleanValue };
-                }
-
+                if (!prev.lockRatio) return { ...prev, width: cleanValue };
                 const width = parseInt(cleanValue) || 0;
                 const height = width > 0 ? Math.round(width / prev.ratio) : 0;
-
-                return {
-                    ...prev,
-                    width: cleanValue,
-                    height: height > 0 ? String(height) : '',
-                };
+                return { ...prev, width: cleanValue, height: height > 0 ? String(height) : '' };
             });
         };
 
-        // ============ 输入高度（联动宽度） ============
         const handleHeightChange = (value: string) => {
             const cleanValue = value.replace(/[^\d]/g, '');
-
             setImageSizeForm(prev => {
-                if (!prev.lockRatio) {
-                    return { ...prev, height: cleanValue };
-                }
-
+                if (!prev.lockRatio) return { ...prev, height: cleanValue };
                 const height = parseInt(cleanValue) || 0;
                 const width = height > 0 ? Math.round(height * prev.ratio) : 0;
-
-                return {
-                    ...prev,
-                    height: cleanValue,
-                    width: width > 0 ? String(width) : '',
-                };
+                return { ...prev, height: cleanValue, width: width > 0 ? String(width) : '' };
             });
         };
 
-        // ============ 切换锁定比例 ============
         const toggleLockRatio = () => {
-            setImageSizeForm(prev => ({
-                ...prev,
-                lockRatio: !prev.lockRatio,
-            }));
+            setImageSizeForm(prev => ({ ...prev, lockRatio: !prev.lockRatio }));
         };
 
-        // ============ 应用自定义尺寸 ============
         const applyCustomImageSize = () => {
             if (!selectedImage) return;
-
             const width = parseInt(imageSizeForm.width) || 0;
             const height = parseInt(imageSizeForm.height) || 0;
 
-            if (width <= 0 && height <= 0) {
-                alert('请输入宽度或高度');
-                return;
-            }
+            if (width <= 0 && height <= 0) return alert('请输入宽度或高度');
 
             const containerWidth = editorRef.current?.clientWidth || 800;
 
@@ -681,30 +635,19 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
 
         // ============ 上传图片并插入编辑器 ============
         const uploadAndInsertImage = useCallback(async (file: File) => {
-            if (!file.type.startsWith('image/')) {
-                console.warn('非图片文件，跳过:', file.type);
-                return;
-            }
-
-            if (file.size > 10 * 1024 * 1024) {
-                alert(`图片 ${file.name} 超过 10MB，已跳过`);
-                return;
-            }
+            if (!file.type.startsWith('image/')) return;
+            if (file.size > 10 * 1024 * 1024) return alert(`图片 ${file.name} 超过 10MB，已跳过`);
 
             setUploading(true);
             setUploadProgress(0);
 
             try {
                 const compressed = await compressImage(file, 800, 800, 0.8);
-                const result = await uploadImageToQiniu(compressed, (percent) => {
+                const result = await uploadImageToQiniu(compressed, imgUploadPath, isAdmin, (percent) => {
                     setUploadProgress(Math.round(percent));
                 });
 
-                // ✅ 显示时用代理 URL
-                const displayUrl = getProxiedImageUrl(result.originalUrl, {
-                    forceProxy: true,
-                });
-
+                const displayUrl = getProxiedImageUrl(result.originalUrl, { forceProxy: true });
                 const imgHtml = `<img src="${displayUrl}" data-original-src="${result.originalUrl}" alt="${file.name || '图片'}" style="width: 50%; max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0; display: block;" /><p><br /></p>`;
 
                 editorRef.current?.focus();
@@ -737,14 +680,11 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                 const file = new File([blob], fileName, { type: blob.type });
 
                 const compressed = await compressImage(file, 800, 800, 0.8);
-                const result = await uploadImageToQiniu(compressed, (percent) => {
+                const result = await uploadImageToQiniu(compressed, imgUploadPath, isAdmin, (percent) => {
                     setUploadProgress(Math.round(percent));
                 });
 
-                const displayUrl = getProxiedImageUrl(result.originalUrl, {
-                    forceProxy: true,
-                });
-
+                const displayUrl = getProxiedImageUrl(result.originalUrl, { forceProxy: true });
                 const imgHtml = `<img src="${displayUrl}" data-original-src="${result.originalUrl}" alt="图片" style="width: 50%; max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0; display: block;" /><p><br /></p>`;
 
                 editorRef.current?.focus();
@@ -807,9 +747,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
             for (const item of items) {
                 if (item.type.startsWith('image/')) {
                     const file = item.getAsFile();
-                    if (file) {
-                        imageFiles.push(file);
-                    }
+                    if (file) imageFiles.push(file);
                 }
             }
 
@@ -825,7 +763,6 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                 for (const file of imageFiles) {
                     await uploadAndInsertImage(file);
                 }
-
                 return;
             }
 
@@ -838,17 +775,14 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
 
                 if (base64Matches.length > 0) {
                     e.preventDefault();
-
                     const text = clipboardData.getData('text/plain');
                     if (text && text.trim()) {
                         editorRef.current?.focus();
                         document.execCommand('insertText', false, text);
                     }
-
                     for (const match of base64Matches) {
                         await uploadBase64Image(match[1]);
                     }
-
                     return;
                 }
 
@@ -856,17 +790,14 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                 const imgUrls = extractImageUrls(htmlContent);
                 if (imgUrls.length > 0) {
                     e.preventDefault();
-
                     const text = clipboardData.getData('text/plain');
                     if (text && text.trim()) {
                         editorRef.current?.focus();
                         document.execCommand('insertText', false, text);
                     }
-
                     for (const url of imgUrls) {
                         await uploadImageFromUrl(url);
                     }
-
                     return;
                 }
             }
@@ -933,7 +864,6 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                 setShowSource(true);
             } else {
                 setShowSource(false);
-
                 requestAnimationFrame(() => {
                     if (editorRef.current) {
                         editorRef.current.innerHTML = sourceHtml;
@@ -947,7 +877,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
         return (
             <div
                 className={cn(
-                    'border border-gray-300 rounded-lg',
+                    'border border-gray-300 rounded-lg flex flex-col', // ✅ 改成 flex 布局
                     'focus-within:ring-2 focus-within:ring-primary-500',
                     className
                 )}
@@ -963,8 +893,8 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                 )}
 
                 {/* ==================== 工具栏 ==================== */}
-                <div className="flex items-center flex-wrap gap-0.5 px-2 py-1.5 bg-gray-50 border-b border-gray-200 rounded-t-lg">
-
+                {/* ✅ sticky top-0 z-20 flex-shrink-0 控制吸顶 */}
+                <div className="sticky top-0 z-20 flex items-center flex-wrap gap-0.5 px-2 py-1.5 bg-gray-50 border-b border-gray-200 rounded-t-lg flex-shrink-0">
                     {showSource ? (
                         <>
                             <button
@@ -983,37 +913,17 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                                 <button
                                     ref={fontDropdown.buttonRef}
                                     type="button"
-                                    onClick={() => {
-                                        fontDropdown.updatePosition();
-                                        setShowFontMenu(!showFontMenu);
-                                    }}
+                                    onClick={() => { fontDropdown.updatePosition(); setShowFontMenu(!showFontMenu); }}
                                     className="h-7 px-2 rounded flex items-center justify-center space-x-1 text-xs hover:bg-gray-200 transition-colors"
                                     title="字体"
                                 >
                                     <span>字体</span>
-                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
+                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                                 </button>
                                 {showFontMenu && (
-                                    <div
-                                        className="fixed bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-[9999] editor-dropdown-menu"
-                                        style={{
-                                            top: fontDropdown.position.top,
-                                            left: fontDropdown.position.left,
-                                            width: 160,
-                                        }}
-                                    >
+                                    <div className="fixed bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-[9999] editor-dropdown-menu" style={{ top: fontDropdown.position.top, left: fontDropdown.position.left, width: 160 }}>
                                         {FONT_FAMILIES.map(f => (
-                                            <button
-                                                key={f.value || 'default'}
-                                                type="button"
-                                                onClick={() => applyFontFamily(f.value)}
-                                                className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50"
-                                                style={{ fontFamily: f.value || 'inherit' }}
-                                            >
-                                                {f.label}
-                                            </button>
+                                            <button key={f.value || 'default'} type="button" onClick={() => applyFontFamily(f.value)} className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50" style={{ fontFamily: f.value || 'inherit' }}>{f.label}</button>
                                         ))}
                                     </div>
                                 )}
@@ -1024,85 +934,33 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                                 <button
                                     ref={sizeDropdown.buttonRef}
                                     type="button"
-                                    onClick={() => {
-                                        sizeDropdown.updatePosition();
-                                        setShowSizeMenu(!showSizeMenu);
-                                    }}
+                                    onClick={() => { sizeDropdown.updatePosition(); setShowSizeMenu(!showSizeMenu); }}
                                     className="h-7 px-2 rounded flex items-center justify-center space-x-1 text-xs hover:bg-gray-200 transition-colors"
                                     title="字号"
                                 >
                                     <span>字号</span>
-                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
+                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                                 </button>
                                 {showSizeMenu && (
-                                    <div
-                                        className="fixed bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-[9999] editor-dropdown-menu"
-                                        style={{
-                                            top: sizeDropdown.position.top,
-                                            left: sizeDropdown.position.left,
-                                            width: 100,
-                                        }}
-                                    >
+                                    <div className="fixed bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-[9999] editor-dropdown-menu" style={{ top: sizeDropdown.position.top, left: sizeDropdown.position.left, width: 100 }}>
                                         {FONT_SIZES.map(s => (
-                                            <button
-                                                key={s.value}
-                                                type="button"
-                                                onClick={() => applyFontSize(s.value)}
-                                                className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50"
-                                            >
-                                                {s.label}
-                                            </button>
+                                            <button key={s.value} type="button" onClick={() => applyFontSize(s.value)} className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50">{s.label}</button>
                                         ))}
                                     </div>
                                 )}
                             </div>
 
-                            {/* 分隔线 */}
                             <div className="w-px h-5 bg-gray-300 mx-0.5" />
 
                             {/* 加粗 */}
-                            <button
-                                type="button"
-                                onClick={() => execCommand('bold')}
-                                className="w-7 h-7 rounded flex items-center justify-center text-sm font-bold hover:bg-gray-200 transition-colors"
-                                title="加粗"
-                            >
-                                B
-                            </button>
-
+                            <button type="button" onClick={() => execCommand('bold')} className="w-7 h-7 rounded flex items-center justify-center text-sm font-bold hover:bg-gray-200 transition-colors" title="加粗">B</button>
                             {/* 斜体 */}
-                            <button
-                                type="button"
-                                onClick={() => execCommand('italic')}
-                                className="w-7 h-7 rounded flex items-center justify-center text-sm italic hover:bg-gray-200 transition-colors"
-                                title="斜体"
-                            >
-                                I
-                            </button>
-
+                            <button type="button" onClick={() => execCommand('italic')} className="w-7 h-7 rounded flex items-center justify-center text-sm italic hover:bg-gray-200 transition-colors" title="斜体">I</button>
                             {/* 下划线 */}
-                            <button
-                                type="button"
-                                onClick={() => execCommand('underline')}
-                                className="w-7 h-7 rounded flex items-center justify-center text-sm underline hover:bg-gray-200 transition-colors"
-                                title="下划线"
-                            >
-                                U
-                            </button>
-
+                            <button type="button" onClick={() => execCommand('underline')} className="w-7 h-7 rounded flex items-center justify-center text-sm underline hover:bg-gray-200 transition-colors" title="下划线">U</button>
                             {/* 删除线 */}
-                            <button
-                                type="button"
-                                onClick={() => execCommand('strikeThrough')}
-                                className="w-7 h-7 rounded flex items-center justify-center text-sm line-through hover:bg-gray-200 transition-colors"
-                                title="删除线"
-                            >
-                                S
-                            </button>
+                            <button type="button" onClick={() => execCommand('strikeThrough')} className="w-7 h-7 rounded flex items-center justify-center text-sm line-through hover:bg-gray-200 transition-colors" title="删除线">S</button>
 
-                            {/* 分隔线 */}
                             <div className="w-px h-5 bg-gray-300 mx-0.5" />
 
                             {/* 文字颜色 */}
@@ -1110,10 +968,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                                 <button
                                     ref={colorDropdown.buttonRef}
                                     type="button"
-                                    onClick={() => {
-                                        colorDropdown.updatePosition();
-                                        setShowColorMenu(!showColorMenu);
-                                    }}
+                                    onClick={() => { colorDropdown.updatePosition(); setShowColorMenu(!showColorMenu); }}
                                     className="h-7 px-1.5 rounded flex items-center justify-center hover:bg-gray-200 transition-colors"
                                     title="文字颜色"
                                 >
@@ -1121,24 +976,10 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                                     <div className="w-1 h-3 bg-red-500 ml-0.5 rounded-sm" />
                                 </button>
                                 {showColorMenu && (
-                                    <div
-                                        className="fixed bg-white rounded-lg shadow-lg border border-gray-200 p-2 z-[9999] editor-dropdown-menu"
-                                        style={{
-                                            top: colorDropdown.position.top,
-                                            left: colorDropdown.position.left,
-                                            width: 160,
-                                        }}
-                                    >
+                                    <div className="fixed bg-white rounded-lg shadow-lg border border-gray-200 p-2 z-[9999] editor-dropdown-menu" style={{ top: colorDropdown.position.top, left: colorDropdown.position.left, width: 160 }}>
                                         <div className="grid grid-cols-8 gap-1">
                                             {TEXT_COLORS.map(color => (
-                                                <button
-                                                    key={color}
-                                                    type="button"
-                                                    onClick={() => applyTextColor(color)}
-                                                    className="w-4 h-4 rounded border border-gray-200 hover:scale-110 transition-transform"
-                                                    style={{ backgroundColor: color }}
-                                                    title={color}
-                                                />
+                                                <button key={color} type="button" onClick={() => applyTextColor(color)} className="w-4 h-4 rounded border border-gray-200 hover:scale-110 transition-transform" style={{ backgroundColor: color }} title={color} />
                                             ))}
                                         </div>
                                     </div>
@@ -1150,10 +991,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                                 <button
                                     ref={bgDropdown.buttonRef}
                                     type="button"
-                                    onClick={() => {
-                                        bgDropdown.updatePosition();
-                                        setShowBgMenu(!showBgMenu);
-                                    }}
+                                    onClick={() => { bgDropdown.updatePosition(); setShowBgMenu(!showBgMenu); }}
                                     className="h-7 px-1.5 rounded flex items-center justify-center hover:bg-gray-200 transition-colors"
                                     title="背景色"
                                 >
@@ -1161,31 +999,11 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                                     <div className="w-1 h-3 bg-yellow-300 ml-0.5 rounded-sm" />
                                 </button>
                                 {showBgMenu && (
-                                    <div
-                                        className="fixed bg-white rounded-lg shadow-lg border border-gray-200 p-2 z-[9999] editor-dropdown-menu"
-                                        style={{
-                                            top: bgDropdown.position.top,
-                                            left: bgDropdown.position.left,
-                                            width: 160,
-                                        }}
-                                    >
+                                    <div className="fixed bg-white rounded-lg shadow-lg border border-gray-200 p-2 z-[9999] editor-dropdown-menu" style={{ top: bgDropdown.position.top, left: bgDropdown.position.left, width: 160 }}>
                                         <div className="grid grid-cols-5 gap-1">
                                             {BG_COLORS.map(color => (
-                                                <button
-                                                    key={color}
-                                                    type="button"
-                                                    onClick={() => applyBgColor(color)}
-                                                    className="w-6 h-6 rounded border border-gray-200 hover:scale-110 transition-transform flex items-center justify-center"
-                                                    style={{
-                                                        backgroundColor: color === 'transparent' ? '#fff' : color,
-                                                    }}
-                                                    title={color === 'transparent' ? '无背景' : color}
-                                                >
-                                                    {color === 'transparent' && (
-                                                        <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                        </svg>
-                                                    )}
+                                                <button key={color} type="button" onClick={() => applyBgColor(color)} className="w-6 h-6 rounded border border-gray-200 hover:scale-110 transition-transform flex items-center justify-center" style={{ backgroundColor: color === 'transparent' ? '#fff' : color }} title={color === 'transparent' ? '无背景' : color}>
+                                                    {color === 'transparent' && <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>}
                                                 </button>
                                             ))}
                                         </div>
@@ -1193,173 +1011,48 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                                 )}
                             </div>
 
-                            {/* 分隔线 */}
                             <div className="w-px h-5 bg-gray-300 mx-0.5" />
 
-                            {/* 左对齐 */}
-                            <button
-                                type="button"
-                                onClick={() => applyAlign('Left')}
-                                className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors"
-                                title="左对齐"
-                            >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h10M4 18h14" />
-                                </svg>
-                            </button>
+                            {/* 对齐 */}
+                            <button type="button" onClick={() => applyAlign('Left')} className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors" title="左对齐"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h10M4 18h14" /></svg></button>
+                            <button type="button" onClick={() => applyAlign('Center')} className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors" title="居中对齐"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M7 12h10M5 18h14" /></svg></button>
+                            <button type="button" onClick={() => applyAlign('Right')} className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors" title="右对齐"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M10 12h10M6 18h14" /></svg></button>
 
-                            {/* 居中对齐 */}
-                            <button
-                                type="button"
-                                onClick={() => applyAlign('Center')}
-                                className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors"
-                                title="居中对齐"
-                            >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M7 12h10M5 18h14" />
-                                </svg>
-                            </button>
-
-                            {/* 右对齐 */}
-                            <button
-                                type="button"
-                                onClick={() => applyAlign('Right')}
-                                className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors"
-                                title="右对齐"
-                            >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M10 12h10M6 18h14" />
-                                </svg>
-                            </button>
-
-                            {/* 两端对齐 */}
-                            <button
-                                type="button"
-                                onClick={() => applyAlign('Justify')}
-                                className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors"
-                                title="两端对齐"
-                            >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                                </svg>
-                            </button>
-
-                            {/* 分隔线 */}
                             <div className="w-px h-5 bg-gray-300 mx-0.5" />
 
-                            {/* 无序列表 */}
-                            <button
-                                type="button"
-                                onClick={() => execCommand('insertUnorderedList')}
-                                className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors"
-                                title="无序列表"
-                            >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h.01M4 12h.01M4 18h.01M8 6h12M8 12h12M8 18h12" />
-                                </svg>
-                            </button>
-
-                            {/* 有序列表 */}
-                            <button
-                                type="button"
-                                onClick={insertOrderedList}
-                                className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors"
-                                title="有序列表"
-                            >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 6h13M7 12h13M7 18h13M3 6h.01M3 12h.01M3 18h.01" />
-                                </svg>
-                            </button>
-
+                            {/* 列表 */}
+                            <button type="button" onClick={() => execCommand('insertUnorderedList')} className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors" title="无序列表"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h.01M4 12h.01M4 18h.01M8 6h12M8 12h12M8 18h12" /></svg></button>
+                            <button type="button" onClick={insertOrderedList} className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors" title="有序列表"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 6h13M7 12h13M7 18h13M3 6h.01M3 12h.01M3 18h.01" /></svg></button>
                             {/* 引用 */}
-                            <button
-                                type="button"
-                                onClick={() => execCommand('formatBlock', '<blockquote>')}
-                                className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors"
-                                title="引用"
-                            >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                </svg>
-                            </button>
+                            <button type="button" onClick={() => execCommand('formatBlock', '<blockquote>')} className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors" title="引用"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg></button>
 
-                            {/* 分隔线 */}
                             <div className="w-px h-5 bg-gray-300 mx-0.5" />
 
                             {/* 链接 */}
-                            <button
-                                type="button"
-                                onClick={openLinkDialog}
-                                className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors"
-                                title="插入链接"
-                            >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                                </svg>
-                            </button>
-
-                            {/* 移除链接 */}
-                            <button
-                                type="button"
-                                onClick={removeLink}
-                                className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors"
-                                title="移除链接"
-                            >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                                </svg>
-                            </button>
+                            <button type="button" onClick={openLinkDialog} className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors" title="插入链接"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg></button>
+                            <button type="button" onClick={removeLink} className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors" title="移除链接"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg></button>
 
                             {/* 代码块 */}
-                            <button
-                                type="button"
-                                onClick={openCodeDialog}
-                                className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors"
-                                title="插入代码块"
-                            >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                                </svg>
-                            </button>
+                            <button type="button" onClick={openCodeDialog} className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors" title="插入代码块"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg></button>
 
                             {/* 表格 */}
                             <div className="relative editor-dropdown">
                                 <button
                                     ref={tableDropdown.buttonRef}
                                     type="button"
-                                    onClick={() => {
-                                        tableDropdown.updatePosition();
-                                        setShowTableMenu(!showTableMenu);
-                                    }}
+                                    onClick={() => { tableDropdown.updatePosition(); setShowTableMenu(!showTableMenu); }}
                                     className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors"
                                     title="插入表格"
                                 >
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18M10 3v18M14 3v18M3 6a3 3 0 013-3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6z" />
-                                    </svg>
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18M10 3v18M14 3v18M3 6a3 3 0 013-3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6z" /></svg>
                                 </button>
                                 {showTableMenu && (
-                                    <div
-                                        className="fixed bg-white rounded-lg shadow-lg border border-gray-200 p-2 z-[9999] editor-dropdown-menu"
-                                        style={{
-                                            top: tableDropdown.position.top,
-                                            left: tableDropdown.position.left,
-                                            width: 260,
-                                        }}
-                                    >
+                                    <div className="fixed bg-white rounded-lg shadow-lg border border-gray-200 p-2 z-[9999] editor-dropdown-menu" style={{ top: tableDropdown.position.top, left: tableDropdown.position.left, width: 260 }}>
                                         <div className="text-xs text-gray-500 mb-2 px-1">选择表格大小</div>
                                         <div className="grid grid-cols-8 gap-0.5">
                                             {[1, 2, 3, 4, 5, 6].map(rows =>
                                                 [1, 2, 3, 4, 5, 6, 7, 8].map(cols => (
-                                                    <button
-                                                        key={`${rows}-${cols}`}
-                                                        type="button"
-                                                        onClick={() => insertTable(rows, cols)}
-                                                        className="w-6 h-6 border border-gray-200 rounded hover:bg-primary-100 hover:border-primary-300 transition-colors flex items-center justify-center text-[10px] text-gray-400"
-                                                        title={`${rows} 行 × ${cols} 列`}
-                                                    >
-                                                        {cols}
-                                                    </button>
+                                                    <button key={`${rows}-${cols}`} type="button" onClick={() => insertTable(rows, cols)} className="w-6 h-6 border border-gray-200 rounded hover:bg-primary-100 hover:border-primary-300 transition-colors flex items-center justify-center text-[10px] text-gray-400" title={`${rows} 行 × ${cols} 列`}>{cols}</button>
                                                 ))
                                             )}
                                         </div>
@@ -1367,36 +1060,17 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                                 )}
                             </div>
 
-                            {/* 分隔线 */}
                             <div className="w-px h-5 bg-gray-300 mx-0.5" />
 
-                            {/* ✅ 上传图片 */}
+                            {/* 图片上传与网址 */}
                             {allowImage && (
-                                <button
-                                    type="button"
-                                    onClick={() => fileInputRef.current?.click()}
-                                    disabled={uploading}
-                                    className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors disabled:opacity-50"
-                                    title="上传图片"
-                                >
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
+                                <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors disabled:opacity-50" title="上传图片">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                 </button>
                             )}
-
-                            {/* ✅ 输入图片网址 */}
                             {allowImage && (
-                                <button
-                                    type="button"
-                                    onClick={openImageUrlDialog}
-                                    disabled={uploading}
-                                    className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors disabled:opacity-50"
-                                    title="输入图片网址"
-                                >
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                                    </svg>
+                                <button type="button" onClick={openImageUrlDialog} disabled={uploading} className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors disabled:opacity-50" title="输入图片网址">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
                                 </button>
                             )}
 
@@ -1404,54 +1078,32 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                             {selectedImage && (
                                 <>
                                     <div className="w-px h-5 bg-gray-300 mx-0.5" />
+                                    {/* 替换图片 */}
+                                    <button type="button" onClick={openReplaceImageDialog} className="h-7 px-2 rounded flex items-center justify-center space-x-1 text-xs hover:bg-gray-200 transition-colors" title="更换图片">
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                                        <span>换图</span>
+                                    </button>
 
                                     {/* 图片尺寸 */}
                                     <div className="relative editor-dropdown">
                                         <button
                                             ref={imageDropdown.buttonRef}
                                             type="button"
-                                            onClick={() => {
-                                                imageDropdown.updatePosition();
-                                                setShowImageSizeMenu(!showImageSizeMenu);
-                                            }}
+                                            onClick={() => { imageDropdown.updatePosition(); setShowImageSizeMenu(!showImageSizeMenu); }}
                                             className="h-7 px-2 rounded flex items-center justify-center space-x-1 text-xs hover:bg-gray-200 transition-colors"
                                             title="图片尺寸"
                                         >
-                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                                            </svg>
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
                                             <span>尺寸</span>
-                                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                            </svg>
+                                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                                         </button>
                                         {showImageSizeMenu && (
-                                            <div
-                                                className="fixed bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-[9999] editor-dropdown-menu"
-                                                style={{
-                                                    top: imageDropdown.position.top,
-                                                    left: imageDropdown.position.left,
-                                                    width: 220,
-                                                }}
-                                            >
+                                            <div className="fixed bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-[9999] editor-dropdown-menu" style={{ top: imageDropdown.position.top, left: imageDropdown.position.left, width: 220 }}>
                                                 {IMAGE_SIZE_PRESETS.map(preset => (
-                                                    <button
-                                                        key={preset.value}
-                                                        type="button"
-                                                        onClick={() => setImageSize(preset.value)}
-                                                        className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50"
-                                                    >
-                                                        {preset.label}
-                                                    </button>
+                                                    <button key={preset.value} type="button" onClick={() => setImageSize(preset.value)} className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50">{preset.label}</button>
                                                 ))}
                                                 <div className="border-t border-gray-100 my-1" />
-                                                <button
-                                                    type="button"
-                                                    onClick={openImageSizeDialog}
-                                                    className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50 text-primary-600"
-                                                >
-                                                    自定义尺寸...
-                                                </button>
+                                                <button type="button" onClick={openImageSizeDialog} className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50 text-primary-600">自定义尺寸...</button>
                                                 <div className="border-t border-gray-100 my-1" />
                                                 <div className="px-3 py-1.5 text-xs text-gray-400">对齐方式</div>
                                                 {[
@@ -1461,42 +1113,21 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                                                     { value: 'float-left', label: '左浮动' },
                                                     { value: 'float-right', label: '右浮动' },
                                                 ].map(align => (
-                                                    <button
-                                                        key={align.value}
-                                                        type="button"
-                                                        onClick={() => setImageAlign(align.value)}
-                                                        className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50"
-                                                    >
-                                                        {align.label}
-                                                    </button>
+                                                    <button key={align.value} type="button" onClick={() => setImageAlign(align.value)} className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50">{align.label}</button>
                                                 ))}
                                                 <div className="border-t border-gray-100 my-1" />
-                                                <button
-                                                    type="button"
-                                                    onClick={deleteImage}
-                                                    className="w-full text-left px-3 py-1.5 text-sm hover:bg-red-50 text-red-600"
-                                                >
-                                                    删除图片
-                                                </button>
+                                                <button type="button" onClick={deleteImage} className="w-full text-left px-3 py-1.5 text-sm hover:bg-red-50 text-red-600">删除图片</button>
                                             </div>
                                         )}
                                     </div>
                                 </>
                             )}
 
-                            {/* 分隔线 */}
                             <div className="w-px h-5 bg-gray-300 mx-0.5" />
 
                             {/* 源码模式 */}
-                            <button
-                                type="button"
-                                onClick={toggleSource}
-                                className="h-7 px-2 rounded flex items-center justify-center space-x-1 text-xs hover:bg-gray-200 transition-colors"
-                                title="源码模式"
-                            >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                                </svg>
+                            <button type="button" onClick={toggleSource} className="h-7 px-2 rounded flex items-center justify-center space-x-1 text-xs hover:bg-gray-200 transition-colors" title="源码模式">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
                                 <span>源码</span>
                             </button>
                         </>
@@ -1505,14 +1136,11 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
 
                 {/* ==================== 上传进度 ==================== */}
                 {uploading && (
-                    <div className="px-3 py-2 bg-blue-50 border-b border-blue-100 flex items-center gap-2">
+                    <div className="px-3 py-2 bg-blue-50 border-b border-blue-100 flex items-center gap-2 flex-shrink-0">
                         <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                         <span className="text-xs text-blue-700">上传中... {uploadProgress}%</span>
                         <div className="flex-1 h-1.5 bg-blue-100 rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-blue-500 rounded-full transition-all duration-200"
-                                style={{ width: `${uploadProgress}%` }}
-                            />
+                            <div className="h-full bg-blue-500 rounded-full transition-all duration-200" style={{ width: `${uploadProgress}%` }} />
                         </div>
                     </div>
                 )}
@@ -1522,8 +1150,8 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                     <textarea
                         value={sourceHtml}
                         onChange={(e) => setSourceHtml(e.target.value)}
-                        className="w-full p-4 text-sm font-mono bg-gray-900 text-green-400 focus:outline-none resize-none"
-                        style={{ minHeight: minHeight + 20 }}
+                        className="w-full flex-1 p-4 text-sm font-mono bg-gray-900 text-green-400 focus:outline-none resize-none"
+                        style={{ minHeight }}
                     />
                 ) : (
                     <div
@@ -1540,11 +1168,11 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                         onDrop={handleDrop}
                         data-placeholder={placeholder}
                         className={cn(
-                            'p-4 text-sm text-gray-700 focus:outline-none rich-text-content',
+                            'flex-1 overflow-y-auto p-4 text-sm text-gray-700 focus:outline-none rich-text-content',
                             'relative',
                             isDragging && 'ring-2 ring-primary-400 bg-primary-50/50'
                         )}
-                        style={{ minHeight }}
+                        style={{ minHeight, maxHeight }} // ✅ 限制最大高度产生滚动条
                     />
                 )}
 
@@ -1579,20 +1207,8 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                                 </div>
                             </div>
                             <div className="px-5 py-3 border-t border-gray-200 flex justify-end gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setDialogType(null)}
-                                    className="px-4 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50"
-                                >
-                                    取消
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={confirmLinkDialog}
-                                    className="px-4 py-1.5 text-sm bg-primary-600 text-white rounded hover:bg-primary-700"
-                                >
-                                    确定
-                                </button>
+                                <button type="button" onClick={() => setDialogType(null)} className="px-4 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50">取消</button>
+                                <button type="button" onClick={confirmLinkDialog} className="px-4 py-1.5 text-sm bg-primary-600 text-white rounded hover:bg-primary-700">确定</button>
                             </div>
                         </div>
                     </div>
@@ -1616,76 +1232,53 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                                 />
                             </div>
                             <div className="px-5 py-3 border-t border-gray-200 flex justify-end gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setDialogType(null)}
-                                    className="px-4 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50"
-                                >
-                                    取消
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={confirmCodeDialog}
-                                    className="px-4 py-1.5 text-sm bg-primary-600 text-white rounded hover:bg-primary-700"
-                                >
-                                    确定
-                                </button>
+                                <button type="button" onClick={() => setDialogType(null)} className="px-4 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50">取消</button>
+                                <button type="button" onClick={confirmCodeDialog} className="px-4 py-1.5 text-sm bg-primary-600 text-white rounded hover:bg-primary-700">确定</button>
                             </div>
                         </div>
                     </div>
                 )}
 
-                {/* ==================== ✅ 图片网址弹窗 ==================== */}
-                {showImageUrlDialog && (
+                {/* ==================== 图片网址弹窗 ==================== */}
+                {dialogType === 'imageUrl' && (
                     <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50">
                         <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
                             <div className="px-5 py-3 border-b border-gray-200 flex items-center justify-between">
                                 <h3 className="text-sm font-semibold text-gray-800">输入图片网址</h3>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowImageUrlDialog(false)}
-                                    className="text-gray-400 hover:text-gray-600"
-                                >
-                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
+                                <button type="button" onClick={() => setDialogType(null)} className="text-gray-400 hover:text-gray-600">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                                 </button>
                             </div>
                             <div className="p-5 space-y-4">
                                 <div>
-                                    <label className="block text-xs text-gray-500 mb-1">
-                                        图片网址 <span className="text-red-500">*</span>
-                                    </label>
+                                    <label className="block text-xs text-gray-500 mb-1">图片网址 <span className="text-red-500">*</span></label>
                                     <input
                                         type="text"
-                                        value={imageUrlForm.url}
-                                        onChange={(e) => setImageUrlForm(prev => ({ ...prev, url: e.target.value }))}
+                                        value={dialogValue}
+                                        onChange={(e) => setDialogValue(e.target.value)}
                                         placeholder="https://example.com/image.jpg"
                                         className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                                         autoFocus
                                     />
-                                    <p className="text-xs text-gray-400 mt-1">
-                                        支持 http:// 和 https:// 开头的图片地址
-                                    </p>
+                                    <p className="text-xs text-gray-400 mt-1">支持 http:// 和 https:// 开头的图片地址</p>
                                 </div>
                                 <div>
                                     <label className="block text-xs text-gray-500 mb-1">图片描述（可选）</label>
                                     <input
                                         type="text"
-                                        value={imageUrlForm.alt}
-                                        onChange={(e) => setImageUrlForm(prev => ({ ...prev, alt: e.target.value }))}
+                                        value={dialogText}
+                                        onChange={(e) => setDialogText(e.target.value)}
                                         placeholder="图片的替代文字"
                                         className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                                     />
                                 </div>
-
                                 {/* 预览 */}
-                                {imageUrlForm.url && validateImageUrl(imageUrlForm.url).valid && (
+                                {dialogValue && validateImageUrl(dialogValue).valid && (
                                     <div>
                                         <label className="block text-xs text-gray-500 mb-1">预览</label>
                                         <div className="border border-gray-200 rounded p-2 bg-gray-50">
                                             <img
-                                                src={getProxiedImageUrl(imageUrlForm.url, { forceProxy: true })}
+                                                src={getProxiedImageUrl(dialogValue, { forceProxy: true })}
                                                 alt="预览"
                                                 className="max-h-32 mx-auto rounded"
                                                 onError={(e) => {
@@ -1698,21 +1291,50 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                                 )}
                             </div>
                             <div className="px-5 py-3 border-t border-gray-200 flex justify-end gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowImageUrlDialog(false)}
-                                    className="px-4 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50"
-                                >
-                                    取消
+                                <button type="button" onClick={() => setDialogType(null)} className="px-4 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50">取消</button>
+                                <button type="button" onClick={insertImageFromUrl} disabled={!dialogValue.trim()} className="px-4 py-1.5 text-sm bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50">插入图片</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* ✅ 替换图片弹窗 */}
+                {showReplaceImageDialog && (
+                    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50">
+                        <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+                            <div className="px-5 py-3 border-b border-gray-200 flex items-center justify-between">
+                                <h3 className="text-sm font-semibold text-gray-800">更换图片</h3>
+                                <button type="button" onClick={() => setShowReplaceImageDialog(false)} className="text-gray-400 hover:text-gray-600">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                                 </button>
-                                <button
-                                    type="button"
-                                    onClick={insertImageFromUrl}
-                                    disabled={!imageUrlForm.url.trim()}
-                                    className="px-4 py-1.5 text-sm bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    插入图片
-                                </button>
+                            </div>
+                            <div className="p-5 space-y-4">
+                                <div>
+                                    <label className="block text-xs text-gray-500 mb-1">当前图片地址</label>
+                                    <input
+                                        type="text"
+                                        value={replaceImageUrl}
+                                        onChange={(e) => setReplaceImageUrl(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                        autoFocus
+                                    />
+                                </div>
+                                {replaceImageUrl && validateImageUrl(replaceImageUrl).valid && (
+                                    <div>
+                                        <label className="block text-xs text-gray-500 mb-1">新图片预览</label>
+                                        <div className="border border-gray-200 rounded p-2 bg-gray-50">
+                                            <img
+                                                src={getProxiedImageUrl(replaceImageUrl, { forceProxy: true })}
+                                                alt="预览"
+                                                className="max-h-32 mx-auto rounded"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="px-5 py-3 border-t border-gray-200 flex justify-end gap-2">
+                                <button type="button" onClick={() => setShowReplaceImageDialog(false)} className="px-4 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50">取消</button>
+                                <button type="button" onClick={confirmReplaceImage} disabled={!replaceImageUrl.trim()} className="px-4 py-1.5 text-sm bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50">确认替换</button>
                             </div>
                         </div>
                     </div>
@@ -1774,20 +1396,8 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                                 </div>
                             </div>
                             <div className="px-5 py-3 border-t border-gray-200 flex justify-end gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowImageSizeDialog(false)}
-                                    className="px-4 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50"
-                                >
-                                    取消
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={applyCustomImageSize}
-                                    className="px-4 py-1.5 text-sm bg-primary-600 text-white rounded hover:bg-primary-700"
-                                >
-                                    应用
-                                </button>
+                                <button type="button" onClick={() => setShowImageSizeDialog(false)} className="px-4 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50">取消</button>
+                                <button type="button" onClick={applyCustomImageSize} className="px-4 py-1.5 text-sm bg-primary-600 text-white rounded hover:bg-primary-700">应用</button>
                             </div>
                         </div>
                     </div>

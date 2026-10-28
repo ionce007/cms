@@ -225,7 +225,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const isVip =
         user?.role === 'vip' &&
         (!user.vipExpireAt || new Date(user.vipExpireAt) > new Date());
-    const isAdmin = user?.role === 'admin';
+    const isAdmin = user?.role === 'super';
 
     return (
         <AuthContext.Provider

@@ -1,13 +1,8 @@
-import sequelize from '../common/db';  // 导入 sequelize 实例
-import { DateAdd, dateFormat } from '../common/utils'
-const { Formula, Token, MemberDownload } = require('../models');
-const { Op } = require('sequelize');
-const request = require('sync-request');
 
-const bdSupplier = 'baidupan'; // 百度网盘供应商标识
+//const bdSupplier = 'baidupan'; // 百度网盘供应商标识
 
 //获取网盘上指定路径下的文件列表
-async function getPanFiles(req, res, next) {
+/*async function getPanFiles(req, res, next) {
     var json = { status: true, msg: '获取网盘文件列表成功！', data: null }
     try {
         var token = await getAccessToken();
@@ -28,26 +23,14 @@ async function getPanFiles(req, res, next) {
     catch (error) {
         json.status = false;
         json.msg = error.message;
-        console.log('error = ' , error);
+        console.log('error = ', error);
     }
     res.json(json);
-}
-//访问百度网盘平台更新access_token
-function refresh_access_token(refresh_token) {
-    var json = {}
-    try {
-        var appKey = process.env.PAN_APIKEY;
-        var secretKey = process.env.PAN_SECRETKEY;
-
-        var url = `https://openapi.baidu.com/oauth/2.0/token?grant_type=refresh_token&refresh_token=${refresh_token}&client_id=${appKey}&client_secret=${secretKey}`;
-        var ret = request('GET', url);
-        json = { code: 1, state: 'successed', msg: '刷新 token 成功！', data: JSON.parse(ret.getBody('utf8')) };
-        return json;
-    }
-    catch (e) {
-        json = { code: -1, state: 'failed', msg: e.message, data: null };
-        return json;
-    }
+}*/
+//获取网盘访问的token，过期的token会自动刷新获取新的token
+/*async function getToken(req, res, next) {
+    const token = getPanToken();
+    res.json(token);
 }
 
 async function getAccessToken() {
@@ -68,54 +51,9 @@ function isExpires(token) {
     if (Date.parse(expireTime) <= Date.parse(new Date())) return true;
     return false;
 }
-/*String.prototype.format = function () {
-    if (arguments.length == 0) {
-        return this;
-    }
-    for (var s = this, i = 0; i < arguments.length; i++) {
-        s = s.replace(new RegExp("\\{" + i + "\\}", "g"), arguments[i]);
-    }
-    return s;
-};*/
-async function createAuthToken(token) {
-    try {
-        await Token.destroy({ where: { supplier: 'baidupan' } });
+*/
 
-        const date = dateFormat(new Date(), 'yyyy-MM-dd HH:mm:ss');
-        token.supplier = 'baidupan';
-        token.remark = '百度网盘Access Token'
-        token.updatedAt = date;
-        token.createdAt = date;
-        const newToken = await Token.create(token);
-        return newToken.dataValues;
-    }
-    catch (err) {
-        console.error(err);
-        throw err;
-    }
-
-}
-async function getBaiduAuthCode(req, res, next) {
-    const refUrl = req.query.state || '/admin/#/formula/auth';
-    try {
-        var code = req.query.code;
-        var client_id = process.env.PAN_APIKEY;
-        var client_secret = process.env.PAN_SECRETKEY;
-        var redirect_uri = process.env.PAN_REDIRECT_URI;
-
-        var reqUrl = `https://openapi.baidu.com/oauth/2.0/token?grant_type=authorization_code&code=${code}&client_id=${client_id}&client_secret=${client_secret}&redirect_uri=${redirect_uri}`;
-        var header = { 'User-Agent': 'pan.baidu.com' };
-        var ret = request("GET", reqUrl, header);
-        var retJson = JSON.parse(ret.getBody('utf8'));
-        const token = await createAuthToken(retJson);
-
-        res.redirect(refUrl);
-    } catch (e) {
-        console.log('获取授权失败！error:' + e.message);
-        res.redirect(refUrl);
-    }
-}
-async function getAccessTokenFromDB(supplier = bdSupplier) {
+/*async function getAccessTokenFromDB(supplier = bdSupplier) {
     let result = { code: 200, msg: 'success', data: {} };
     try {
         const token = await Token.findByPk(supplier);
@@ -145,50 +83,15 @@ async function refreshAccessToken(refresh_token) {
         console.log('refreshAccessToken error: ', err);
         return null
     }
-}
-async function update(token) {
-    try {
-        let json = {};
-        json.updatedAt = dateFormat(new Date(), 'yyyy-MM-dd HH:mm:ss');
-        json.access_token = token.access_token;
-        json.refresh_token = token.refresh_token;
-        json.expires_in = token.expires_in;
-        const ret = await Token.update(json, { where: { supplier: bdSupplier } });
-        return ret ? true : false;
-    }
-    catch (err) {
-        console.error(err);
-        return false;
-    }
-}
-async function getAccessTokenWithRefresh() {
-    try {
-        let token = await getAccessTokenFromDB(bdSupplier);
-        if (!isExpires(token)) { return token; }
-        const newToken = await refreshAccessToken(token.data.refresh_token);
-        if (newToken) {
-            const ret = await update(newToken);
-            if (ret) token = await getAccessTokenFromDB(bdSupplier);
-        }
-        return token;
-    }
-    catch (err) {
-        console.error(err);
-        throw err;
-    }
-}
-async function getToken(req, res, next) {
-    try {
-        const token = await getAccessTokenWithRefresh();
-        res.json(token);
-    }
-    catch (err) {
-        console.error(err);
-        res.status(500).json({ code: -1, msg: err.message, data: {} });
-    }
-}
+}*/
+
 async function getDownloadUrl(req, res, next) {
-    try {
+    const fs_id = req.params.id;
+    const userId = req.user ? req.user.toJSON().id : null;
+    const result = getFileDownloadUrl(fs_id, userId);
+    return res.status(result.status).json(result);
+
+    /*try {
         const fs_id = req.params.id;
         if (!fs_id) {
             res.status(400).json({ code: -5, msg: '缺少参数 fs_id！', data: {} });
@@ -279,12 +182,15 @@ async function getDownloadUrl(req, res, next) {
     catch (err) {
         console.error(err);
         res.status(500).json({ code: -1, msg: err.message, data: {} });
-    }
+    }*/
 }
+
 module.exports = {
-    getPanFiles,
-    getBaiduAuthCode,
-    getBDToken,
-    getToken,
+    //getPanFiles,
+    //getBDToken,
+    //getToken,
+    //getPanAuthUrl,
+    //getPanAuthCode,
+    //getTongjiAuthCode,
     getDownloadUrl
 }

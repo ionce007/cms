@@ -25,3 +25,10 @@ export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:30
  * 图片代理路径
  */
 export const IMAGE_PROXY_PATH = `${API_BASE_URL}/imgproxy`;
+
+export const defaultQiniuParams = {
+    accessKey: '_dzyx12scaLcXISGKnrfHTtRHpyDAZlgEbkgKgoY',
+    secretKey: 'Q0ndMWFnChD-eNI_csBXaT6Wo8RGp1XJ5fH4oAnU',
+    domain: 'img.foryet.com',
+    bucket: 'chancms'
+}

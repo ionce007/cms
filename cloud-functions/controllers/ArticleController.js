@@ -7,9 +7,15 @@ import { calcReadTime } from '../common/utils';
 //import { getAllCategories, getAllTags, getAllFrags, getSiteConfig, filterByIds } from './cache/DataCache';
 
 async function test(req, res, next) {
-    const count = await Article.count({ where: { cid: 3 } })
-    return res.json({ code: 1, message: 'success', data: count });
-    const attributes =  ['accessKey', 'secretKey', 'domain', 'bucket'] ;
+    try {
+        const data = await Article.findAll({ where: { cid: 3 }, raw: true })
+        return res.json({ code: 1, message: 'success', data: data });
+    }
+    catch (error) {
+        return res.json({ code: 1, message: error.message, data: null });
+    }
+
+    const attributes = ['accessKey', 'secretKey', 'domain', 'bucket'];
     const config = await Config.findOne({ attributes, raw: true });
     return res.json({ code: 1, message: 'success', data: config });
     //const siteInfo = await getSiteConfig();
@@ -540,7 +546,7 @@ async function searchArticles(req, res, next) {
             order,
             limit,
             offset,
-            //distinct: true   // ✅ 避免 include 导致 count 不准
+            distinct: true   // ✅ 避免 include 导致 count 不准
         });
 
         /*const result = rows.map(article => {

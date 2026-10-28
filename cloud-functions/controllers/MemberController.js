@@ -685,7 +685,7 @@ async function getMemberProfile(req, res, next) {
 
         // ✅ 计算等级标签
         let levelLabel = '普通会员';
-        if (member.role === 'admin') levelLabel = '管理员';
+        if (member.role === 'super') levelLabel = '管理员';
         else if (isVip) levelLabel = 'VIP会员';
         else if (member.role === 'vip') levelLabel = 'VIP已过期';
 

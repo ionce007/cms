@@ -98,7 +98,7 @@ export default function LikeButton({
                     />
                 </svg>
                 <span className={cn('font-semibold', sizeClass.label)}>
-                    {likes.toLocaleString()}
+                    {likes}
                 </span>
                 {showLabel && (
                     <span className={sizeClass.label}>

@@ -7,7 +7,6 @@ Frag.init(
     {
         id: {
             type: DataTypes.INTEGER,
-            defaultValue: DataTypes.INTEGER,
             autoIncrement: true,
             primaryKey: true,
             comment: 'ID，关键字串类型，自动递增',
@@ -20,6 +19,7 @@ Frag.init(
     {
         sequelize,
         tableName: 'cms_frag',  // 指定表名
+        omitNull: true, // ✅ 加在这里：忽略 null 值的字段
         comment: '碎片表'  // 表注释
     }
 );
