@@ -7,8 +7,8 @@ import { useAdminFetch } from '@/hooks/useAdminFetch';
 import RichTextEditor, { RichTextEditorHandle } from '@/components/frontend/RichTextEditor';
 import { ArrowLeft, Image as ImageIcon, X, Loader2 } from 'lucide-react';
 import { uploadImageToQiniu } from '@/lib/qiniuUpload';
+import { getProxiedImageUrl, restoreOriginalImageUrls } from '@/lib/imageProxy';
 
-// ✅ 获取当前时间，格式化为 datetime-local 需要的 YYYY-MM-DDTHH:mm
 // ✅ 极其稳健的本地时间格式化方法
 const getCurrentTime = () => {
     const d = new Date();
@@ -102,7 +102,7 @@ export default function ArticleEditPage() {
                     createdAt: formattedDate
                 });
 
-                // 延迟渲染富文本
+                // 延迟渲染富文本（内容里存真实 URL，编辑器内部会走代理显示）
                 setTimeout(() => {
                     if (editorRef.current) editorRef.current.setHtml(data.content || '');
                 }, 100);
@@ -128,7 +128,7 @@ export default function ArticleEditPage() {
         setForm({ ...form, tagIds: newTagIds });
     };
 
-    // 处理图片上传
+    // 处理图片上传（存入真实 URL）
     const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -151,12 +151,14 @@ export default function ArticleEditPage() {
         }
     };
 
-    // 保存提交
+    // 保存提交（内容里的代理图片还原为真实 URL）
     const handleSave = async () => {
         if (!form.title || !form.cid) return alert('标题和栏目不能为空');
 
         setSubmitting(true);
-        const content = editorRef.current?.getHtml() || '';
+        const rawContent = editorRef.current?.getHtml() || '';
+        // ✅ 保存前把内容里的代理图片 src 还原成真实地址
+        const content = restoreOriginalImageUrls(rawContent);
         const submitData = { ...form, content };
 
         const url = isEdit ? `/admin/contents/articles/${params.id}` : '/admin/contents/articles';
@@ -277,8 +279,18 @@ export default function ArticleEditPage() {
                         <div className="flex items-start flex-1">
                             <label className="w-20 flex-shrink-0 text-sm text-gray-700 text-right pr-3 pt-1.5">缩略图</label>
                             <div className="flex items-center gap-3 w-full">
+                                {/* ✅ 缩略图预览走代理，form.img 仍存真实 URL */}
                                 <div className="w-16 h-16 border rounded flex items-center justify-center bg-gray-50 text-gray-400 flex-shrink-0 overflow-hidden">
-                                    {form.img ? <img src={form.img} alt="封面" className="w-full h-full object-cover" /> : <ImageIcon className="w-6 h-6" />}
+                                    {form.img ? (
+                                        <img
+                                            src={getProxiedImageUrl(form.img, { forceProxy: true })}
+                                            alt="封面"
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                        />
+                                    ) : (
+                                        <ImageIcon className="w-6 h-6" />
+                                    )}
                                 </div>
 
                                 <input

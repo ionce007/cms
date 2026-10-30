@@ -382,7 +382,8 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
 
             let url = dialogValue.trim();
             if (!/^https?:\/\//.test(url) && !/^mailto:/.test(url)) {
-                url = 'https://' + url;
+                //url = 'https://' + url;
+                url = 'http://' + url;
             }
 
             editorRef.current?.focus();
