@@ -159,7 +159,7 @@ export default function ArticleEditPage() {
         const content = editorRef.current?.getHtml() || '';
         const submitData = { ...form, content };
 
-        const url = isEdit ? `/admin/articles/${params.id}` : '/admin/articles';
+        const url = isEdit ? `/admin/contents/articles/${params.id}` : '/admin/contents/articles';
         const method = isEdit ? 'PUT' : 'POST';
 
         const res = await adminFetch(url, { method, body: JSON.stringify(submitData) });
@@ -167,7 +167,7 @@ export default function ArticleEditPage() {
 
         if (res.code === 1) {
             alert('保存成功');
-            router.push('/admin/articles');
+            router.push('/admin/contents/articles');
         } else {
             alert(res.message);
         }
@@ -178,7 +178,7 @@ export default function ArticleEditPage() {
         if (window.history.length > 2) {
             router.back();
         } else {
-            router.push('/admin/articles');
+            router.push('/admin/contents/articles');
         }
     };
 

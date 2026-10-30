@@ -53,7 +53,7 @@ export default function ArticlesPage() {
                         />
                     </form>
                     {hasPermission('articles', 'create') && (
-                        <Link href="/admin/articles/create" className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm">
+                        <Link href="/admin/contents/articles/create" className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm">
                             + 新建
                         </Link>
                     )}
@@ -94,7 +94,7 @@ export default function ArticlesPage() {
                                     <td className="py-1.5 px-3 flex items-center justify-end gap-1">
                                         {/* ✅ 控制“编辑”按钮 */}
                                         {hasPermission('articles', 'edit') && (
-                                            <Link href={`/admin/articles/${item.id}`} className="p-1 text-blue-600">
+                                            <Link href={`/admin/contents/articles/${item.id}`} className="p-1 text-blue-600">
                                                 <Edit2 className="w-3.5 h-3.5" />
                                             </Link>
                                         )}
