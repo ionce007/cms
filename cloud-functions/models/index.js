@@ -49,6 +49,11 @@ function initAssociations() {
         as: 'Category'
     });
 
+    Category.hasMany(Article, {
+        foreignKey: 'cid',
+        as: 'Articles'
+    });
+
     // ✅ 会员表建立关联
     PasswordReset.belongsTo(Member, { foreignKey: 'memberId' });
     Member.hasMany(PasswordReset, { foreignKey: 'memberId' });

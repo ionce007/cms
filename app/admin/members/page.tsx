@@ -4,8 +4,10 @@
 import { useState, useEffect } from 'react';
 import { useAdminFetch } from '@/hooks/useAdminFetch';
 import { Search, Trash2, Ban, CheckCircle } from 'lucide-react';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function MembersPage() {
+    const { hasPermission } = usePermission();
     const [members, setMembers] = useState<any[]>([]);
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(1);
@@ -95,11 +97,11 @@ export default function MembersPage() {
                                 </td>
                                 <td className="py-2 px-3 flex justify-end gap-2">
                                     {m.status === 0 ? (
-                                        <button onClick={() => handleStatusChange(m.id, 1)} className="text-orange-500 p-1 hover:bg-orange-50 rounded" title="封禁账号"><Ban className="w-4 h-4" /></button>
+                                        hasPermission('members', 'edit') ? <button onClick={() => handleStatusChange(m.id, 1)} className="text-orange-500 p-1 hover:bg-orange-50 rounded" title="封禁账号"><Ban className="w-4 h-4" /></button> : <></>
                                     ) : (
-                                        <button onClick={() => handleStatusChange(m.id, 0)} className="text-green-600 p-1 hover:bg-green-50 rounded" title="解封账号"><CheckCircle className="w-4 h-4" /></button>
+                                        hasPermission('members', 'edit') ? <button onClick={() => handleStatusChange(m.id, 0)} className="text-green-600 p-1 hover:bg-green-50 rounded" title="解封账号"><CheckCircle className="w-4 h-4" /></button> : <></>
                                     )}
-                                    <button onClick={() => handleDelete(m.id)} className="text-red-500 p-1 hover:bg-red-50 rounded" title="彻底删除"><Trash2 className="w-4 h-4" /></button>
+                                    {hasPermission('members', 'delete') && (<button onClick={() => handleDelete(m.id)} className="text-red-500 p-1 hover:bg-red-50 rounded" title="彻底删除"><Trash2 className="w-4 h-4" /></button>)}
                                 </td>
                             </tr>
                         ))}

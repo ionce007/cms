@@ -4,8 +4,10 @@
 import { useState, useEffect } from 'react';
 import { useAdminFetch } from '@/hooks/useAdminFetch';
 import { Settings, Globe, Cloud, Save, Loader2 } from 'lucide-react';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function SettingsPage() {
+    const { hasPermission } = usePermission();
     const [activeTab, setActiveTab] = useState<'config' | 'site'>('config');
     const { adminFetch } = useAdminFetch();
 
@@ -134,7 +136,7 @@ export default function SettingsPage() {
                                 </div>
                                 <div className="flex items-center">
                                     <label className="w-24 flex-shrink-0 text-sm text-gray-700 text-right pr-3">SecretKey</label>
-                                    <input type="password" name="secretKey" value={configForm.secretKey || ''} onChange={handleConfigChange} className="flex-1 border rounded p-2 text-sm outline-none focus:ring-1 focus:ring-blue-500" />
+                                    <input type="text" name="secretKey" value={configForm.secretKey || ''} onChange={handleConfigChange} className="flex-1 border rounded p-2 text-sm outline-none focus:ring-1 focus:ring-blue-500" />
                                 </div>
                                 <div className="flex items-center">
                                     <label className="w-24 flex-shrink-0 text-sm text-gray-700 text-right pr-3">空间名称</label>
@@ -173,10 +175,11 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="pt-4 border-t flex justify-start pl-24">
-                            <button onClick={handleSaveConfig} disabled={savingConfig} className="bg-blue-600 text-white px-6 py-2 rounded text-sm flex items-center gap-2 hover:bg-blue-700 disabled:opacity-50">
+                            {hasPermission('settings', 'edit') && (<button onClick={handleSaveConfig} disabled={savingConfig} className="bg-blue-600 text-white px-6 py-2 rounded text-sm flex items-center gap-2 hover:bg-blue-700 disabled:opacity-50">
                                 {savingConfig ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                 {savingConfig ? '保存中...' : '保存配置'}
                             </button>
+                            )}
                         </div>
                     </div>
                 )}
@@ -243,10 +246,11 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="pt-4 border-t flex justify-start pl-24">
-                            <button onClick={handleSaveSite} disabled={savingSite} className="bg-blue-600 text-white px-6 py-2 rounded text-sm flex items-center gap-2 hover:bg-blue-700 disabled:opacity-50">
+                            {hasPermission('settings', 'edit') && (<button onClick={handleSaveSite} disabled={savingSite} className="bg-blue-600 text-white px-6 py-2 rounded text-sm flex items-center gap-2 hover:bg-blue-700 disabled:opacity-50">
                                 {savingSite ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                 {savingSite ? '保存中...' : '保存信息'}
                             </button>
+                            )}
                         </div>
                     </div>
                 )}

@@ -5,6 +5,7 @@ import { useAdminFetch } from '@/hooks/useAdminFetch';
 import Modal from '@/components/admin/Modal';
 import { Plus, Edit2, Trash2, Search, HelpCircle, Home } from 'lucide-react';
 import { pinyin } from 'pinyin-pro';
+import { usePermission } from '@/hooks/usePermission';
 
 // 初始表单数据
 const initialForm = {
@@ -26,9 +27,11 @@ const initialForm = {
     target: '0', // 打开方式 '0' 当前页, '1' 新页
     orderBy: 1,
     description: '',
+    count: 0, //该栏目下的文章数量
 };
 
 export default function CategoriesPage() {
+    const { hasPermission } = usePermission();
     const [list, setList] = useState<any[]>([]);
     const [filteredList, setFilteredList] = useState<any[]>([]);
     const [keyword, setKeyword] = useState('');
@@ -150,9 +153,10 @@ export default function CategoriesPage() {
                             className="pl-7 pr-2 py-1 border border-gray-300 rounded text-xs w-full sm:w-56 focus:ring-1 focus:ring-blue-500 outline-none"
                         />
                     </div>
-                    <button onClick={openCreateModal} className="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1 whitespace-nowrap transition-colors">
+                    {hasPermission('categories', 'create') && (<button onClick={openCreateModal} className="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1 whitespace-nowrap transition-colors">
                         <Plus className="w-3.5 h-3.5" /> 新增
                     </button>
+                    )}
                 </div>
             </div>
 
@@ -164,6 +168,7 @@ export default function CategoriesPage() {
                                 <th className="py-2 px-3 font-medium">ID</th>
                                 <th className="py-2 px-3 font-medium">栏目名称</th>
                                 <th className="py-2 px-3 font-medium">路径</th>
+                                <th className="py-2 px-3 font-medium">文章数量</th>
                                 <th className="py-2 px-3 font-medium">类型</th>
                                 <th className="py-2 px-3 font-medium">排序</th>
                                 <th className="py-2 px-3 font-medium">状态</th>
@@ -176,6 +181,7 @@ export default function CategoriesPage() {
                                     <td className="py-1.5 px-3 text-gray-400 text-xs">{item.id}</td>
                                     <td className="py-1.5 px-3 font-medium text-gray-800">{item.name}</td>
                                     <td className="py-1.5 px-3 text-gray-500 text-xs">{item.path}</td>
+                                    <td className="py-1.5 px-3 text-gray-500 text-xs">{item.count}</td>
                                     <td className="py-1.5 px-3 text-gray-500 text-xs">{item.type === '0' ? '栏目' : '单页'}</td>
                                     <td className="py-1.5 px-3 text-gray-500 text-xs">{item.orderBy}</td>
                                     <td className="py-1.5 px-3">
@@ -184,12 +190,14 @@ export default function CategoriesPage() {
                                         </span>
                                     </td>
                                     <td className="py-1.5 px-3 flex items-center justify-end gap-1">
-                                        <button onClick={() => openEditModal(item)} className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="编辑">
+                                        {hasPermission('categories', 'edit') && (<button onClick={() => openEditModal(item)} className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="编辑">
                                             <Edit2 className="w-3.5 h-3.5" />
                                         </button>
-                                        <button onClick={async () => { if (confirm('确认删除?')) { await adminFetch(`/admin/categories/${item.id}`, { method: 'DELETE' }); fetchList(); } }} className="p-1 text-red-500 hover:bg-red-50 rounded" title="删除">
+                                        )}
+                                        {hasPermission('categories', 'delete') && (<button onClick={async () => { if (confirm('确认删除?')) { await adminFetch(`/admin/categories/${item.id}`, { method: 'DELETE' }); fetchList(); } }} className="p-1 text-red-500 hover:bg-red-50 rounded" title="删除">
                                             <Trash2 className="w-3.5 h-3.5" />
                                         </button>
+                                        )}
                                     </td>
                                 </tr>
                             ))}

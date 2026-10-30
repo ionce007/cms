@@ -1,6 +1,6 @@
-const { Op, QueryTypes } = require('sequelize');
+const { Op, QueryTypes, fn, col } = require('sequelize');
 const sequelize = require('../common/db');
-const { Category } = require('../models');
+const { Category, Article } = require('../models');
 
 async function getCategories(req, res, next) {
     try {
@@ -23,7 +23,18 @@ async function getCategories(req, res, next) {
                 ]
             })
         }
-        const { count, rows } = await Category.findAndCountAll({ where, limit, offset });
+        const attributes = {
+            include: [
+                [fn('COUNT', col('Articles.id')), 'count']
+            ]
+        };
+        const include = [{
+            model: Article,
+            as: 'Articles',
+            attributes: [],
+            required: false,
+        }];
+        const { count, rows } = await Category.findAndCountAll({ where, attributes, include, group: ['id'], subQuery: false, limit, offset });
 
         res.json({ code: 1, message: 'Category retrieved successfully', count: count, data: rows });
     } catch (error) {

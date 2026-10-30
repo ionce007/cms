@@ -5,8 +5,10 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAdminFetch } from '@/hooks/useAdminFetch';
 import { Trash2, ExternalLink } from 'lucide-react';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function DownloadsManagePage() {
+    const { hasPermission } = usePermission();
     const [dataList, setDataList] = useState<any[]>([]);
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(1);
@@ -104,7 +106,7 @@ export default function DownloadsManagePage() {
                                     <td className="py-2 px-3 text-gray-600 font-medium">{item.downloadCount || 1} 次</td>
                                     <td className="py-2 px-3 text-gray-400 text-xs">{new Date(item.lastDownloadAt || item.createdAt).toLocaleString()}</td>
                                     <td className="py-2 px-3 flex items-center justify-end">
-                                        <button onClick={() => handleDelete(item.id)} className="text-red-500 p-1 hover:bg-red-50 rounded"><Trash2 className="w-4 h-4" /></button>
+                                        {hasPermission('downloads', 'delete') && (<button onClick={() => handleDelete(item.id)} className="text-red-500 p-1 hover:bg-red-50 rounded"><Trash2 className="w-4 h-4" /></button>)}
                                     </td>
                                 </tr>
                             ))}

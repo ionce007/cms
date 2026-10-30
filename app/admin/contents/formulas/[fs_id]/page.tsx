@@ -1,4 +1,4 @@
-// app/admin/formulas/[fs_id]/page.tsx
+// app/admin/contents/formulas/[fs_id]/page.tsx
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -42,7 +42,7 @@ export default function FormulaEditPage() {
                 }, 100);
             } else {
                 alert(res.message);
-                router.push('/admin/formulas');
+                router.push('/admin/contents/formulas');
             }
             setLoading(false);
         }
@@ -87,7 +87,7 @@ export default function FormulaEditPage() {
 
         if (res.code === 1) {
             alert('保存成功');
-            router.push('/admin/formulas');
+            router.push('/admin/contents/formulas');
         } else {
             alert(res.message);
         }
@@ -95,7 +95,7 @@ export default function FormulaEditPage() {
 
     const handleBack = () => {
         if (window.history.length > 2) router.back();
-        else router.push('/admin/formulas');
+        else router.push('/admin/contents/formulas');
     };
 
     if (loading) return <div className="p-6 text-center text-gray-500">加载中...</div>;
@@ -132,7 +132,7 @@ export default function FormulaEditPage() {
                     <div className="flex flex-col md:flex-row gap-4">
                         <div className="flex items-center w-full md:w-1/3">
                             <label className="w-20 flex-shrink-0 text-sm text-gray-700 text-right pr-3">文件类型</label>
-                            <select name="kind" value={form.kind || ''} onChange={handleChange} className="flex-1 border rounded p-2 text-sm outline-none">
+                            <select name="kind" value={form.kind || ''} onChange={handleChange} disabled className="flex-1 border rounded p-2 text-sm outline-none">
                                 <option value="指标公式">指标公式</option>
                                 <option value="选股公式">选股公式</option>
                                 <option value="经验分享">经验分享</option>
@@ -141,7 +141,7 @@ export default function FormulaEditPage() {
                         </div>
                         <div className="flex items-center flex-1">
                             <label className="w-20 flex-shrink-0 text-sm text-gray-700 text-right pr-3"><span className="text-red-500 mr-1">*</span>文件名称</label>
-                            <input name="server_filename" value={form.server_filename || ''} onChange={handleChange} className="flex-1 border rounded p-2 text-sm bg-gray-50 outline-none" placeholder="请输入文件名称" />
+                            <input name="server_filename" value={form.server_filename || ''} onChange={handleChange} readOnly className="flex-1 border rounded p-2 text-sm bg-gray-50 outline-none" placeholder="请输入文件名称" />
                         </div>
                     </div>
 

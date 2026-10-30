@@ -1,4 +1,3 @@
-// app/admin/formulas/token/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,8 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useAdminFetch } from '@/hooks/useAdminFetch';
 import { ArrowLeft, Clock, Key } from 'lucide-react';
 import BaiduAuthModal from '@/components/admin/BaiduAuthModal';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function BaiduTokenPage() {
+    const { hasPermission } = usePermission();
     const router = useRouter();
     const { adminFetch } = useAdminFetch();
     const [tokenData, setTokenData] = useState<any>(null);
@@ -43,7 +44,7 @@ export default function BaiduTokenPage() {
     };
 
     const handleBack = () => {
-        router.push('/admin/formulas');
+        router.push('/admin/system/bdpan');
     };
 
     const formatTime = (timestamp: number) => {
@@ -70,10 +71,6 @@ export default function BaiduTokenPage() {
     return (
         <div className="p-4 pb-20">
             <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-                {/*<button onClick={handleBack} className="hover:text-blue-600 flex items-center gap-1 transition-colors">
-                    <ArrowLeft className="w-4 h-4" /> 返回公式列表
-                </button>
-                <span>/</span>*/}
                 <span className="text-gray-800">百度网盘授权</span>
             </div>
 
@@ -81,9 +78,10 @@ export default function BaiduTokenPage() {
                 {!tokenData ? (
                     <div className="text-center py-10">
                         <p className="text-gray-500 mb-4">尚未授权百度网盘</p>
-                        <button onClick={handleOpenAuth} className="bg-blue-600 text-white px-6 py-2 rounded text-sm flex items-center gap-2 mx-auto hover:bg-blue-700 transition-colors">
+                        {hasPermission('bdpan', 'edit') && (<button onClick={handleOpenAuth} className="bg-blue-600 text-white px-6 py-2 rounded text-sm flex items-center gap-2 mx-auto hover:bg-blue-700 transition-colors">
                             <Key className="w-4 h-4" /> 立即授权
                         </button>
+                        )}
                     </div>
                 ) : (
                     <div className="space-y-4">
@@ -123,9 +121,10 @@ export default function BaiduTokenPage() {
                         </div>
 
                         <div className="mt-6 flex justify-start pl-28">
-                            <button onClick={handleOpenAuth} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded text-sm flex items-center gap-2 transition-colors">
+                            {hasPermission('bdpan', 'edit') && (<button onClick={handleOpenAuth} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded text-sm flex items-center gap-2 transition-colors">
                                 <Key className="w-4 h-4" /> 重新授权
                             </button>
+                            )}
                         </div>
                     </div>
                 )}

@@ -5,8 +5,10 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAdminFetch } from '@/hooks/useAdminFetch';
 import { Heart, Star, Trash2, ExternalLink } from 'lucide-react';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function LikesAndBookmarksPage() {
+    const { hasPermission } = usePermission();
     const [activeTab, setActiveTab] = useState<'likes' | 'bookmarks'>('likes');
     const [dataList, setDataList] = useState<any[]>([]);
     const [total, setTotal] = useState(0);
@@ -121,7 +123,7 @@ export default function LikesAndBookmarksPage() {
                                     </td>
                                     <td className="py-2 px-3 text-gray-400 text-xs">{new Date(item.createdAt).toLocaleString()}</td>
                                     <td className="py-2 px-3 flex items-center justify-end">
-                                        <button onClick={() => handleDelete(item.id)} className="text-red-500 p-1 hover:bg-red-50 rounded"><Trash2 className="w-4 h-4" /></button>
+                                        {hasPermission('likes', 'delete') && (<button onClick={() => handleDelete(item.id)} className="text-red-500 p-1 hover:bg-red-50 rounded"><Trash2 className="w-4 h-4" /></button>)}
                                     </td>
                                 </tr>
                             ))}

@@ -1,4 +1,4 @@
-// app/admin/formulas/page.tsx
+// app/admin/contents/formulas/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,8 +6,10 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAdminFetch } from '@/hooks/useAdminFetch';
 import { Trash2, Search, Edit2, RefreshCw, Loader2 } from 'lucide-react';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function FormulasPage() {
+    const { hasPermission } = usePermission();
     const [list, setList] = useState<any[]>([]);
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(1);
@@ -81,7 +83,7 @@ export default function FormulasPage() {
 
                     {/* 同步网盘按钮 */}
                     {/* ✅ 同步按钮增加 disabled 和 loading 状态 */}
-                    <button
+                    {hasPermission('formulas', 'sync') && (<button
                         onClick={handleSync}
                         disabled={syncing}
                         className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1 whitespace-nowrap transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -93,20 +95,7 @@ export default function FormulasPage() {
                         )}
                         {syncing ? '同步中...' : '同步网盘'}
                     </button>
-
-                    {/* 百度授权按钮 */}
-                    {/*<button
-                        onClick={() => router.push('/admin/formulas/token')}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1 whitespace-nowrap transition-colors"
-                    >
-                        <Key className="w-3.5 h-3.5" /> 百度授权
-                    </button>
-                    <button
-                        onClick={() => router.push('/admin/tongji')}
-                        className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1 whitespace-nowrap"
-                    >
-                        <BarChart3 className="w-3.5 h-3.5" /> 统计授权
-                    </button>*/}
+                    )}
                 </div>
             </div>
 
@@ -140,14 +129,15 @@ export default function FormulasPage() {
                                         </span>
                                     </td>
                                     <td className="py-1.5 px-3 flex items-center justify-end gap-1">
-                                        <Link
-                                            href={`/admin/formulas/${item.fs_id}`}
+                                        {hasPermission('formulas', 'edit') && (<Link
+                                            href={`/admin/contents/formulas/${item.fs_id}`}
                                             className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
                                             title="编辑"
                                         >
                                             <Edit2 className="w-3.5 h-3.5" />
                                         </Link>
-                                        <button
+                                        )}
+                                        {hasPermission('formulas', 'delete') && (<button
                                             onClick={async () => {
                                                 if (confirm('确认删除该公式?')) {
                                                     await adminFetch(`/admin/formulas/${item.fs_id}`, { method: 'DELETE' });
@@ -159,6 +149,7 @@ export default function FormulasPage() {
                                         >
                                             <Trash2 className="w-3.5 h-3.5" />
                                         </button>
+                                        )}
                                     </td>
                                 </tr>
                             ))}

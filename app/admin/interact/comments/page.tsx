@@ -6,8 +6,10 @@ import Link from 'next/link';
 import { useAdminFetch } from '@/hooks/useAdminFetch';
 import Modal from '@/components/admin/Modal';
 import { Search, Trash2, CheckCircle, XCircle, Clock, ExternalLink, ImageIcon } from 'lucide-react';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function CommentsManagePage() {
+    const { hasPermission } = usePermission();
     const [dataList, setDataList] = useState<any[]>([]);
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(1);
@@ -187,19 +189,20 @@ export default function CommentsManagePage() {
                                             <span className="text-xs text-blue-500 animate-pulse">处理中...</span>
                                         ) : (
                                             <>
-                                                {item.status !== 0 && (
+                                                {item.status !== 0 && hasPermission('comments', 'audit') && (
                                                     <button onClick={() => handleCommentStatus(item.id, 0)} className="text-green-600 text-xs hover:underline">
                                                         通过
                                                     </button>
                                                 )}
-                                                {item.status !== 2 && (
+                                                {item.status !== 2 && hasPermission('comments', 'audit') && (
                                                     <button onClick={() => handleCommentStatus(item.id, 2)} className="text-orange-500 text-xs hover:underline">
                                                         拒绝
                                                     </button>
                                                 )}
-                                                <button onClick={() => handleDelete(item.id)} className="text-red-500 p-1 hover:bg-red-50 rounded" title="删除">
+                                                {hasPermission('comments', 'delete') && (<button onClick={() => handleDelete(item.id)} className="text-red-500 p-1 hover:bg-red-50 rounded" title="删除">
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
+                                                )}
                                             </>
                                         )}
                                     </td>

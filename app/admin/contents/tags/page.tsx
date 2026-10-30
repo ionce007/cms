@@ -4,8 +4,10 @@ import { useAdminFetch } from '@/hooks/useAdminFetch';
 import Modal from '@/components/admin/Modal';
 import { Plus, Edit2, Trash2, Search } from 'lucide-react';
 import { pinyin } from 'pinyin-pro';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function TagsPage() {
+    const { hasPermission } = usePermission();
     const [list, setList] = useState<any[]>([]);
     const [filteredList, setFilteredList] = useState<any[]>([]);
     const [keyword, setKeyword] = useState('');
@@ -79,9 +81,10 @@ export default function TagsPage() {
                         <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2 top-1/2 -translate-y-1/2" />
                         <input type="text" placeholder="搜索标签..." value={keyword} onChange={e => setKeyword(e.target.value)} className="pl-7 pr-2 py-1 border rounded text-xs w-full sm:w-56 focus:ring-1 focus:ring-blue-500 outline-none" />
                     </div>
-                    <button onClick={openCreateModal} className="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1 whitespace-nowrap">
+                    {hasPermission('tags', 'create') && (<button onClick={openCreateModal} className="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1 whitespace-nowrap">
                         <Plus className="w-3.5 h-3.5" /> 新增
                     </button>
+                    )}
                 </div>
             </div>
 
@@ -108,8 +111,8 @@ export default function TagsPage() {
                                     <td className="py-1.5 px-3 text-gray-500 text-xs">{item.path}</td>
                                     <td className="py-1.5 px-3 text-gray-500 text-xs">{item.count || 0}</td>
                                     <td className="py-1.5 px-3 flex items-center justify-end gap-1">
-                                        <button onClick={() => openEditModal(item)} className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="编辑"><Edit2 className="w-3.5 h-3.5" /></button>
-                                        <button onClick={async () => { if (confirm('确认删除?')) { await adminFetch(`/admin/tags/${item.id}`, { method: 'DELETE' }); fetchList(); } }} className="p-1 text-red-500 hover:bg-red-50 rounded" title="删除"><Trash2 className="w-3.5 h-3.5" /></button>
+                                        {hasPermission('tags', 'edit') && (<button onClick={() => openEditModal(item)} className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="编辑"><Edit2 className="w-3.5 h-3.5" /></button>)}
+                                        {hasPermission('tags', 'delete') && (<button onClick={async () => { if (confirm('确认删除?')) { await adminFetch(`/admin/tags/${item.id}`, { method: 'DELETE' }); fetchList(); } }} className="p-1 text-red-500 hover:bg-red-50 rounded" title="删除"><Trash2 className="w-3.5 h-3.5" /></button>)}
                                     </td>
                                 </tr>
                             ))}

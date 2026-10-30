@@ -5,8 +5,10 @@ import RichTextEditor, { RichTextEditorHandle } from '@/components/frontend/Rich
 import Modal from '@/components/admin/Modal';
 import { Edit2, Trash2, Plus } from 'lucide-react';
 import { pinyin } from 'pinyin-pro'; // ✅ 引入拼音库
+import { usePermission } from '@/hooks/usePermission';
 
 export default function FragsPage() {
+    const { hasPermission } = usePermission();
     const [list, setList] = useState<any[]>([]);
     const { adminFetch } = useAdminFetch();
     const editorRef = useRef<RichTextEditorHandle>(null);
@@ -95,9 +97,10 @@ export default function FragsPage() {
         <div className="p-3">
             <div className="flex items-center justify-between mb-2">
                 <h1 className="text-lg font-bold text-gray-800">碎片信息</h1>
-                <button onClick={openCreateModal} className="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1 whitespace-nowrap">
+                {hasPermission('frags', 'create') && (<button onClick={openCreateModal} className="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1 whitespace-nowrap">
                     <Plus className="w-3.5 h-3.5" /> 新增碎片
                 </button>
+                )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2">
@@ -107,12 +110,14 @@ export default function FragsPage() {
                             <div className="flex items-center justify-between mb-0.5">
                                 <h3 className="font-bold text-sm text-gray-800 truncate" title={item.name}>{item.name}</h3>
                                 <div className="flex items-center opacity-0 group-hover:opacity-100 transition-all">
-                                    <button onClick={() => openEditModal(item)} className="p-1 text-blue-600 bg-blue-50 rounded mr-1" title="编辑">
+                                    {hasPermission('frags', 'edit') && (<button onClick={() => openEditModal(item)} className="p-1 text-blue-600 bg-blue-50 rounded mr-1" title="编辑">
                                         <Edit2 className="w-3.5 h-3.5" />
                                     </button>
-                                    <button onClick={() => handleDelete(item.id)} className="p-1 text-red-600 bg-red-50 rounded" title="删除">
+                                    )}
+                                    {hasPermission('frags', 'delete') && (<button onClick={() => handleDelete(item.id)} className="p-1 text-red-600 bg-red-50 rounded" title="删除">
                                         <Trash2 className="w-3.5 h-3.5" />
                                     </button>
+                                    )}
                                 </div>
                             </div>
                             <p className="text-[11px] text-gray-500 font-mono bg-gray-50 inline-block px-1 py-0.5 rounded border border-gray-100">

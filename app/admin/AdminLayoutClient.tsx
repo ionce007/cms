@@ -1,13 +1,14 @@
 // app/admin/AdminLayoutClient.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { usePermission } from '@/hooks/usePermission';
+import { useAdminFetch } from '@/hooks/useAdminFetch';
 import {
     LayoutDashboard, FolderTree, Tags, FileText, Download,
     MessageSquare, Heart, Puzzle, Shield, Users, Key,
@@ -26,11 +27,11 @@ const MENU_ITEMS = [
     {
         group: '内容管理',
         items: [
-            { key: 'categories', name: '栏目管理', href: '/admin/categories', icon: FolderTree },
-            { key: 'articles', name: '文章管理', href: '/admin/articles', icon: FileText },
-            { key: 'tags', name: '标签管理', href: '/admin/tags', icon: Tags },
-            { key: 'formulas', name: '下载公式', href: '/admin/formulas', icon: Download },
-            { key: 'frags', name: '碎片信息', href: '/admin/frags', icon: Puzzle },
+            { key: 'categories', name: '栏目管理', href: '/admin/contents/categories', icon: FolderTree },
+            { key: 'articles', name: '文章管理', href: '/admin/contents/articles', icon: FileText },
+            { key: 'tags', name: '标签管理', href: '/admin/contents/tags', icon: Tags },
+            { key: 'formulas', name: '下载公式', href: '/admin/contents/formulas', icon: Download },
+            { key: 'frags', name: '碎片信息', href: '/admin/contents/frags', icon: Puzzle },
         ]
     },
     {
@@ -44,16 +45,16 @@ const MENU_ITEMS = [
     {
         group: '会员管理',
         items: [
-            { key: 'members', name: '会员管理', href: '/admin/members', icon: Users }, // 独立的前台会员
+            { key: 'members', name: '会员管理', href: '/admin/members', icon: Users },
         ]
     },
     {
         group: '系统管理',
         items: [
-            { key: 'users', name: '系统用户', href: '/admin/system/users', icon: Shield }, // 后台管理员
-            { key: 'roles', name: '角色权限', href: '/admin/system/roles', icon: Key }, // 预留：角色权限管理
+            { key: 'users', name: '系统用户', href: '/admin/system/users', icon: Shield },
+            { key: 'roles', name: '角色权限', href: '/admin/system/roles', icon: Key },
             { key: 'settings', name: '系统设置', href: '/admin/system/settings', icon: Settings },
-            { key: 'pan', name: '网盘授权', href: '/admin/system/bdpan', icon: RefreshCw },
+            { key: 'bdpan', name: '网盘授权', href: '/admin/system/bdpan', icon: RefreshCw },
             { key: 'tongji', name: '统计授权', href: '/admin/system/tongji', icon: BarChart3 },
             { key: 'logs', name: '日志管理', href: '/admin/system/logs', icon: Activity },
         ]
@@ -61,10 +62,11 @@ const MENU_ITEMS = [
 ];
 
 export default function AdminLayoutClient({ children }: { children: React.ReactNode }) {
-    const { hasPermission } = usePermission(); // 或者直接根据 adminUser.permissions 判断
+    const { hasPermission } = usePermission();
     const pathname = usePathname();
     const router = useRouter();
     const { isAdminLoggedIn, isLoading, adminUser, adminLogout } = useAdminAuth();
+    const { adminFetch } = useAdminFetch();
 
     // ============ 状态 ============
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -72,17 +74,23 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
 
-    // ✅ 核心逻辑：根据权限过滤菜单
-    // 如果是超级管理员角色(admin)，显示所有；否则只显示权限列表里的。
-    // ✅ 过滤菜单：如果是 admin 全部显示；如果是其他角色，只要该模块有权限数组（非空），就显示
+    // ✅ 全局搜索状态
+    const [searchKeyword, setSearchKeyword] = useState('');
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const searchRef = useRef<HTMLDivElement>(null);
+    const searchInputRef = useRef<HTMLInputElement>(null);
+
+    // ✅ 过滤菜单：如果是 super 角色全部显示；否则只要该模块有权限数组（非空），就显示
     const filteredMenuItems = MENU_ITEMS.map(group => {
         const allowedItems = group.items.filter(item => {
-            if (adminUser?.role === 'super') return true;
+            if (adminUser?.role === 'super' || hasPermission(item.key, 'view')) return true;
             const modulePerms = adminUser?.permissions?.[item.key];
             return modulePerms && modulePerms.length > 0;
         });
         return { ...group, items: allowedItems };
-    }).filter(group => group.items.length > 0); // 如果组内没有权限项，则隐藏整个组
+    }).filter(group => group.items.length > 0);
 
     // 记录当前展开的菜单组（手风琴模式）
     const [openGroup, setOpenGroup] = useState<string>('概览');
@@ -111,6 +119,60 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
         }
     }, [pathname]);
 
+    // ✅ 全局搜索：点击外部关闭下拉面板
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+                setShowDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // ✅ 全局搜索：防抖处理
+    useEffect(() => {
+        if (!searchKeyword.trim()) {
+            setSearchResults([]);
+            setShowDropdown(false);
+            return;
+        }
+
+        const timer = setTimeout(async () => {
+            setIsSearching(true);
+            try {
+                const res = await adminFetch(`/admin/search?keyword=${encodeURIComponent(searchKeyword)}`);
+                if (res.code === 1) {
+                    setSearchResults(res.data || []);
+                    setShowDropdown(true);
+                }
+            } catch (err) {
+                console.error('搜索失败', err);
+            } finally {
+                setIsSearching(false);
+            }
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [searchKeyword, adminFetch]);
+
+    // ✅ 全局搜索：快捷键 Ctrl+K
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                searchInputRef.current?.focus();
+                setShowDropdown(!!searchKeyword);
+            }
+            if (e.key === 'Escape') {
+                setShowDropdown(false);
+                searchInputRef.current?.blur();
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [searchKeyword]);
+
     // 退出登录处理
     const handleLogout = () => {
         if (confirm('确定退出后台登录吗？')) {
@@ -121,7 +183,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
 
     // 切换组展开状态
     const toggleGroup = (groupName: string) => {
-        if (isCollapsed) return; // 折叠成图标时不触发手风琴
+        if (isCollapsed) return;
         setOpenGroup(prev => prev === groupName ? '' : groupName);
     };
 
@@ -192,7 +254,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
 
                 {/* 菜单列表 */}
                 <div className="flex-1 overflow-y-auto py-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-                    {MENU_ITEMS.map((group) => {
+                    {filteredMenuItems.map((group) => {
                         const isOpen = openGroup === group.group;
                         const hasActiveItem = group.items.some(item =>
                             pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))
@@ -280,13 +342,63 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                         >
                             <Menu className="w-5 h-5" />
                         </button>
-                        <div className="hidden sm:flex items-center bg-gray-100 rounded-lg px-3 py-2 border border-transparent focus-within:border-primary-300 focus-within:bg-white transition-all w-64">
-                            <Search className="w-4 h-4 text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="全局搜索... (Ctrl+K)"
-                                className="bg-transparent border-none focus:ring-0 text-sm ml-2 w-full placeholder-gray-400 outline-none"
-                            />
+
+                        {/* ✅ 全局搜索框与下拉面板 */}
+                        <div className="relative hidden sm:block" ref={searchRef}>
+                            <div className="flex items-center bg-gray-100 rounded-lg px-3 py-2 border border-transparent focus-within:border-primary-300 focus-within:bg-white transition-all w-64">
+                                <Search className="w-4 h-4 text-gray-400" />
+                                <input
+                                    ref={searchInputRef}
+                                    type="text"
+                                    placeholder="全局搜索... (Ctrl+K)"
+                                    value={searchKeyword}
+                                    onChange={(e) => setSearchKeyword(e.target.value)}
+                                    onFocus={() => { if (searchKeyword) setShowDropdown(true); }}
+                                    className="bg-transparent border-none focus:ring-0 text-sm ml-2 w-full placeholder-gray-400 outline-none"
+                                />
+                                {isSearching && (
+                                    <Loader2 className="w-4 h-4 text-primary-500 animate-spin flex-shrink-0" />
+                                )}
+                            </div>
+
+                            {/* 搜索结果下拉面板 */}
+                            {showDropdown && (
+                                <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden max-h-96 overflow-y-auto z-50 animate-in fade-in slide-in-from-top-2">
+                                    {searchResults.length > 0 ? (
+                                        <div className="py-2">
+                                            <div className="px-4 py-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                                                搜索结果
+                                            </div>
+                                            {searchResults.map((item, index) => (
+                                                <div
+                                                    key={index}
+                                                    onClick={() => {
+                                                        setSearchKeyword('');
+                                                        setShowDropdown(false);
+                                                        router.push(item.url);
+                                                    }}
+                                                    className="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center justify-between transition-colors group"
+                                                >
+                                                    <div className="flex items-center gap-2 overflow-hidden">
+                                                        <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 flex-shrink-0">
+                                                            {item.type}
+                                                        </span>
+                                                        <span className="text-sm text-gray-700 truncate group-hover:text-blue-600 transition-colors">
+                                                            {item.label}
+                                                        </span>
+                                                    </div>
+                                                    <ChevronLeft className="w-4 h-4 text-gray-300 group-hover:text-blue-500 transition-colors rotate-180 flex-shrink-0" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="p-8 text-center">
+                                            <div className="text-4xl mb-2 text-gray-200">🔍</div>
+                                            <p className="text-sm text-gray-500">未找到关于 “{searchKeyword}” 的结果</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
 

@@ -1,6 +1,7 @@
 const { DataTypes, Model } = require('sequelize');
 const sequelize = require('../common/db');
 const  { isUrl } = require('../common/utils');
+
 class Category extends Model { }
 
 Category.init(
@@ -50,16 +51,16 @@ Category.init(
         tableName: 'cms_category',  // 指定表名
         comment: '栏目表',  // 表注释
         // 默认 scope：自动包含文章数量
-        defaultScope: {
+        /*defaultScope: {
             attributes: {
                 include: [
                     [
-                        sequelize.literal(`(SELECT COUNT(*) FROM cms_article WHERE cms_article.cid = Category.id)`),
+                        sequelize.literal(`(SELECT COUNT(*) FROM cms_article WHERE cms_article.cid = cms_category.id)`),
                         'count'
                     ]
                 ]
             }
-        }
+        }*/
     }
 );
 

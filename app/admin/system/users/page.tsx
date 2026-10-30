@@ -5,8 +5,10 @@ import { useState, useEffect } from 'react';
 import { useAdminFetch } from '@/hooks/useAdminFetch';
 import Modal from '@/components/admin/Modal';
 import { Plus, Edit2, Trash2, Search } from 'lucide-react';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function SystemUsersPage() {
+    const { hasPermission } = usePermission();
     const [users, setUsers] = useState<any[]>([]);
     const [roles, setRoles] = useState<any[]>([]);
     const [total, setTotal] = useState(0);
@@ -83,7 +85,7 @@ export default function SystemUsersPage() {
                         <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2 top-1/2 -translate-y-1/2" />
                         <input type="text" placeholder="搜索用户名..." value={keyword} onChange={e => setKeyword(e.target.value)} className="pl-7 pr-2 py-1.5 border rounded text-sm w-48 focus:ring-1 focus:ring-blue-500 outline-none" />
                     </form>
-                    <button onClick={openCreateModal} className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm flex items-center gap-1 hover:bg-blue-700"><Plus className="w-4 h-4" /> 新增用户</button>
+                    {hasPermission('users', 'create') && (<button onClick={openCreateModal} className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm flex items-center gap-1 hover:bg-blue-700"><Plus className="w-4 h-4" /> 新增用户</button>)}
                 </div>
             </div>
 
@@ -112,8 +114,8 @@ export default function SystemUsersPage() {
                                 </td>
                                 <td className="py-2 px-3 text-gray-500 text-xs truncate max-w-[150px]">{u.remark}</td>
                                 <td className="py-2 px-3 flex justify-end gap-1">
-                                    <button onClick={() => openEditModal(u)} className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="编辑"><Edit2 className="w-4 h-4" /></button>
-                                    <button onClick={() => handleDelete(u.id)} className="p-1 text-red-500 hover:bg-red-50 rounded" title="删除"><Trash2 className="w-4 h-4" /></button>
+                                    {hasPermission('users', 'edit') && (<button onClick={() => openEditModal(u)} className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="编辑"><Edit2 className="w-4 h-4" /></button>)}
+                                    {hasPermission('users', 'delete') && (<button onClick={() => handleDelete(u.id)} className="p-1 text-red-500 hover:bg-red-50 rounded" title="删除"><Trash2 className="w-4 h-4" /></button>)}
                                 </td>
                             </tr>
                         ))}

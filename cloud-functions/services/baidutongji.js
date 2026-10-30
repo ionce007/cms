@@ -152,6 +152,7 @@ async function getSiteID() {
 module.exports = {
     getToken,
     getAccessTokenFromDB,
+    getAccessTokenWithRefresh,
     getAuthUrl,
     getAuthCode
 }
