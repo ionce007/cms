@@ -143,6 +143,7 @@ export function getProxiedImageUrl(
     }
 ): string {
     if (!url || url.trim() === '') return '';
+    if(url.trim().startsWith('//')) url = `http:${url.trim()}`;
     const trimmed = url.trim();
 
     // data: / blob: 直接返回

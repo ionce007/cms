@@ -511,7 +511,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
             if (!validation.valid) return alert(validation.message || '图片网址无效');
 
             let finalUrl = url;
-            if (url.startsWith('//')) finalUrl = `https:${url}`;
+            //if (url.startsWith('//')) finalUrl = `https:${url}`;
 
             const displayUrl = getProxiedImageUrl(finalUrl, { forceProxy: true });
             const alt = dialogText.trim() || '图片';
