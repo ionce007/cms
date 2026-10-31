@@ -183,6 +183,13 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                     setSourceHtml(html);
                 } else if (editorRef.current) {
                     editorRef.current.innerHTML = html;
+                    // ✅ 为没有 data-original-src 的图片补上原始 src（保持 // 不变）
+                    editorRef.current.querySelectorAll('img').forEach(img => {
+                        if (!img.getAttribute('data-original-src')) {
+                            const rawSrc = img.getAttribute('src') || '';
+                            if (rawSrc) img.setAttribute('data-original-src', rawSrc);
+                        }
+                    });
                     updateState();
                 }
                 setSourceHtml(html);
@@ -542,7 +549,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
             if (!validation.valid) return alert(validation.message || '图片网址无效');
 
             let finalUrl = url;
-            if (url.startsWith('//')) finalUrl = `https:${url}`;
+            //if (url.startsWith('//')) finalUrl = `https:${url}`;
 
             const displayUrl = getProxiedImageUrl(finalUrl, { forceProxy: true });
 

@@ -115,7 +115,7 @@ export function getProxiedImageUrl_Old(
         //return `${PROXY_PATH}?url=${encodeURIComponent(fullUrl)}`;
     }
     //图片网址 协议与 网站协议 相同时，不做图片代理
-    if(trimmed.toLocaleLowerCase().startsWith(protocol.toLocaleLowerCase())) return trimmed;
+    if (trimmed.toLocaleLowerCase().startsWith(protocol.toLocaleLowerCase())) return trimmed;
     // HTTP 图片
     if (trimmed.startsWith('http://')) {
         return `${PROXY_PATH}?url=${encodeURIComponent(trimmed)}`;
@@ -143,8 +143,9 @@ export function getProxiedImageUrl(
     }
 ): string {
     if (!url || url.trim() === '') return '';
-    if(url.trim().startsWith('//')) url = `http:${url.trim()}`;
-    const trimmed = url.trim();
+
+    let trimmed = url.trim();
+    if (trimmed.startsWith('//')) trimmed = `http:${trimmed}`;
 
     // data: / blob: 直接返回
     if (trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
@@ -169,8 +170,8 @@ export function getProxiedImageUrl(
     // ✅ 判断是否需要代理
     const protocol = options?.protocol ?? (typeof window !== 'undefined' ? window.location.protocol as 'http:' | 'https:' : 'https:');
     //图片网址协议 与 网站协议 相同时，不使用图片代理。
-    if(trimmed.toLocaleLowerCase().startsWith(protocol)) return trimmed; 
-    
+    if (trimmed.toLocaleLowerCase().startsWith(protocol)) return trimmed;
+
     const shouldProxy = options?.forceProxy !== undefined
         ? options.forceProxy
         : protocol === 'https:';
