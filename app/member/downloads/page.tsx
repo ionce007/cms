@@ -114,7 +114,7 @@ export default function MyDownloadsPage() {
                         title="还没有下载过任何公式"
                         description="去公式页面看看吧"
                         actionLabel="浏览公式"
-                        actionHref="/formulas"
+                        actionHref="/downloads"
                     />
                 </div>
             ) : (

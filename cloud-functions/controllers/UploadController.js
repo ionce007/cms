@@ -13,7 +13,6 @@ async function getQiniuToken(req, res) {
     try {
         const { fileName = '', fileType = '', path = 'uploads' } = req.body;
         const result = await generateQiniuToken(fileName, fileType, path);
-        console.log('getQiniuToken -> result = ', result)
         return res.json(result);
 
         /*const config = await getQiniuParams();

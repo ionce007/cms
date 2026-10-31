@@ -88,7 +88,8 @@ async function refreshAccessToken(refresh_token) {
 async function getDownloadUrl(req, res, next) {
     const fs_id = req.params.id;
     const userId = req.user ? req.user.toJSON().id : null;
-    const result = getFileDownloadUrl(fs_id, userId);
+    const result = await getFileDownloadUrl(fs_id, userId);
+    console.log('result = ', result);
     return res.status(result.status).json(result);
 
     /*try {

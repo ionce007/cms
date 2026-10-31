@@ -1,7 +1,7 @@
 // controllers/admin/FormulaController.js
 const { Op } = require('sequelize');
 const request = require('sync-request');
-const { Token, Formula } = require('../models')
+const { Token, Formula, MemberDownload } = require('../models')
 const { DateAdd, dateFormat } = require('../common/utils');
 
 const bdSupplier = 'baidupan';
@@ -182,13 +182,14 @@ async function getFileDownloadUrl(fs_id, userId = null) {
             return { code: -3, status: 401, message: '请先登录', }
         }
         const token = await getAccessTokenWithRefresh();
-        if (token.code !== 200) {
+        if (token.code !== 1) {
             return { code: -4, status: 500, msg: '获取百度网盘Token失败！', data: {} };
         }
         if (!token.data) {
             return { code: -5, status: 500, msg: '百度网盘Token不存在！', data: {} };
         }
         const access_token = token.data.access_token;
+        //console.log('access_token = ', access_token)
         if (!access_token) {
             return { code: -6, status: 500, msg: '百度网盘Access Token不存在！', data: {} };
         }
