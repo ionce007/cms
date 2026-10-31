@@ -161,7 +161,7 @@ export default function ArticleEditPage() {
         const content = restoreOriginalImageUrls(rawContent);
         const submitData = { ...form, content };
 
-        const url = isEdit ? `/admin/contents/articles/${params.id}` : '/admin/contents/articles';
+        const url = isEdit ? `/admin/articles/${params.id}` : '/admin/articles';
         const method = isEdit ? 'PUT' : 'POST';
 
         const res = await adminFetch(url, { method, body: JSON.stringify(submitData) });
