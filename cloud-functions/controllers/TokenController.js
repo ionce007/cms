@@ -1,4 +1,4 @@
-
+import { getFileDownloadUrl } from '../services/baidupan'
 //const bdSupplier = 'baidupan'; // 百度网盘供应商标识
 
 //获取网盘上指定路径下的文件列表
