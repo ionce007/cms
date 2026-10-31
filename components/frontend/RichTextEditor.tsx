@@ -110,7 +110,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
         {
             placeholder = '请输入内容...',
             minHeight = 200,
-            maxHeight = 600, // 默认最大高度
+            maxHeight = 400, // 默认最大高度
             maxLength = 5000,
             className,
             onChange,
@@ -388,9 +388,9 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
             }
 
             let url = dialogValue.trim();
+            if(url.startsWith('//')) url = `http:${url}`;
             if (!/^https?:\/\//.test(url) && !/^mailto:/.test(url)) {
-                //url = 'https://' + url;
-                url = 'http://' + url;
+                url = 'https://' + url;
             }
 
             editorRef.current?.focus();

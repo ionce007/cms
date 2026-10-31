@@ -332,7 +332,7 @@ export default function ArticleEditPage() {
                         <label className="w-20 flex-shrink-0 text-sm text-gray-700 text-right pr-3 pt-1.5">文章内容</label>
                         <div className="flex-1 border rounded overflow-hidden">
                             <div className="max-h-[600px] overflow-y-auto">
-                                <RichTextEditor ref={editorRef} minHeight={400} imgUploadPath='uploads' isAdmin={true} />
+                                <RichTextEditor ref={editorRef} minHeight={200} maxHeight={400} imgUploadPath='uploads' isAdmin={true} />
                             </div>
                         </div>
                     </div>
