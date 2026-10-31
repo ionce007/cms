@@ -10,6 +10,7 @@ import {
     useCallback,
 } from 'react';
 import { uploadImageToQiniu, compressImage } from '@/lib/qiniuUpload';
+import { processHtmlImages } from '@/lib/htmlProcessor';
 import { getProxiedImageUrl } from '@/lib/imageProxy';
 import { cn } from '@/lib/utils';
 
@@ -182,6 +183,8 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                 if (showSource) {
                     setSourceHtml(html);
                 } else if (editorRef.current) {
+                    debugger;
+                    html = processHtmlImages(html);
                     editorRef.current.innerHTML = html;
                     // ✅ 为没有 data-original-src 的图片补上原始 src（保持 // 不变）
                     editorRef.current.querySelectorAll('img').forEach(img => {
