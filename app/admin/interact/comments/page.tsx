@@ -169,7 +169,8 @@ export default function CommentsManagePage() {
                                         {item.nickname}
                                         {item.memberId && <span className="ml-1 text-[10px] bg-blue-50 text-blue-600 px-1 rounded">会员</span>}
                                     </td>
-                                    <td className="py-2 px-3 max-w-[250px] truncate cursor-pointer text-blue-600 hover:underline" title="点击查看完整内容" onClick={() => setPreviewContent(item.content)}>
+                                    <td className="py-2 px-3 max-w-[250px] truncate cursor-pointer text-blue-600 hover:underline" title="点击查看完整内容" 
+                                        onClick={() => setPreviewContent(item.content)}>
                                         {parseCommentPreview(item.content)}
                                     </td>
                                     <td className="py-2 px-3 text-gray-500 text-xs truncate max-w-[280px]">

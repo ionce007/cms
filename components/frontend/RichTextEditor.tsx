@@ -125,6 +125,9 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
         const editorRef = useRef<HTMLDivElement>(null);
         const fileInputRef = useRef<HTMLInputElement>(null);
 
+        // 保存的光标位置（Range），用于在点击工具栏/按钮/弹窗后恢复插入点
+        const savedSelectionRef = useRef<Range | null>(null);
+
         const [isEmpty, setIsEmpty] = useState(true);
         const [uploading, setUploading] = useState(false);
         const [uploadProgress, setUploadProgress] = useState(0);
@@ -183,7 +186,6 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                 if (showSource) {
                     setSourceHtml(html);
                 } else if (editorRef.current) {
-                    debugger;
                     html = processHtmlImages(html);
                     editorRef.current.innerHTML = html;
                     // ✅ 为没有 data-original-src 的图片补上原始 src（保持 // 不变）
@@ -220,6 +222,56 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
             setSourceHtml(html);
             onChange?.(html);
         };
+
+        // ============ 选区保存 / 恢复 ============
+        // 核心：contentEditable 编辑器在点击工具栏按钮/弹窗时会把焦点移出编辑器，
+        // 此时 window.getSelection() 不再指向编辑器内部，导致 execCommand 把内容插入到首行。
+        // 因此这里持续监听 selectionchange，把位于编辑器内部的选区快照保存下来，
+        // 在插入前用 restoreSelection() 先恢复光标位置，再执行插入命令。
+        const saveSelection = useCallback(() => {
+            const editor = editorRef.current;
+            if (!editor) return;
+            const selection = window.getSelection();
+            if (!selection || selection.rangeCount === 0) return;
+            const range = selection.getRangeAt(0);
+            // 仅保存位于编辑器内部的选区，点击工具栏时不覆盖已保存的光标
+            if (editor.contains(range.commonAncestorContainer)) {
+                savedSelectionRef.current = range.cloneRange();
+            }
+        }, []);
+
+        const restoreSelection = useCallback(() => {
+            const editor = editorRef.current;
+            if (!editor) return;
+            editor.focus();
+            const saved = savedSelectionRef.current;
+            if (saved) {
+                const selection = window.getSelection();
+                if (selection) {
+                    selection.removeAllRanges();
+                    selection.addRange(saved);
+                }
+            }
+        }, []);
+
+        // 统一插入助手：先恢复光标位置，再执行插入命令
+        const insertHtmlAtSelection = useCallback((html: string) => {
+            restoreSelection();
+            document.execCommand('insertHTML', false, html);
+            updateState();
+        }, [restoreSelection]);
+
+        const insertTextAtSelection = useCallback((text: string) => {
+            restoreSelection();
+            document.execCommand('insertText', false, text);
+            updateState();
+        }, [restoreSelection]);
+
+        // 监听选区变化，持续保存编辑器内的光标位置
+        useEffect(() => {
+            document.addEventListener('selectionchange', saveSelection);
+            return () => document.removeEventListener('selectionchange', saveSelection);
+        }, [saveSelection]);
 
         // ============ 点击外部关闭菜单 ============
         useEffect(() => {
@@ -286,7 +338,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
 
         // ============ 基础命令 ============
         const execCommand = (command: string, value?: string) => {
-            editorRef.current?.focus();
+            restoreSelection();
             document.execCommand(command, false, value);
             updateState();
         };
@@ -319,7 +371,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
         };
 
         const applyBgColor = (color: string) => {
-            editorRef.current?.focus();
+            restoreSelection();
             document.execCommand('hiliteColor', false, color);
             document.execCommand('backColor', false, color);
             updateState();
@@ -342,9 +394,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
             }
             tableHtml += '</table><p><br /></p>';
 
-            editorRef.current?.focus();
-            document.execCommand('insertHTML', false, tableHtml);
-            updateState();
+            insertHtmlAtSelection(tableHtml);
             setShowTableMenu(false);
         };
 
@@ -367,9 +417,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
 
             const codeHtml = `<pre style="background: #1f2937; color: #f3f4f6; padding: 12px; border-radius: 8px; overflow-x: auto; margin: 12px 0; font-family: ui-monospace, monospace; font-size: 13px;"><code>${escaped}</code></pre><p><br /></p>`;
 
-            editorRef.current?.focus();
-            document.execCommand('insertHTML', false, codeHtml);
-            updateState();
+            insertHtmlAtSelection(codeHtml);
 
             setDialogType(null);
             setDialogValue('');
@@ -391,12 +439,12 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
             }
 
             let url = dialogValue.trim();
-            if(url.startsWith('//')) url = `http:${url}`;
+            if (url.startsWith('//')) url = `http:${url}`;
             if (!/^https?:\/\//.test(url) && !/^mailto:/.test(url)) {
                 url = 'https://' + url;
             }
 
-            editorRef.current?.focus();
+            restoreSelection();
 
             if (dialogText.trim()) {
                 const linkHtml = `<a href="${url}" target="_blank" rel="noopener noreferrer">${dialogText}</a>`;
@@ -528,9 +576,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
 
             const imgHtml = `<img src="${displayUrl}" data-original-src="${finalUrl}" alt="${alt}" style="width: 50%; max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0; display: block;" /><p><br /></p>`;
 
-            editorRef.current?.focus();
-            document.execCommand('insertHTML', false, imgHtml);
-            updateState();
+            insertHtmlAtSelection(imgHtml);
 
             setDialogType(null);
             setDialogValue('');
@@ -661,9 +707,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                 const displayUrl = getProxiedImageUrl(result.originalUrl, { forceProxy: true });
                 const imgHtml = `<img src="${displayUrl}" data-original-src="${result.originalUrl}" alt="${file.name || '图片'}" style="width: 50%; max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0; display: block;" /><p><br /></p>`;
 
-                editorRef.current?.focus();
-                document.execCommand('insertHTML', false, imgHtml);
-                updateState();
+                insertHtmlAtSelection(imgHtml);
             } catch (err) {
                 console.error('图片上传失败:', err);
                 alert(err instanceof Error ? err.message : '图片上传失败');
@@ -698,16 +742,12 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                 const displayUrl = getProxiedImageUrl(result.originalUrl, { forceProxy: true });
                 const imgHtml = `<img src="${displayUrl}" data-original-src="${result.originalUrl}" alt="图片" style="width: 50%; max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0; display: block;" /><p><br /></p>`;
 
-                editorRef.current?.focus();
-                document.execCommand('insertHTML', false, imgHtml);
-                updateState();
+                insertHtmlAtSelection(imgHtml);
             } catch (err) {
                 console.error('网页图片上传失败:', err);
                 const displayUrl = getProxiedImageUrl(url, { forceProxy: true });
                 const imgHtml = `<img src="${displayUrl}" data-original-src="${url}" alt="图片" style="max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0; display: block;" /><p><br /></p>`;
-                editorRef.current?.focus();
-                document.execCommand('insertHTML', false, imgHtml);
-                updateState();
+                insertHtmlAtSelection(imgHtml);
             } finally {
                 setUploading(false);
                 setUploadProgress(0);
@@ -767,7 +807,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
 
                 const text = clipboardData.getData('text/plain');
                 if (text && text.trim()) {
-                    editorRef.current?.focus();
+                    restoreSelection();
                     document.execCommand('insertText', false, text);
                 }
 
@@ -788,7 +828,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                     e.preventDefault();
                     const text = clipboardData.getData('text/plain');
                     if (text && text.trim()) {
-                        editorRef.current?.focus();
+                        restoreSelection();
                         document.execCommand('insertText', false, text);
                     }
                     for (const match of base64Matches) {
@@ -803,7 +843,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                     e.preventDefault();
                     const text = clipboardData.getData('text/plain');
                     if (text && text.trim()) {
-                        editorRef.current?.focus();
+                        restoreSelection();
                         document.execCommand('insertText', false, text);
                     }
                     for (const url of imgUrls) {
@@ -816,8 +856,9 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
             // 3. 默认：纯文本
             e.preventDefault();
             const text = clipboardData.getData('text/plain');
+            restoreSelection();
             document.execCommand('insertText', false, text);
-        }, [uploadAndInsertImage, uploadImageFromUrl, uploadBase64Image]);
+        }, [uploadAndInsertImage, uploadImageFromUrl, uploadBase64Image, restoreSelection]);
 
         // ============ 拖拽处理 ============
         const handleDragEnter = (e: React.DragEvent) => {

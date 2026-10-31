@@ -7,6 +7,7 @@ import { useAdminFetch } from '@/hooks/useAdminFetch';
 import RichTextEditor, { RichTextEditorHandle } from '@/components/frontend/RichTextEditor';
 import { ArrowLeft, Image as ImageIcon, Loader2, Clock } from 'lucide-react';
 import { uploadImageToQiniu } from '@/lib/qiniuUpload';
+import { getProxiedImageUrl, restoreOriginalImageUrls } from '@/lib/imageProxy';
 
 // 格式化时间戳 (秒/毫秒) 为 YYYY-MM-DD HH:mm:ss
 const formatTime = (timestamp: number) => {
@@ -76,7 +77,8 @@ export default function FormulaEditPage() {
         if (!form.server_filename) return alert('文件名称不能为空');
 
         setSubmitting(true);
-        const content = editorRef.current?.getHtml() || '';
+        const rawContent = editorRef.current?.getHtml() || '';
+        const content = restoreOriginalImageUrls(rawContent);
         const submitData = { ...form, content };
 
         const res = await adminFetch(`/admin/formulas/${fs_id}`, {
@@ -172,7 +174,7 @@ export default function FormulaEditPage() {
                             <label className="w-20 flex-shrink-0 text-sm text-gray-700 text-right pr-3 pt-1.5">缩略图</label>
                             <div className="flex items-center gap-3 w-full">
                                 <div className="w-16 h-16 border rounded flex items-center justify-center bg-gray-50 text-gray-400 flex-shrink-0 overflow-hidden">
-                                    {form.img ? <img src={form.img} alt="封面" className="w-full h-full object-cover" /> : <ImageIcon className="w-6 h-6" />}
+                                    {form.img ? <img src={getProxiedImageUrl(form.img, { forceProxy: true })} alt="封面" className="w-full h-full object-cover" /> : <ImageIcon className="w-6 h-6" />}
                                 </div>
                                 <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
                                 <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="bg-green-500 text-white text-xs px-3 py-1.5 rounded flex-shrink-0 flex items-center gap-1">
@@ -193,7 +195,7 @@ export default function FormulaEditPage() {
                         <label className="w-20 flex-shrink-0 text-sm text-gray-700 text-right pr-3 pt-1.5">文章内容</label>
                         <div className="flex-1 border rounded overflow-hidden">
                             <div className="max-h-[500px] overflow-y-auto">
-                                <RichTextEditor ref={editorRef} minHeight={300} />
+                                <RichTextEditor ref={editorRef} minHeight={200} maxHeight={400}/>
                             </div>
                         </div>
                     </div>

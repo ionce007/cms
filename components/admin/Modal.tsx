@@ -1,9 +1,10 @@
 // components/admin/Modal.tsx
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, isValidElement, cloneElement } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getProxiedImageUrl } from '@/lib/imageProxy';
 
 interface ModalProps {
     isOpen: boolean;
@@ -33,6 +34,28 @@ export default function Modal({
             document.body.style.overflow = 'unset';
         };
     }, [isOpen]);
+
+    /** 递归遍历 children，把 <img> 的 src 改写成代理地址 */
+    function proxyImages(node: React.ReactNode): React.ReactNode {
+        if (Array.isArray(node)) return node.map(proxyImages);
+        if (!isValidElement(node)) return node;
+
+        const el = node as React.ReactElement<{ src?: string; children?: React.ReactNode }>;
+        let props: Record<string, unknown> = {};
+
+        // 处理原生 img
+        if (el.type === 'img' && typeof el.props.src === 'string') {
+            props.src = getProxiedImageUrl(el.props.src, { forceProxy: true });//toProxySrc(el.props.src);
+        }
+        // 处理 next/image（如果你在 children 里用了）
+        if (typeof el.type === 'function' && 'src' in el.props && typeof el.props.src === 'string') {
+            // 保守起见：仅当 children 里明确是 <Image> 组件时改写
+            props.src = getProxiedImageUrl(el.props.src, { forceProxy: true }); //toProxySrc(el.props.src);
+        }
+
+        const nextChildren = el.props.children ? proxyImages(el.props.children) : el.props.children;
+        return cloneElement(el, { ...props, children: nextChildren });
+    }
 
     if (!isOpen) return null;
 
@@ -75,7 +98,7 @@ export default function Modal({
 
                 {/* 内容区 (自适应剩余空间，超出滚动) */}
                 <div className="flex-1 overflow-y-auto p-5 scrollbar-thin">
-                    {children}
+                    {proxyImages(children)}
                 </div>
 
                 {/* 底部按钮区 (固定) */}
