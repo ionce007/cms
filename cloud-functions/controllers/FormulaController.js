@@ -403,6 +403,8 @@ function formatFormula(item, includeContent = false) {
         isSell: plain.isSell,
         views: plain.views,
         likes: plain.likes,
+        marked: plain.marked,
+        downloads: plain.downloads,
         author: plain.author || { name: '缠说・股经', avatar: '/img/avatar.jpg' },
         server_ctime: plain.server_ctime,
         server_mtime: plain.server_mtime,
