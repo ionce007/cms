@@ -41,43 +41,35 @@ const createCroppedImage = async (
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('No 2d context');
 
+    // ✅ 关键修复 1：canvas 尺寸直接等于裁剪结果尺寸，不再用旋转外接框尺寸
+    canvas.width = pixelCrop.width;
+    canvas.height = pixelCrop.height;
+
     const rotRad = (rotation * Math.PI) / 180;
-    const { width: bBoxWidth, height: bBoxHeight } = {
-        width: image.width,
-        height: image.height,
-    };
 
-    const boundsWidth =
-        Math.abs(Math.cos(rotRad) * bBoxWidth) +
-        Math.abs(Math.sin(rotRad) * bBoxHeight);
-    const boundsHeight =
-        Math.abs(Math.sin(rotRad) * bBoxWidth) +
-        Math.abs(Math.cos(rotRad) * bBoxHeight);
+    // ✅ 关键修复 2：把 canvas 坐标系原点平移到裁剪区域中心
+    ctx.translate(pixelCrop.width / 2, pixelCrop.height / 2);
 
-    canvas.width = boundsWidth;
-    canvas.height = boundsHeight;
-
-    ctx.translate(boundsWidth / 2, boundsHeight / 2);
+    // ✅ 关键修复 3：围绕中心旋转 / 翻转
     ctx.rotate(rotRad);
     ctx.scale(flip.horizontal ? -1 : 1, flip.vertical ? -1 : 1);
-    ctx.translate(-bBoxWidth / 2, -bBoxHeight / 2);
 
-    ctx.drawImage(
-        image,
-        pixelCrop.x,
-        pixelCrop.y,
-        pixelCrop.width,
-        pixelCrop.height,
-        0,
-        0,
-        pixelCrop.width,
-        pixelCrop.height
-    );
+    // ✅ 关键修复 4：把原图中裁剪区域的中心平移到 canvas 原点（即中心）
+    //    注意：pixelCrop 是原图坐标系下的裁剪框，需在"未旋转的原图"上取中心
+    const cropCenterX = pixelCrop.x + pixelCrop.width / 2;
+    const cropCenterY = pixelCrop.y + pixelCrop.height / 2;
+    ctx.translate(-cropCenterX, -cropCenterY);
 
-    return new Promise((resolve) => {
+    // 绘制整张原图，由上面的平移/旋转决定哪块落到 canvas 中
+    ctx.drawImage(image, 0, 0);
+
+    return new Promise((resolve, reject) => {
         canvas.toBlob(
             (file) => {
-                if (!file) return;
+                if (!file) {
+                    reject(new Error('Canvas toBlob 失败'));
+                    return;
+                }
                 resolve(file);
             },
             'image/jpeg',
@@ -85,7 +77,6 @@ const createCroppedImage = async (
         );
     });
 };
-
 export default function ImageCropperModal({
     imageSrc,
     onCropComplete,
