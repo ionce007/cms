@@ -31,6 +31,8 @@ interface AuthContextValue {
         nickname?: string;
     }) => Promise<void>;
     logout: () => void;
+    /** ✅ 新增：局部更新当前用户（合并字段） */
+    updateUser: (patch: Partial<NonNullable<User>>) => void;
     refreshUser: () => Promise<void>;
 }
 
@@ -54,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             sessionStorage.setItem('login_redirect_url', currentUrl);
         }
     }, [pathname]);
-    
+
     // ✅ 清理登录状态
     const clearAuth = useCallback(() => {
         setUser(null);
@@ -187,10 +189,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(USER_KEY, JSON.stringify(data.data.user));
     }, []);
 
+    const updateUser = useCallback((patch: Partial<NonNullable<User>>) => {
+        setUser(prev => (prev ? { ...prev, ...patch } : prev));
+    }, []);
     // ✅ 登出
     const logout = useCallback(() => {
         clearAuth();
     }, [clearAuth]);
+
 
     // ✅ 刷新用户信息（手动调用）
     const refreshUser = useCallback(async () => {
@@ -222,9 +228,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, [token, clearAuth]);
 
     const isLoggedIn = !!user && !!token;
-    const isVip =
-        user?.role === 'vip' &&
-        (!user.vipExpireAt || new Date(user.vipExpireAt) > new Date());
+    const isVip = user?.role === 'vip' && (!user.vipExpireAt || new Date(user.vipExpireAt) > new Date());
     const isAdmin = user?.role === 'super';
 
     return (
@@ -239,6 +243,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 login,
                 register,
                 logout,
+                updateUser,
                 refreshUser,
             }}
         >

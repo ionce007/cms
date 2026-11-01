@@ -7,10 +7,12 @@ import { useMemberFetch } from '@/hooks/useMemberFetch';
 import { uploadImageToQiniu, compressImage } from '@/lib/qiniuUpload';
 import CoverImage from '@/components/frontend/CoverImage';
 import ImageCropperModal from '@/components/frontend/ImageCropperModal';
+import { useAuth } from '@/contexts/AuthContext'; // ✅ 引入
 
 export default function MemberSettingsPage() {
     const { user, refresh } = useMemberUser();
     const { memberFetch } = useMemberFetch();
+    const { refreshUser } = useAuth();
 
     const [form, setForm] = useState({ nickname: '', avatar: '' });
     const [submitting, setSubmitting] = useState(false);
@@ -90,8 +92,10 @@ export default function MemberSettingsPage() {
         });
 
         if (result.ok) {
+            await Promise.all([refresh(), refreshUser()]);
             alert('保存成功');
-            await refresh();
+            //await refresh();
+
         } else {
             alert(result.message || '保存失败');
         }
