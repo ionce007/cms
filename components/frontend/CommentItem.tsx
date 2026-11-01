@@ -5,11 +5,7 @@ import { useState, useMemo } from 'react';
 import CommentForm from './CommentForm';
 import { useAuth } from '@/contexts/AuthContext';
 import { CommentItem as CommentItemType } from '@/hooks/useComments';
-import {
-    sanitizeHtml,
-    isPlainText,
-    plainTextToHtml,
-} from '@/lib/sanitizeHtml';
+import { sanitizeHtml, isPlainText, plainTextToHtml, } from '@/lib/sanitizeHtml';
 import { proxyHtmlImageUrls } from '@/lib/imageProxy';
 import { cn } from '@/lib/utils';
 // ✅ 引入 useLightbox
@@ -38,7 +34,7 @@ export default function CommentItem({
     const { user } = useAuth();
     // ✅ 获取灯箱方法
     const { openLightbox } = useLightbox();
-    
+
     const [showReplyForm, setShowReplyForm] = useState(false);
     const [showAllReplies, setShowAllReplies] = useState(false);
 

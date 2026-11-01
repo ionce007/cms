@@ -4,6 +4,7 @@
 import { cn } from '@/lib/utils';
 import { useMemberUser } from '../MemberLayoutClient';
 import SafeImage from '@/components/frontend/SafeImage';
+import { useLightbox } from '@/components/frontend/ImageLightbox';
 
 interface MemberUserCardProps {
     /** 紧凑模式（窄屏横向一行显示） */
@@ -12,6 +13,22 @@ interface MemberUserCardProps {
 
 export default function MemberUserCard({ compact = false }: MemberUserCardProps) {
     const { user, loading } = useMemberUser();
+    const { openLightbox } = useLightbox();
+
+    const handleContentClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        const target = e.target as HTMLElement;
+        // 判断点击的是不是图片
+        if (target.tagName === 'IMG') {
+            const img = target as HTMLImageElement;
+            // 优先取 data-original-src（如果有），否则取 src
+            const src = img.getAttribute('data-original-src') || img.src;
+            if (src) {
+                e.preventDefault();
+                e.stopPropagation();
+                openLightbox([src]); // 打开灯箱
+            }
+        }
+    };
 
     // 骨架屏
     if (loading) {
@@ -45,12 +62,9 @@ export default function MemberUserCard({ compact = false }: MemberUserCardProps)
     // ✅ 紧凑模式
     if (compact) {
         return (
-            <div className="bg-white rounded-xl border border-gray-200 p-3 flex items-center gap-3">
-                {/*<img
-                    src={user.avatar || '/img/avatar-default-member.jpg'}
-                    alt={user.nickname}
-                    className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                />*/}
+            <div className="bg-white rounded-xl border border-gray-200 p-3 flex items-center gap-3"
+                onClick={handleContentClick}
+            >
                 <SafeImage
                     src={user?.avatar || '/img/avatar-default-member.png'}
                     alt={user?.nickname || user?.username || '用户'}
@@ -81,12 +95,9 @@ export default function MemberUserCard({ compact = false }: MemberUserCardProps)
     // 常规模式
     return (
         <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <div className="flex items-center gap-3 mb-3">
-                {/*<img
-                    src={user.avatar || '/img/avatar-default-member.jpg'}
-                    alt={user.nickname}
-                    className="w-12 h-12 rounded-full object-cover flex-shrink-0"
-                />*/}
+            <div className="flex items-center gap-3 mb-3"
+                onClick={handleContentClick}
+            >
                 <SafeImage
                     src={user?.avatar || '/img/avatar-default-member.png'}
                     alt={user?.nickname || user?.username || '用户'}

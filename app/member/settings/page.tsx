@@ -8,6 +8,7 @@ import { uploadImageToQiniu, compressImage } from '@/lib/qiniuUpload';
 import CoverImage from '@/components/frontend/CoverImage';
 import ImageCropperModal from '@/components/frontend/ImageCropperModal';
 import { useAuth } from '@/contexts/AuthContext'; // ✅ 引入
+import { useLightbox } from '@/components/frontend/ImageLightbox';
 
 export default function MemberSettingsPage() {
     const { user, refresh } = useMemberUser();
@@ -23,6 +24,8 @@ export default function MemberSettingsPage() {
     const [selectedImage, setSelectedImage] = useState<string | null>(null); // 待裁剪的图片
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    const { openLightbox } = useLightbox();
+    
     useEffect(() => {
         if (user) {
             setForm({
@@ -82,6 +85,21 @@ export default function MemberSettingsPage() {
         }
     };
 
+    const handleContentClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        const target = e.target as HTMLElement;
+        // 判断点击的是不是图片
+        if (target.tagName === 'IMG') {
+            const img = target as HTMLImageElement;
+            // 优先取 data-original-src（如果有），否则取 src
+            const src = img.getAttribute('data-original-src') || img.src;
+            if (src) {
+                e.preventDefault();
+                e.stopPropagation();
+                openLightbox([src]); // 打开灯箱
+            }
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSubmitting(true);
@@ -120,7 +138,9 @@ export default function MemberSettingsPage() {
                         </label>
                         <div className="flex items-center gap-4">
                             {/* 头像预览 */}
-                            <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-200 shadow-sm">
+                            <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-200 shadow-sm"
+                                onClick={handleContentClick}
+                            >
                                 <CoverImage
                                     src={form.avatar}
                                     alt="头像"
@@ -142,9 +162,7 @@ export default function MemberSettingsPage() {
                                     type="button"
                                     onClick={() => fileInputRef.current?.click()}
                                     disabled={uploading}
-                                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm 
-                             font-medium hover:bg-gray-200 transition-colors 
-                             disabled:opacity-50"
+                                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors disabled:opacity-50"
                                 >
                                     {uploading ? `上传中 ${uploadProgress}%` : '选择并裁剪图片'}
                                 </button>
