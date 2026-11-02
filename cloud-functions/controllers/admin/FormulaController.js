@@ -20,7 +20,24 @@ async function list(req, res) {
         res.status(500).json({ code: -1, message: error.message });
     }
 }
+// ✅ 1. 获取列表：仅查询 isdir = 0 的文件
+async function listForPush(req, res) {
+    try {
+        const { page = 1, limit = 10, keyword = '' } = req.query;
+        const where = { isdir: 0, status: 1 }; // 过滤目录和状态
+        if (keyword) where.server_filename = { [Op.like]: `%${keyword}%` };
 
+        const { count, rows } = await Formula.findAndCountAll({
+            where,
+            order: [['fs_id', 'DESC']],
+            limit: parseInt(limit),
+            offset: (page - 1) * limit,
+        });
+        res.json({ code: 1, data: rows, total: count });
+    } catch (error) {
+        res.status(500).json({ code: -1, message: error.message });
+    }
+}
 // ✅ 2. 新增：获取百度网盘 Token 授权信息
 async function getToken(req, res) {
     try {
@@ -90,4 +107,4 @@ async function remove(req, res) {
     }
 }
 
-module.exports = { list, detail, update, remove, getToken };
+module.exports = { list, detail, update, remove, getToken, listForPush };

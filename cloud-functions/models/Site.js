@@ -17,7 +17,7 @@ Site.init(
         wx: { type: DataTypes.STRING(50), comment: '站点备案号' },
         icp: { type: DataTypes.STRING(100), comment: 'ICP备案号' },     
         code: { type: DataTypes.STRING(1000), comment: '站点统计代码' },
-        json: { type: DataTypes.TEXT('medium'), comment: '站点配置json' },
+        json: { type: DataTypes.JSON, comment: '站点配置json' },
         title: { type: DataTypes.STRING(100), comment: '站点标题' },
         keywords: { type: DataTypes.STRING(1000), comment: '站点关键字' },
         description: { type: DataTypes.STRING(500), comment: '站点描述' }

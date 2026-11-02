@@ -7,6 +7,7 @@ import { calcReadTime } from '../common/utils';
 //import { getAllCategories, getAllTags, getAllFrags, getSiteConfig, filterByIds } from './cache/DataCache';
 
 async function test(req, res, next) {
+    console.log('.env.NEXT_PUBLIC_SITE_URL:', process.env.NEXT_PUBLIC_SITE_URL);
     try {
         const data = await Article.findAll({ where: { cid: 3 }, raw: true })
         return res.json({ code: 1, message: 'success', data: data });

@@ -56,6 +56,7 @@ const MENU_ITEMS = [
             { key: 'settings', name: '系统设置', href: '/admin/system/settings', icon: Settings },
             { key: 'bdpan', name: '网盘授权', href: '/admin/system/bdpan', icon: RefreshCw },
             { key: 'tongji', name: '统计授权', href: '/admin/system/tongji', icon: BarChart3 },
+            { key: 'baidupush', name: '百度推送', href: '/admin/system/baidupush', icon: Activity },
             { key: 'logs', name: '日志管理', href: '/admin/system/logs', icon: Activity },
         ]
     },

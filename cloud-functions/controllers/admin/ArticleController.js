@@ -21,7 +21,25 @@ async function list(req, res) {
         res.status(500).json({ code: -1, message: error.message });
     }
 }
+// 获取列表 (为百度推送提供的接口)
+async function listForPush(req, res) {
+    try {
+        const { page = 1, limit = 10, keyword = '' } = req.query;
+        const where = { status: 0 }; // 只获取已发布的文章
+        if (keyword) where.title = { [Op.like]: `%${keyword}%` };
 
+        const { count, rows } = await Article.findAndCountAll({
+            where,
+            include: [{ model: Category, as: 'Category', attributes: ['name'] }],
+            order: [['id', 'DESC']],
+            limit: parseInt(limit),
+            offset: (page - 1) * limit,
+        });
+        res.json({ code: 1, data: rows, total: count });
+    } catch (error) {
+        res.status(500).json({ code: -1, message: error.message });
+    }
+}
 // ✅ 获取单篇详情（包含标签）
 async function detail(req, res) {
     try {
@@ -107,4 +125,4 @@ async function remove(req, res) {
     }
 }
 
-module.exports = { list, detail, create, update, remove };
+module.exports = { list, detail, create, update, remove,listForPush };

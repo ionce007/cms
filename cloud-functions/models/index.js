@@ -22,6 +22,7 @@ const MemberLike = require('./MemberLike')
 const MemberDownload = require('./MemberDownload')
 const Comment = require('./Comment');
 const VisitLog = require('./VisitLog');
+const BaiduPushLog = require('./BaiduPushLog');
 
 const sequelize = require('../common/db');
 let isInitialized = false;
@@ -151,3 +152,4 @@ exports.MemberLike = MemberLike;
 exports.MemberDownload = MemberDownload;
 exports.Comment = Comment;
 exports.VisitLog = VisitLog;
+exports.BaiduPushLog = BaiduPushLog;

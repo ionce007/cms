@@ -11,6 +11,7 @@ const InteractionController = require('./InteractionController');
 const UserController = require('../../controllers/admin/UserController');
 const MemberController = require('../../controllers/admin/MemberController');
 const SettingController = require('../../controllers/admin/SettingController');
+const BaiduPushController = require('../../controllers/admin/BaiduPushController');
 
 module.exports = {
     Dashboard: DashboardController,
@@ -26,4 +27,5 @@ module.exports = {
     User: UserController,
     Member: MemberController,
     Setting:SettingController,
+    BaiduPush: BaiduPushController,
 }
