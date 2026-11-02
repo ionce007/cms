@@ -15,15 +15,27 @@ export default function BaiduPushLogsPage() {
     const [page, setPage] = useState(1);
     const [filterType, setFilterType] = useState('');
 
+    // ✅ 新增搜索关键词状态
+    const [searchKeyword, setSearchKeyword] = useState('');
+    const [inputKeyword, setInputKeyword] = useState('');
+
     const fetchLogs = async () => {
-        const res = await adminFetch(`/admin/baidu/push/logs?page=${page}&limit=${LIMIT}&type=${filterType}`);
+        // ✅ 请求带上 keyword
+        const res = await adminFetch(`/admin/baidu/push/logs?page=${page}&limit=${LIMIT}&type=${filterType}&keyword=${searchKeyword}`);
         if (res.code === 1) {
             setList(res.data);
             setTotal(res.total);
         }
     };
 
-    useEffect(() => { fetchLogs(); }, [page, filterType]);
+    useEffect(() => { fetchLogs(); }, [page, filterType, searchKeyword]);
+
+    // ✅ 触发搜索
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        setPage(1);
+        setSearchKeyword(inputKeyword);
+    };
 
     // ===== 推送弹窗 =====
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -45,20 +57,17 @@ export default function BaiduPushLogsPage() {
         setSelectedIds([]);
     };
 
-    // 拉取待选记录
     const fetchPickList = async () => {
         setPickLoading(true);
-        const api = pickType === 'article' ? '/admin/articles/to-push' : '/admin/formulas/to-push';
+        const api = pickType === 'article' ? '/admin/articles' : '/admin/formulas';
         const res = await adminFetch(`${api}?page=${pickPage}&limit=${PICK_LIMIT}&keyword=${pickKeyword}`);
         setPickLoading(false);
 
         if (res.code === 1) {
-            // ✅ 统一字段名：兼容不同的数据库字段（比如 formulaId, articleId 或者 title, name）
             const formattedData = res.data.map((item: any) => ({
                 ...item,
-                id: pickType === 'article' ? item.id : item.fs_id, // 必须有唯一 id
-                title: pickType === 'article' ? item.title : item.server_filename.substring(0, item.server_filename.lastIndexOf('.')), // 统一 title 字段,
-                type: pickType === 'article' ? item.Category.name : item.kind, // 统一 type 字段
+                id: item.id ?? item.articleId ?? item.formulaId,
+                title: item.title ?? item.name ?? '未命名',
             }));
             setPickList(formattedData);
             setPickTotal(res.total);
@@ -68,7 +77,6 @@ export default function BaiduPushLogsPage() {
         }
     };
 
-    // 拉取已推送统计
     const fetchSubmittedMap = async () => {
         const res = await adminFetch(`/admin/baidu/push/submitted-ids?type=${pickType}`);
         if (res.code === 1) {
@@ -100,7 +108,7 @@ export default function BaiduPushLogsPage() {
     };
 
     const toggleSelect = (id: number | undefined) => {
-        if (id === undefined) return; // 防止 undefined 污染
+        if (id === undefined) return;
         setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
     };
 
@@ -129,6 +137,18 @@ export default function BaiduPushLogsPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
                 <h1 className="text-lg font-bold text-gray-800">百度提交记录</h1>
                 <div className="flex items-center gap-2">
+                    {/* ✅ 新增历史记录搜索框 */}
+                    <form onSubmit={handleSearch} className="relative">
+                        <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2 top-1/2 -translate-y-1/2" />
+                        <input
+                            type="text"
+                            placeholder="搜索标题..."
+                            value={inputKeyword}
+                            onChange={e => setInputKeyword(e.target.value)}
+                            className="pl-7 pr-2 py-1 border border-gray-300 rounded text-xs w-full sm:w-48 focus:ring-1 focus:ring-blue-500 outline-none"
+                        />
+                    </form>
+
                     <select
                         value={filterType}
                         onChange={e => { setFilterType(e.target.value); setPage(1); }}
@@ -200,9 +220,7 @@ export default function BaiduPushLogsPage() {
             {/* ===== 推送弹窗 ===== */}
             {dialogOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                    {/* ✅ 固定高度 h-[600px]，防止加载时高度闪烁 */}
-                    <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl h-[500px] flex flex-col">
-                        {/* 头部 */}
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl h-[600px] flex flex-col">
                         <div className="flex items-center justify-between px-4 py-2 border-b">
                             <h2 className="text-base font-bold text-gray-800">推送页面到百度</h2>
                             <button onClick={() => setDialogOpen(false)} className="text-gray-400 hover:text-gray-600">
@@ -210,7 +228,6 @@ export default function BaiduPushLogsPage() {
                             </button>
                         </div>
 
-                        {/* 类型切换 + 搜索 */}
                         <div className="flex items-center gap-2 px-4 py-2 border-b">
                             <div className="flex rounded border overflow-hidden text-sm">
                                 {(['article', 'formula'] as const).map(t => (
@@ -235,7 +252,6 @@ export default function BaiduPushLogsPage() {
                             </form>
                         </div>
 
-                        {/* 待选列表 - ✅ 占据剩余高度，内部滚动，确保底部栏固定在下方 */}
                         <div className="flex-1 overflow-auto">
                             {pickLoading ? (
                                 <div className="py-10 text-center text-gray-400 text-sm">加载中...</div>
@@ -255,7 +271,6 @@ export default function BaiduPushLogsPage() {
                                             </th>
                                             <th className="py-2 px-3">ID</th>
                                             <th className="py-2 px-3 w-full max-w-[300px]">标题</th>
-                                            <th className="py-2 px-3">{pickType === 'article' ? '分类' : '类型'}</th>
                                             <th className="py-2 px-3">推送情况</th>
                                         </tr>
                                     </thead>
@@ -274,10 +289,9 @@ export default function BaiduPushLogsPage() {
                                                         />
                                                     </td>
                                                     <td className="py-1.5 px-3 text-gray-400 text-xs">{item.id ?? '-'}</td>
-                                                    <td className="py-1.5 px-3 text-gray-800 truncate max-w-[250px]" title={item.title}>
+                                                    <td className="py-1.5 px-3 text-gray-800 truncate max-w-[300px]" title={item.title}>
                                                         {item.title}
                                                     </td>
-                                                    <td className="py-1.5 px-3 text-xs">{item.type ?? '-'}</td>
                                                     <td className="py-1.5 px-3 text-xs">
                                                         {stat ? (
                                                             <span className="text-green-600">
@@ -303,7 +317,6 @@ export default function BaiduPushLogsPage() {
                             )}
                         </div>
 
-                        {/* 分页 + 提交 */}
                         <div className="px-4 py-2 border-t bg-gray-50 flex items-center justify-between text-xs text-gray-500">
                             <div className="flex items-center gap-1">
                                 <button disabled={pickPage <= 1} onClick={() => setPickPage(pickPage - 1)} className="px-2 py-0.5 border rounded hover:bg-white disabled:opacity-50">上一页</button>

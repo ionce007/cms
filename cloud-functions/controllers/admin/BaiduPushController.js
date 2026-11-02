@@ -1,7 +1,7 @@
 const { Op } = require('sequelize');
-const baidpush = require('../../services/baiduPush');
+const { pushUrls, SITE } = require('../../services/baiduPush');
 import { BaiduPushLog, Article, Formula } from '../../models';
-const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://cms.foryet.com';
+//const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://cms.foryet.com';
 
 async function baiduPush(req, res) {
     try {
@@ -40,12 +40,12 @@ async function baiduPush(req, res) {
                 ? `/articles/${r.id}`
                 : `/downloads/${r.fs_id}`;
             const fullUrl = `${SITE}${path}`;
-            urlMap[fullUrl] = { id: type === 'article' ? r.id : r.fs_id, title: type === 'article' ? r.title : r.server_filename  };
+            urlMap[fullUrl] = { id: type === 'article' ? r.id : r.fs_id, title: type === 'article' ? r.title : r.server_filename };
             return fullUrl;
         });
 
         // 提交到百度
-        const result = await baidpush.pushUrls(urls);
+        const result = await pushUrls(urls);
 
         // 计算成功/失败的 URL
         const failedUrls = new Set([
@@ -60,6 +60,7 @@ async function baiduPush(req, res) {
             title: urlMap[url].title,
             url,
             mark: type,
+            targetId: urlMap[url].id, // 👈 这里新增 targetId
             status: successUrls.has(url) ? 1 : 2,
             result: JSON.stringify(result)
         }));
@@ -77,11 +78,15 @@ async function baiduPush(req, res) {
 }
 async function getBaiduPushLogs(req, res) {
     try {
+        const { type, keyword } = req.query;
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 20;
         const where = {};
         if (req.query.type) where.mark = req.query.type;
-
+        // 如果有搜索关键词，进行模糊匹配
+        if (keyword) {
+            where.title = { [Op.like]: `%${keyword}%` };
+        }
         const { count, rows } = await BaiduPushLog.findAndCountAll({
             where,
             order: [['id', 'DESC']],

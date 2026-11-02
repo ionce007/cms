@@ -163,6 +163,14 @@ export const PERMISSION_GROUPS = [
                 ]
             },
             {
+                module: 'baidupush',
+                label: '百度推送',
+                actions: [
+                    { key: 'view', label: '查看' },
+                    { key: 'push', label: '推送' },
+                ]
+            },
+            {
                 module: 'logs',
                 label: '日志管理',
                 actions: [

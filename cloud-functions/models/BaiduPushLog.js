@@ -12,7 +12,7 @@ BaiduPushLog.init(
             comment: 'ID，关键字串类型，自动递增',
         },
         title: { type: DataTypes.STRING(100), comment: '标题' },
-        targetId: { type: DataTypes.STRING(60), comment: '目标ID' },
+        targetId: { type: DataTypes.STRING(60), comment: '目标ID（关联的文章或公式ID）' },
         url: { type: DataTypes.STRING(500), allowNull: false, comment: '推送的URL' },
         mark: { type: DataTypes.STRING(50), comment: '标识' },
         status: { type: DataTypes.TINYINT, comment: '状态 1-成功 2-失败' },

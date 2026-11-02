@@ -64,7 +64,7 @@ app.delete('/tags/:id', requireAdmin, checkPermission('tags', 'delete'), control
 
 // ... 文章管理
 app.get('/articles', requireAdmin, checkPermission('articles', 'view'), controllers.Article.list);
-app.get('/articles/to-push', requireAdmin, checkPermission('articles', 'view'), controllers.Article.listForPush);
+app.get('/articles/to-push', requireAdmin, checkPermission('baidupush', 'view'), controllers.Article.listForPush);
 app.get('/articles/:id', requireAdmin, checkPermission('articles', 'edit'), controllers.Article.detail);
 app.post('/articles', requireAdmin, checkPermission('articles', 'create'), controllers.Article.create);
 app.put('/articles/:id', requireAdmin, checkPermission('articles', 'edit'), controllers.Article.update);
@@ -73,7 +73,7 @@ app.get('/qiniu/token', requireAdmin, controllers.Upload.getQiniuToken);
 
 // ... 下载公式
 app.get('/formulas', requireAdmin, checkPermission('formulas', 'view'), controllers.Formula.list);
-app.get('/formulas/to-push', requireAdmin, checkPermission('formulas', 'view'), controllers.Formula.listForPush );
+app.get('/formulas/to-push', requireAdmin, checkPermission('baidupush', 'view'), controllers.Formula.listForPush );
 app.get('/formulas/:fs_id', requireAdmin, checkPermission('formulas', 'edit'), controllers.Formula.detail); // ✅ 新增
 app.put('/formulas/:fs_id', requireAdmin, checkPermission('formulas', 'edit'), controllers.Formula.update); // ✅ 修改参数名为 fs_id
 app.delete('/formulas/:id', requireAdmin, checkPermission('formulas', 'delete'), controllers.Formula.remove);
@@ -139,8 +139,8 @@ app.put('/settings/site', requireAdmin, checkPermission('settings', 'edit'), con
 app.get('/search', requireAdmin, controllers.Dashboard.globalSearch);
 
 // 百度推送
-app.post('/baidu/push', requireAdmin, checkPermission('baidu_push', 'push'), controllers.BaiduPush.baiduPush);
-app.get('/baidu/push/submitted-ids', requireAdmin, checkPermission('baidu_push', 'view'), controllers.BaiduPush.submittedIds); 
-app.get('/baidu/push/logs', requireAdmin, checkPermission('baidu_push', 'view'), controllers.BaiduPush.getBaiduPushLogs); 
+app.post('/baidu/push', requireAdmin, checkPermission('baidupush', 'push'), controllers.BaiduPush.baiduPush);
+app.get('/baidu/push/submitted-ids', requireAdmin, checkPermission('baidupush', 'view'), controllers.BaiduPush.submittedIds); 
+app.get('/baidu/push/logs', requireAdmin, checkPermission('baidupush', 'view'), controllers.BaiduPush.getBaiduPushLogs); 
 
 export default app;

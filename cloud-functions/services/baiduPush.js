@@ -30,4 +30,4 @@ async function pushUrls(urls) {
     }
 }
 
-module.exports = { pushUrls };
+module.exports = { pushUrls, SITE };
