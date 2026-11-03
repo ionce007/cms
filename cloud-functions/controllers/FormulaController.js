@@ -169,11 +169,7 @@ async function incrementViewCount(req, res) {
 
         // ✅ 查找文件
         const formula = await Formula.findOne({
-            where: {
-                fs_id: id,
-                status: 0,
-                isdir: 0,
-            },
+            where: { fs_id: id, },
             attributes: ['fs_id', 'views'],
         });
 

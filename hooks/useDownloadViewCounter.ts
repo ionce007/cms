@@ -7,10 +7,10 @@ import { API_BASE_URL } from '@/config/env';
 /**
  * 下载文件浏览量计数（防刷）
  * - 使用 localStorage 记录已浏览文件
- * - 同一文件 24 小时内只计一次
+ * - 同一文件 2 分钟内只计一次
  */
 const STORAGE_KEY = 'viewed_downloads';
-const EXPIRE_TIME = 24 * 60 * 60 * 1000; // 24 小时
+const EXPIRE_TIME = 2 * 60 * 1000; // 2 分钟    24 * 60 * 60 * 1000; // 24 小时
 
 interface ViewedRecord {
     [fsId: string]: number;

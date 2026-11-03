@@ -228,12 +228,12 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
             </div>
         );
     }
-/*
-    // ✅ 处理 HTML 中的 HTTP 图片
-    const processedContent = useMemo(() => {
-        return processHtmlImages(item.content);
-    }, [item]);
-*/
+    /*
+        // ✅ 处理 HTML 中的 HTTP 图片
+        const processedContent = useMemo(() => {
+            return processHtmlImages(item.content);
+        }, [item]);
+    */
     // ========== 正常内容 ==========
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -289,6 +289,38 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
 
                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-4 border-y border-gray-100 mb-6">
                                         <div>
+                                            <div className="text-xs text-gray-400 mb-1">浏览次数</div>
+                                            <div className="text-sm font-medium text-gray-700">
+                                                {views}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs text-gray-400 mb-1">点赞次数</div>
+                                            <div className="text-sm font-medium text-gray-700">
+                                                {item.likes}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs text-gray-400 mb-1">收藏次数</div>
+                                            <div className="text-sm font-medium text-gray-700">
+                                                {item.marked}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs text-gray-400 mb-1">下载次数</div>
+                                            <div className="text-sm font-medium text-gray-700">
+                                                {item.downloads}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs text-gray-400 mb-1">价格</div>
+                                            <div className="text-sm font-medium text-gray-700">
+                                                {item.isSell === 0 || item.price === 0
+                                                    ? '免费'
+                                                    : `¥${item.price}`}
+                                            </div>
+                                        </div>
+                                        <div>
                                             <div className="text-xs text-gray-400 mb-1">文件大小</div>
                                             <div className="text-sm font-medium text-gray-700">
                                                 {formatFileSize(item.size)}
@@ -298,20 +330,6 @@ export default function DownloadDetailClient({ id }: DownloadDetailClientProps) 
                                             <div className="text-xs text-gray-400 mb-1">上传时间</div>
                                             <div className="text-sm font-medium text-gray-700">
                                                 {formatTimestamp(item.server_ctime)}
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div className="text-xs text-gray-400 mb-1">浏览次数</div>
-                                            <div className="text-sm font-medium text-gray-700">
-                                                {views}
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div className="text-xs text-gray-400 mb-1">价格</div>
-                                            <div className="text-sm font-medium text-gray-700">
-                                                {item.isSell === 0 || item.price === 0
-                                                    ? '免费'
-                                                    : `¥${item.price}`}
                                             </div>
                                         </div>
                                     </div>

@@ -8,10 +8,10 @@ import { API_ENDPOINTS } from '@/config/routes';
 /**
  * 防刷策略：
  * - 使用 localStorage 记录已浏览的文章 ID + 时间戳
- * - 同一篇文章 3 分钟内只计一次
+ * - 同一篇文章 2 分钟内只计一次
  */
 const STORAGE_KEY = 'viewed_articles';
-const EXPIRE_TIME =  3 * 60 * 1000; // 3 分钟
+const EXPIRE_TIME =  2 * 60 * 1000; // 2 分钟
 
 interface ViewedRecord {
     [articleId: string]: number;  // articleId -> timestamp
