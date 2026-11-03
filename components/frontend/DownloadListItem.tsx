@@ -5,7 +5,7 @@ import Link from 'next/link';
 import CoverImage from './CoverImage';
 import { formatFileSize } from '@/config/constants';
 import { API_BASE_URL } from '@/config/env';
-import {API_ENDPOINTS} from '@/config/routes';
+import { API_ENDPOINTS } from '@/config/routes';
 import { cn } from '@/lib/utils';
 
 interface DownloadListItemProps {
@@ -78,9 +78,9 @@ export default function DownloadListItem({
                     {/* 文件名 */}
                     <h3 className="text-sm sm:text-base font-semibold text-gray-800 mb-1 group-hover:text-primary-600 transition-colors line-clamp-2 flex-shrink-0">
                         {hasDetail ? (
-                            <Link href={detailUrl}>{item.server_filename}</Link>
+                            <Link href={detailUrl}>{item.server_filename.substring(0, item.server_filename.lastIndexOf('.'))}</Link>
                         ) : (
-                            item.server_filename
+                            item.server_filename.substring(0, item.server_filename.lastIndexOf('.'))
                         )}
                     </h3>
 
@@ -129,7 +129,7 @@ export default function DownloadListItem({
 
                             {/* 点赞 */}
                             <span className="flex items-center space-x-1 whitespace-nowrap">
-                                <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill={item.isLiked ? "currentColor": "none"} viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill={item.isLiked ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                 </svg>
                                 <span>{item.likes || 0}</span>
@@ -139,7 +139,7 @@ export default function DownloadListItem({
                             <span className="hidden sm:flex items-center space-x-1 whitespace-nowrap">
                                 <svg
                                     className="w-3 h-3 sm:w-3.5 sm:h-3.5"
-                                    fill={item.isBookmarked ? "currentColor": "none"}
+                                    fill={item.isBookmarked ? "currentColor" : "none"}
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"
                                     strokeWidth={2}
@@ -155,7 +155,7 @@ export default function DownloadListItem({
 
                             {/* 下载次数 */}
                             <span className="hidden sm:flex items-center space-x-1 whitespace-nowrap">
-                                <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill={ item.isDownloaded ? "currentColor" : "none" } viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill={item.isDownloaded ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                 </svg>
                                 <span>{item.downloads || 0}</span>

@@ -12,7 +12,6 @@ interface UseDownloadsOptions {
     page?: number;
     limit?: number;
     category?: string | number;
-    kind?: string;
     search?: string;
     sort?: SortOption;
 }
@@ -21,7 +20,7 @@ export function useDownloads(options: UseDownloadsOptions = {}) {
     const {
         page = 1,
         limit = 12,
-        kind = '',
+        category = '',
         search = '',
         sort = 'latest',
     } = options;
@@ -46,8 +45,8 @@ export function useDownloads(options: UseDownloadsOptions = {}) {
                 sort,
             });
 
-            if (kind !== '' && kind !== undefined) {
-                params.append('kind', String(kind));
+            if (category !== '' && category !== undefined) {
+                params.append('kind', String(category));
             }
             //if (kind) params.append('kind', kind);
             if (search) params.append('search', search);
@@ -79,7 +78,7 @@ export function useDownloads(options: UseDownloadsOptions = {}) {
             setIsLoading(false);
             setIsLoaded(true);
         }
-    }, [page, limit, kind, search, sort, token]);
+    }, [page, limit, category, search, sort, token]);
 
     useEffect(() => {
         fetchData();

@@ -17,6 +17,7 @@ async function getFormulas(req, res) {
         const where = {
             status: 1,
             isdir: 0,
+            kind: { [Op.in]: ['选股公式', '指标公式'] }, // 只显示常见公式文件
         };
 
         if (kind) where.kind = kind;

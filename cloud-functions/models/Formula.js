@@ -27,7 +27,7 @@ Formula.init(
         isSell: { type: DataTypes.INTEGER, defaultValue: 1, comment: '指标公式是否可售' },
         xhsUrl: { type: DataTypes.STRING, defaultValue: "", comment: '是否有小红书网址' },
         img: { type: DataTypes.STRING, defaultValue: '', comment: '文件封面' },
-        kind: { type: DataTypes.STRING, defaultValue: FORMULA_KIND.ZBGS, comment: '文件各类' },
+        kind: { type: DataTypes.STRING, defaultValue: FORMULA_KIND.ZBGS, comment: '文件分类' },
         summary: { type: DataTypes.STRING(500), defaultValue: '', comment: '内容概述' },
         content: { type: DataTypes.TEXT, defaultValue: '', comment: '指标公式操作说明' },
         views: { type: DataTypes.INTEGER, defaultValue: 0, comment: '浏览次数' },

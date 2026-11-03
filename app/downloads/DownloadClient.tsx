@@ -82,6 +82,7 @@ export default function DownloadClient() {
 
     // ✅ 分类筛选
     const handleCategoryChange = (value: string) => {
+        console.log('handleCategoryChange -> value: ', value);
         setCategory(value);
         setCurrentPage(1);
     };
@@ -236,7 +237,7 @@ export default function DownloadClient() {
                                             className={cn(
                                                 'flex-shrink-0 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap',
                                                 category === ''
-                                                    ? 'bg-primary-50 text-primary-700 border border-primary-200'
+                                                    ? 'bg-primary-50 text-primary-700 border border-primary-400'
                                                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-transparent'
                                             )}
                                         >
@@ -245,11 +246,11 @@ export default function DownloadClient() {
                                         {FORMULA_KINDS.map((k) => (
                                             <button
                                                 key={k.value}
-                                                onClick={() => handleCategoryChange(k.value)}
+                                                onClick={() => handleCategoryChange(k.label)}
                                                 className={cn(
                                                     'flex-shrink-0 px-1.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap',
-                                                    category === k.value
-                                                        ? 'bg-primary-50 text-primary-700 border border-primary-200'
+                                                    category === k.label
+                                                        ? 'bg-primary-50 text-primary-700 border border-primary-400'
                                                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-transparent'
                                                 )}
                                             >
