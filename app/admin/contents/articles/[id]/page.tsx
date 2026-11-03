@@ -278,47 +278,43 @@ export default function ArticleEditPage() {
                         </div>
                         <div className="flex items-start flex-1">
                             <label className="w-20 flex-shrink-0 text-sm text-gray-700 text-right pr-3 pt-1.5">缩略图</label>
-                            <div className="flex items-center gap-3 w-full">
-                                {/* ✅ 缩略图预览走代理，form.img 仍存真实 URL */}
-                                <div className="w-16 h-16 border rounded flex items-center justify-center bg-gray-50 text-gray-400 flex-shrink-0 overflow-hidden">
+                            <div className="flex items-center gap-3 w-full relative">
+                                {/* 缩略图容器 */}
+                                <div className="w-16 h-16 border rounded flex-shrink-0 relative group cursor-pointer z-20 hover:z-[100]">
                                     {form.img ? (
-                                        <img
-                                            src={getProxiedImageUrl(form.img, { forceProxy: true })}
-                                            alt="封面"
-                                            className="w-full h-full object-cover"
-                                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                                        />
+                                        <>
+                                            {/* 缩略图 */}
+                                            <img
+                                                src={getProxiedImageUrl(form.img, { forceProxy: true })}
+                                                alt="封面"
+                                                className="w-full h-full object-cover rounded"
+                                            />
+
+                                            {/* 悬浮原图 (Tip) - 右侧显示并放大 */}
+                                            <div className="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 absolute left-full top-1/2 -translate-y-1/2 ml-3 w-[400px] h-[400px] p-2 bg-white border border-gray-200 rounded-lg shadow-2xl z-[999] pointer-events-none">
+                                                <img
+                                                    src={getProxiedImageUrl(form.img, { forceProxy: true })}
+                                                    alt="原图预览"
+                                                    className="w-full h-full object-contain rounded bg-gray-50"
+                                                />
+                                                {/* 左侧小三角指示器 */}
+                                                <div className="absolute right-full top-1/2 -translate-y-1/2 w-0 h-0 border-t-8 border-b-8 border-r-8 border-transparent border-r-white"></div>
+                                            </div>
+                                        </>
                                     ) : (
-                                        <ImageIcon className="w-6 h-6" />
+                                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                            <ImageIcon className="w-6 h-6" />
+                                        </div>
                                     )}
                                 </div>
 
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    ref={fileInputRef}
-                                    onChange={handleFileSelect}
-                                    className="hidden"
-                                />
-
-                                <button
-                                    type="button"
-                                    onClick={() => fileInputRef.current?.click()}
-                                    disabled={uploading}
-                                    className="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1.5 rounded transition-colors flex-shrink-0 flex items-center gap-1 disabled:opacity-50"
-                                >
+                                {/* 隐藏的 input 和 按钮 */}
+                                <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
+                                <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="bg-green-500 text-white text-xs px-3 py-1.5 rounded flex-shrink-0 flex items-center gap-1">
                                     {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
-                                    {uploading ? '上传中...' : '默认封面'}
+                                    {uploading ? '上传中...' : '默认封面图'}
                                 </button>
-
-                                <input
-                                    type="text"
-                                    name="img"
-                                    value={form.img}
-                                    onChange={handleChange}
-                                    className="flex-1 border rounded p-2 text-sm outline-none"
-                                    placeholder="图片URL"
-                                />
+                                <input type="text" name="img" value={form.img || ''} onChange={handleChange} className="flex-1 border rounded p-2 text-sm outline-none" placeholder="图片URL" />
                             </div>
                         </div>
                     </div>
