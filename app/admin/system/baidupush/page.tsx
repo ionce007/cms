@@ -59,7 +59,7 @@ export default function BaiduPushLogsPage() {
 
     const fetchPickList = async () => {
         setPickLoading(true);
-        const api = pickType === 'article' ? '/admin/articles' : '/admin/formulas';
+        const api = pickType === 'article' ? '/admin/articles/to-push' : '/admin/formulas/to-push';
         const res = await adminFetch(`${api}?page=${pickPage}&limit=${PICK_LIMIT}&keyword=${pickKeyword}`);
         setPickLoading(false);
 
