@@ -6,7 +6,7 @@ import CommentForm from './CommentForm';
 import { useAuth } from '@/contexts/AuthContext';
 import { CommentItem as CommentItemType } from '@/hooks/useComments';
 import { sanitizeHtml, isPlainText, plainTextToHtml, } from '@/lib/sanitizeHtml';
-import { proxyHtmlImageUrls } from '@/lib/imageProxy';
+import { proxyHtmlImageUrls, getProxiedImageUrl } from '@/lib/imageProxy';
 import { cn } from '@/lib/utils';
 // ✅ 引入 useLightbox
 import { useLightbox } from '@/components/frontend/ImageLightbox';
@@ -106,7 +106,7 @@ export default function CommentItem({
                 {/* 头部：头像 + 昵称 + 时间 */}
                 <div className="flex items-start space-x-3">
                     <img
-                        src={comment.avatar || '/img/avatar-default.png'}
+                        src={getProxiedImageUrl(comment.avatar, { forceProxy: true }) || '/img/avatar-default.png'}
                         alt={comment.nickname}
                         className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover flex-shrink-0"
                     />
