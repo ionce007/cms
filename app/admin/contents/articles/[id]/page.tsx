@@ -45,6 +45,13 @@ const initialForm = {
     createdAt: getCurrentTime() // ✅ 发布时间默认为当前时间
 };
 
+const ATTR_OPTIONS = [
+    { value: 1, label: '头条' },
+    { value: 2, label: '推荐' },
+    { value: 3, label: '轮播' },
+    { value: 4, label: '热门' },
+] as const;
+
 export default function ArticleEditPage() {
     const router = useRouter();
     const params = useParams();
@@ -261,11 +268,35 @@ export default function ArticleEditPage() {
                         </div>
                         <div className="flex items-center flex-1">
                             <label className="w-20 flex-shrink-0 text-sm text-gray-700 text-right pr-3">内容属性</label>
-                            <div className="flex gap-4 text-sm">
+                            {/*<div className="flex gap-4 text-sm">
                                 <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" /> 头条</label>
                                 <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" /> 推荐</label>
                                 <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" /> 轮播</label>
                                 <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" /> 热门</label>
+                            </div>*/}
+                            <div className="flex gap-4 text-sm">
+                                {ATTR_OPTIONS.map(opt => {
+                                    const list = String(form.attr || '').split(',').filter(Boolean).map(Number);
+                                    const checked = list.includes(opt.value);
+                                    return (
+                                        <label key={opt.value} className="flex items-center gap-1 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                className="rounded text-blue-600 focus:ring-blue-500"
+                                                checked={checked}
+                                                onChange={(e) => {
+                                                    const prev = String(form.attr || '').split(',').filter(Boolean).map(Number);
+                                                    const next = e.target.checked
+                                                        ? [...new Set([...prev, opt.value])]
+                                                        : prev.filter(v => v !== opt.value);
+                                                    next.sort((a, b) => a - b);
+                                                    setForm({ ...form, attr: next.join(',') });
+                                                }}
+                                            />
+                                            {opt.label}
+                                        </label>
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>

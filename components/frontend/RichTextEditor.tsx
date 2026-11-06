@@ -10,7 +10,6 @@ import {
     useCallback,
 } from 'react';
 import { uploadImageToQiniu, compressImage } from '@/lib/qiniuUpload';
-import { processHtmlImages } from '@/lib/htmlProcessor';
 import { getProxiedImageUrl } from '@/lib/imageProxy';
 import { cn } from '@/lib/utils';
 
@@ -25,7 +24,7 @@ export interface RichTextEditorHandle {
 interface RichTextEditorProps {
     placeholder?: string;
     minHeight?: number;
-    maxHeight?: number; // ✅ 新增：控制最大高度
+    maxHeight?: number;
     maxLength?: number;
     className?: string;
     onChange?: (html: string) => void;
@@ -79,6 +78,8 @@ const BG_COLORS = [
     '#f1f5f9', '#e2e8f0', '#1f2937', '#000000',
 ];
 
+const UNDO_LIMIT = 100;
+
 // ============ 下拉定位 Hook ============
 function useDropdownPosition(width = 200) {
     const buttonRef = useRef<HTMLButtonElement>(null);
@@ -88,16 +89,9 @@ function useDropdownPosition(width = 200) {
         if (buttonRef.current) {
             const rect = buttonRef.current.getBoundingClientRect();
             const windowWidth = window.innerWidth;
-
             let left = rect.left;
-            if (left + width > windowWidth - 20) {
-                left = windowWidth - width - 20;
-            }
-
-            setPosition({
-                top: rect.bottom + 4,
-                left: Math.max(10, left),
-            });
+            if (left + width > windowWidth - 20) left = windowWidth - width - 20;
+            setPosition({ top: rect.bottom + 4, left: Math.max(10, left) });
         }
     }, [width]);
 
@@ -111,49 +105,41 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
         {
             placeholder = '请输入内容...',
             minHeight = 200,
-            maxHeight = 400, // 默认最大高度
+            maxHeight = 600,
             maxLength = 5000,
             className,
             onChange,
             onBlur,
             allowImage = true,
             imgUploadPath = 'uploads',
-            isAdmin = false
+            isAdmin = false,
         },
         ref
     ) {
         const editorRef = useRef<HTMLDivElement>(null);
         const fileInputRef = useRef<HTMLInputElement>(null);
 
-        // 保存的光标位置（Range），用于在点击工具栏/按钮/弹窗后恢复插入点
-        const savedSelectionRef = useRef<Range | null>(null);
-
         const [isEmpty, setIsEmpty] = useState(true);
         const [uploading, setUploading] = useState(false);
         const [uploadProgress, setUploadProgress] = useState(0);
         const [isDragging, setIsDragging] = useState(false);
 
-        // 图片选中
         const [selectedImage, setSelectedImage] = useState<HTMLImageElement | null>(null);
         const [showImageSizeMenu, setShowImageSizeMenu] = useState(false);
 
-        // 下拉菜单
         const [showFontMenu, setShowFontMenu] = useState(false);
         const [showSizeMenu, setShowSizeMenu] = useState(false);
         const [showColorMenu, setShowColorMenu] = useState(false);
         const [showBgMenu, setShowBgMenu] = useState(false);
         const [showTableMenu, setShowTableMenu] = useState(false);
 
-        // 弹窗
         const [dialogType, setDialogType] = useState<'link' | 'code' | 'imageUrl' | null>(null);
         const [dialogValue, setDialogValue] = useState('');
         const [dialogText, setDialogText] = useState('');
 
-        // ✅ 图片替换弹窗
         const [showReplaceImageDialog, setShowReplaceImageDialog] = useState(false);
         const [replaceImageUrl, setReplaceImageUrl] = useState('');
 
-        // 图片自定义尺寸弹窗
         const [showImageSizeDialog, setShowImageSizeDialog] = useState(false);
         const [imageSizeForm, setImageSizeForm] = useState({
             width: '',
@@ -164,17 +150,106 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
             ratio: 1,
         });
 
-        // 源码模式
         const [showSource, setShowSource] = useState(false);
         const [sourceHtml, setSourceHtml] = useState('');
 
-        // 下拉菜单定位
+        // ============ 撤销/重做 ============
+        const historyRef = useRef<string[]>([]);
+        const historyIndexRef = useRef<number>(-1);
+        const isRestoringRef = useRef(false);
+        const lastSnapshotRef = useRef<string>('');
+        const typingTimerRef = useRef<number | null>(null);
+        const [canUndo, setCanUndo] = useState(false);
+        const [canRedo, setCanRedo] = useState(false);
+
         const fontDropdown = useDropdownPosition(160);
         const sizeDropdown = useDropdownPosition(100);
         const colorDropdown = useDropdownPosition(160);
         const bgDropdown = useDropdownPosition(160);
         const tableDropdown = useDropdownPosition(260);
         const imageDropdown = useDropdownPosition(220);
+
+        // ============ 撤销/重做核心 ============
+        const readCurrentHtml = useCallback((): string => {
+            if (showSource) return sourceHtml;
+            return editorRef.current?.innerHTML || '';
+        }, [showSource, sourceHtml]);
+
+        const refreshHistoryFlags = useCallback(() => {
+            setCanUndo(historyIndexRef.current > 0);
+            setCanRedo(historyIndexRef.current < historyRef.current.length - 1);
+        }, []);
+
+        const pushSnapshot = useCallback((html: string, force = false) => {
+            if (isRestoringRef.current) return;
+            const last = historyRef.current[historyIndexRef.current] ?? '';
+            if (!force && html === last) return;
+            if (!force && html === lastSnapshotRef.current) return;
+
+            if (historyIndexRef.current < historyRef.current.length - 1) {
+                historyRef.current = historyRef.current.slice(0, historyIndexRef.current + 1);
+            }
+
+            historyRef.current.push(html);
+            if (historyRef.current.length > UNDO_LIMIT) historyRef.current.shift();
+            historyIndexRef.current = historyRef.current.length - 1;
+
+            lastSnapshotRef.current = html;
+            refreshHistoryFlags();
+        }, [refreshHistoryFlags]);
+
+        const scheduleSnapshot = useCallback(() => {
+            if (typingTimerRef.current) window.clearTimeout(typingTimerRef.current);
+            typingTimerRef.current = window.setTimeout(() => {
+                pushSnapshot(readCurrentHtml());
+                typingTimerRef.current = null;
+            }, 400);
+        }, [pushSnapshot, readCurrentHtml]);
+
+        const restoreSnapshot = useCallback((html: string) => {
+            isRestoringRef.current = true;
+            if (showSource) {
+                setSourceHtml(html);
+            } else if (editorRef.current) {
+                editorRef.current.innerHTML = html;
+                editorRef.current.querySelectorAll('img').forEach(el => el.classList.remove('image-selected'));
+            }
+            setSelectedImage(null);
+            setShowImageSizeMenu(false);
+
+            if (editorRef.current) {
+                const text = editorRef.current.textContent || '';
+                setIsEmpty(!text.trim());
+            }
+            onChange?.(html);
+
+            requestAnimationFrame(() => {
+                isRestoringRef.current = false;
+                lastSnapshotRef.current = html;
+                refreshHistoryFlags();
+            });
+        }, [showSource, onChange, refreshHistoryFlags]);
+
+        const undo = useCallback(() => {
+            if (typingTimerRef.current) {
+                window.clearTimeout(typingTimerRef.current);
+                typingTimerRef.current = null;
+            }
+            const current = readCurrentHtml();
+            const last = historyRef.current[historyIndexRef.current] ?? '';
+            if (current !== last && !isRestoringRef.current) pushSnapshot(current);
+            if (historyIndexRef.current <= 0) return;
+            historyIndexRef.current -= 1;
+            restoreSnapshot(historyRef.current[historyIndexRef.current]);
+            refreshHistoryFlags();
+        }, [readCurrentHtml, pushSnapshot, restoreSnapshot, refreshHistoryFlags]);
+
+        const redo = useCallback(() => {
+            if (historyIndexRef.current >= historyRef.current.length - 1) return;
+            historyIndexRef.current += 1;
+            restoreSnapshot(historyRef.current[historyIndexRef.current]);
+            refreshHistoryFlags();
+        }, [restoreSnapshot, refreshHistoryFlags]);
 
         // ============ 暴露方法 ============
         useImperativeHandle(ref, () => ({
@@ -186,9 +261,8 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                 if (showSource) {
                     setSourceHtml(html);
                 } else if (editorRef.current) {
-                    html = processHtmlImages(html);
                     editorRef.current.innerHTML = html;
-                    // ✅ 为没有 data-original-src 的图片补上原始 src（保持 // 不变）
+                    // 补 data-original-src（保留 // 原值）
                     editorRef.current.querySelectorAll('img').forEach(img => {
                         if (!img.getAttribute('data-original-src')) {
                             const rawSrc = img.getAttribute('src') || '';
@@ -198,6 +272,10 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                     updateState();
                 }
                 setSourceHtml(html);
+                historyRef.current = [html];
+                historyIndexRef.current = 0;
+                lastSnapshotRef.current = html;
+                refreshHistoryFlags();
             },
             clear: () => {
                 if (editorRef.current) {
@@ -206,6 +284,10 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                     setSelectedImage(null);
                 }
                 setSourceHtml('');
+                historyRef.current = [''];
+                historyIndexRef.current = 0;
+                lastSnapshotRef.current = '';
+                refreshHistoryFlags();
             },
             focus: () => {
                 if (!showSource) editorRef.current?.focus();
@@ -223,64 +305,23 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
             onChange?.(html);
         };
 
-        // ============ 选区保存 / 恢复 ============
-        // 核心：contentEditable 编辑器在点击工具栏按钮/弹窗时会把焦点移出编辑器，
-        // 此时 window.getSelection() 不再指向编辑器内部，导致 execCommand 把内容插入到首行。
-        // 因此这里持续监听 selectionchange，把位于编辑器内部的选区快照保存下来，
-        // 在插入前用 restoreSelection() 先恢复光标位置，再执行插入命令。
-        const saveSelection = useCallback(() => {
-            const editor = editorRef.current;
-            if (!editor) return;
-            const selection = window.getSelection();
-            if (!selection || selection.rangeCount === 0) return;
-            const range = selection.getRangeAt(0);
-            // 仅保存位于编辑器内部的选区，点击工具栏时不覆盖已保存的光标
-            if (editor.contains(range.commonAncestorContainer)) {
-                savedSelectionRef.current = range.cloneRange();
-            }
-        }, []);
-
-        const restoreSelection = useCallback(() => {
-            const editor = editorRef.current;
-            if (!editor) return;
-            editor.focus();
-            const saved = savedSelectionRef.current;
-            if (saved) {
-                const selection = window.getSelection();
-                if (selection) {
-                    selection.removeAllRanges();
-                    selection.addRange(saved);
-                }
-            }
-        }, []);
-
-        // 统一插入助手：先恢复光标位置，再执行插入命令
-        const insertHtmlAtSelection = useCallback((html: string) => {
-            restoreSelection();
-            document.execCommand('insertHTML', false, html);
-            updateState();
-        }, [restoreSelection]);
-
-        const insertTextAtSelection = useCallback((text: string) => {
-            restoreSelection();
-            document.execCommand('insertText', false, text);
-            updateState();
-        }, [restoreSelection]);
-
-        // 监听选区变化，持续保存编辑器内的光标位置
+        // ============ 挂载/卸载 ============
         useEffect(() => {
-            document.addEventListener('selectionchange', saveSelection);
-            return () => document.removeEventListener('selectionchange', saveSelection);
-        }, [saveSelection]);
+            pushSnapshot('', true);
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, []);
+
+        useEffect(() => {
+            return () => {
+                if (typingTimerRef.current) window.clearTimeout(typingTimerRef.current);
+            };
+        }, []);
 
         // ============ 点击外部关闭菜单 ============
         useEffect(() => {
             const handleClickOutside = (e: MouseEvent) => {
                 const target = e.target as HTMLElement;
-                if (
-                    !target.closest('.editor-dropdown') &&
-                    !target.closest('.editor-dropdown-menu')
-                ) {
+                if (!target.closest('.editor-dropdown') && !target.closest('.editor-dropdown-menu')) {
                     setShowFontMenu(false);
                     setShowSizeMenu(false);
                     setShowColorMenu(false);
@@ -293,7 +334,6 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
             return () => document.removeEventListener('mousedown', handleClickOutside);
         }, []);
 
-        // ============ 窗口滚动/缩放更新下拉位置 ============
         useEffect(() => {
             const handleResize = () => {
                 if (showFontMenu) fontDropdown.updatePosition();
@@ -303,10 +343,8 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                 if (showTableMenu) tableDropdown.updatePosition();
                 if (showImageSizeMenu) imageDropdown.updatePosition();
             };
-
             window.addEventListener('resize', handleResize);
             window.addEventListener('scroll', handleResize, true);
-
             return () => {
                 window.removeEventListener('resize', handleResize);
                 window.removeEventListener('scroll', handleResize, true);
@@ -323,58 +361,58 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
             const target = e.target as HTMLElement;
             if (target.tagName === 'IMG') {
                 const img = target as HTMLImageElement;
-                editorRef.current?.querySelectorAll('img').forEach(el => {
-                    el.classList.remove('image-selected');
-                });
+                editorRef.current?.querySelectorAll('img').forEach(el => el.classList.remove('image-selected'));
                 img.classList.add('image-selected');
                 setSelectedImage(img);
+                // 光标放到图片后
+                const selection = window.getSelection();
+                if (selection) {
+                    const range = document.createRange();
+                    range.setStartAfter(img);
+                    range.collapse(true);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }
             } else {
-                editorRef.current?.querySelectorAll('img').forEach(el => {
-                    el.classList.remove('image-selected');
-                });
+                editorRef.current?.querySelectorAll('img').forEach(el => el.classList.remove('image-selected'));
                 setSelectedImage(null);
             }
         };
 
         // ============ 基础命令 ============
         const execCommand = (command: string, value?: string) => {
-            restoreSelection();
+            editorRef.current?.focus();
             document.execCommand(command, false, value);
             updateState();
+            pushSnapshot(readCurrentHtml());
         };
 
-        // ============ 字体 ============
         const applyFontFamily = (font: string) => {
-            if (font) {
-                execCommand('fontName', font);
-            } else {
-                execCommand('removeFormat');
-            }
+            if (font) execCommand('fontName', font);
+            else execCommand('removeFormat');
             setShowFontMenu(false);
         };
 
-        // ============ 字号 ============
         const applyFontSize = (size: string) => {
             execCommand('fontSize', size);
             setShowSizeMenu(false);
         };
 
-        // ============ 对齐 ============
         const applyAlign = (align: 'Left' | 'Center' | 'Right' | 'Justify') => {
             execCommand(`justify${align}`);
         };
 
-        // ============ 颜色 ============
         const applyTextColor = (color: string) => {
             execCommand('foreColor', color);
             setShowColorMenu(false);
         };
 
         const applyBgColor = (color: string) => {
-            restoreSelection();
+            editorRef.current?.focus();
             document.execCommand('hiliteColor', false, color);
             document.execCommand('backColor', false, color);
             updateState();
+            pushSnapshot(readCurrentHtml());
             setShowBgMenu(false);
         };
 
@@ -393,37 +431,35 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                 tableHtml += '</tr>';
             }
             tableHtml += '</table><p><br /></p>';
-
-            insertHtmlAtSelection(tableHtml);
+            editorRef.current?.focus();
+            document.execCommand('insertHTML', false, tableHtml);
+            updateState();
+            pushSnapshot(readCurrentHtml());
             setShowTableMenu(false);
         };
 
-        // ============ 代码示例弹窗 ============
+        // ============ 代码块 ============
         const openCodeDialog = () => {
             setDialogType('code');
             setDialogValue('');
         };
 
         const confirmCodeDialog = () => {
-            if (!dialogValue.trim()) {
-                setDialogType(null);
-                return;
-            }
-
+            if (!dialogValue.trim()) { setDialogType(null); return; }
             const escaped = dialogValue
                 .replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;');
-
             const codeHtml = `<pre style="background: #1f2937; color: #f3f4f6; padding: 12px; border-radius: 8px; overflow-x: auto; margin: 12px 0; font-family: ui-monospace, monospace; font-size: 13px;"><code>${escaped}</code></pre><p><br /></p>`;
-
-            insertHtmlAtSelection(codeHtml);
-
+            editorRef.current?.focus();
+            document.execCommand('insertHTML', false, codeHtml);
+            updateState();
+            pushSnapshot(readCurrentHtml());
             setDialogType(null);
             setDialogValue('');
         };
 
-        // ============ 插入链接 ============
+        // ============ 链接 ============
         const openLinkDialog = () => {
             const selection = window.getSelection();
             const selectedText = selection?.toString() || '';
@@ -433,36 +469,24 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
         };
 
         const confirmLinkDialog = () => {
-            if (!dialogValue.trim()) {
-                setDialogType(null);
-                return;
-            }
-
+            if (!dialogValue.trim()) { setDialogType(null); return; }
             let url = dialogValue.trim();
-            if (url.startsWith('//')) url = `http:${url}`;
-            if (!/^https?:\/\//.test(url) && !/^mailto:/.test(url)) {
-                url = 'https://' + url;
-            }
-
-            restoreSelection();
-
+            if (!/^https?:\/\//.test(url) && !/^mailto:/.test(url)) url = 'http://' + url;
+            editorRef.current?.focus();
             if (dialogText.trim()) {
                 const linkHtml = `<a href="${url}" target="_blank" rel="noopener noreferrer">${dialogText}</a>`;
                 document.execCommand('insertHTML', false, linkHtml);
             } else {
                 document.execCommand('createLink', false, url);
             }
-
             updateState();
+            pushSnapshot(readCurrentHtml());
             setDialogType(null);
             setDialogValue('');
             setDialogText('');
         };
 
-        // ============ 移除链接 ============
         const removeLink = () => execCommand('unlink');
-
-        // ============ 有序列表 ============
         const insertOrderedList = () => execCommand('insertOrderedList');
 
         // ============ 删除图片 ============
@@ -472,12 +496,12 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
             setSelectedImage(null);
             setShowImageSizeMenu(false);
             updateState();
+            pushSnapshot(readCurrentHtml());
         };
 
-        // ============ 图片预设尺寸 ============
+        // ============ 图片尺寸/对齐 ============
         const setImageSize = (size: string) => {
             if (!selectedImage) return;
-
             if (size === 'original') {
                 selectedImage.style.width = '';
                 selectedImage.style.height = '';
@@ -487,20 +511,17 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                 selectedImage.style.width = size;
                 selectedImage.style.height = 'auto';
             }
-
             updateState();
+            pushSnapshot(readCurrentHtml());
             setShowImageSizeMenu(false);
         };
 
-        // ============ 图片对齐 ============
         const setImageAlign = (align: string) => {
             if (!selectedImage) return;
-
             selectedImage.style.float = '';
             selectedImage.style.marginLeft = '';
             selectedImage.style.marginRight = '';
             selectedImage.style.display = '';
-
             switch (align) {
                 case 'left':
                     selectedImage.style.display = 'block';
@@ -535,11 +556,11 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                     selectedImage.style.display = 'block';
                     break;
             }
-
             updateState();
+            pushSnapshot(readCurrentHtml());
         };
 
-        // ============ 打开图片网址弹窗 ============
+        // ============ 图片网址 ============
         const openImageUrlDialog = () => {
             setDialogValue('');
             setDialogText('');
@@ -552,7 +573,6 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
             if (!trimmed) return { valid: false, message: '请输入图片网址' };
             if (trimmed.startsWith('//')) return { valid: true };
             if (!/^https?:\/\//i.test(trimmed)) return { valid: false, message: '请输入有效的图片网址' };
-
             try {
                 const urlObj = new URL(trimmed);
                 const privateRegex = /^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|127\.|localhost|0\.0\.0\.0)/i;
@@ -568,49 +588,44 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
             const validation = validateImageUrl(url);
             if (!validation.valid) return alert(validation.message || '图片网址无效');
 
-            let finalUrl = url;
-            //if (url.startsWith('//')) finalUrl = `https:${url}`;
-
+            // ✅ 保持原样，// 开头不改写
+            const finalUrl = url;
             const displayUrl = getProxiedImageUrl(finalUrl, { forceProxy: true });
             const alt = dialogText.trim() || '图片';
-
             const imgHtml = `<img src="${displayUrl}" data-original-src="${finalUrl}" alt="${alt}" style="width: 50%; max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0; display: block;" /><p><br /></p>`;
-
-            insertHtmlAtSelection(imgHtml);
-
+            editorRef.current?.focus();
+            document.execCommand('insertHTML', false, imgHtml);
+            updateState();
+            pushSnapshot(readCurrentHtml());
             setDialogType(null);
             setDialogValue('');
             setDialogText('');
         };
 
-        // ✅ 打开替换图片弹窗
+        // ============ 替换图片 ============
         const openReplaceImageDialog = () => {
             if (!selectedImage) return;
             setReplaceImageUrl(selectedImage.getAttribute('data-original-src') || selectedImage.src);
             setShowReplaceImageDialog(true);
         };
 
-        // ✅ 确认替换图片
         const confirmReplaceImage = () => {
             if (!selectedImage) return;
             const url = replaceImageUrl.trim();
             const validation = validateImageUrl(url);
             if (!validation.valid) return alert(validation.message || '图片网址无效');
 
-            let finalUrl = url;
-            //if (url.startsWith('//')) finalUrl = `https:${url}`;
-
+            // ✅ 保持原样，// 开头不改写
+            const finalUrl = url;
             const displayUrl = getProxiedImageUrl(finalUrl, { forceProxy: true });
-
-            // 替换 src 和 data-original-src
             selectedImage.src = displayUrl;
             selectedImage.setAttribute('data-original-src', finalUrl);
-
             updateState();
+            pushSnapshot(readCurrentHtml());
             setShowReplaceImageDialog(false);
         };
 
-        // ============ 打开自定义图片尺寸弹窗 ============
+        // ============ 自定义尺寸 ============
         const openImageSizeDialog = () => {
             if (!selectedImage) return;
             const originalWidth = selectedImage.naturalWidth || 0;
@@ -618,7 +633,6 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
             const ratio = originalHeight > 0 ? originalWidth / originalHeight : 1;
             const currentWidth = selectedImage.clientWidth || originalWidth;
             const currentHeight = selectedImage.clientHeight || originalHeight;
-
             setImageSizeForm({
                 width: String(Math.round(currentWidth)),
                 height: String(Math.round(currentHeight)),
@@ -627,7 +641,6 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                 originalHeight,
                 ratio,
             });
-
             setShowImageSizeDialog(true);
             setShowImageSizeMenu(false);
         };
@@ -660,11 +673,8 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
             if (!selectedImage) return;
             const width = parseInt(imageSizeForm.width) || 0;
             const height = parseInt(imageSizeForm.height) || 0;
-
             if (width <= 0 && height <= 0) return alert('请输入宽度或高度');
-
             const containerWidth = editorRef.current?.clientWidth || 800;
-
             if (width > 0) {
                 if (width > containerWidth) {
                     const finalWidth = containerWidth;
@@ -682,32 +692,31 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                 selectedImage.style.height = `${height}px`;
                 selectedImage.style.width = 'auto';
             }
-
             selectedImage.removeAttribute('width');
             selectedImage.removeAttribute('height');
-
             updateState();
+            pushSnapshot(readCurrentHtml());
             setShowImageSizeDialog(false);
         };
 
-        // ============ 上传图片并插入编辑器 ============
+        // ============ 上传图片 ============
         const uploadAndInsertImage = useCallback(async (file: File) => {
             if (!file.type.startsWith('image/')) return;
             if (file.size > 10 * 1024 * 1024) return alert(`图片 ${file.name} 超过 10MB，已跳过`);
 
             setUploading(true);
             setUploadProgress(0);
-
             try {
                 const compressed = await compressImage(file, 800, 800, 0.8);
                 const result = await uploadImageToQiniu(compressed, imgUploadPath, isAdmin, (percent) => {
                     setUploadProgress(Math.round(percent));
                 });
-
                 const displayUrl = getProxiedImageUrl(result.originalUrl, { forceProxy: true });
                 const imgHtml = `<img src="${displayUrl}" data-original-src="${result.originalUrl}" alt="${file.name || '图片'}" style="width: 50%; max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0; display: block;" /><p><br /></p>`;
-
-                insertHtmlAtSelection(imgHtml);
+                editorRef.current?.focus();
+                document.execCommand('insertHTML', false, imgHtml);
+                updateState();
+                pushSnapshot(readCurrentHtml());
             } catch (err) {
                 console.error('图片上传失败:', err);
                 alert(err instanceof Error ? err.message : '图片上传失败');
@@ -715,86 +724,74 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                 setUploading(false);
                 setUploadProgress(0);
             }
-        }, []);
+        }, [imgUploadPath, isAdmin, pushSnapshot, readCurrentHtml]);
 
-        // ============ 从 URL 下载图片并上传 ============
         const uploadImageFromUrl = useCallback(async (url: string) => {
             setUploading(true);
             setUploadProgress(0);
-
             try {
                 const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(url)}`;
                 const response = await fetch(proxyUrl);
-                if (!response.ok) {
-                    throw new Error(`下载失败: HTTP ${response.status}`);
-                }
-
+                if (!response.ok) throw new Error(`下载失败: HTTP ${response.status}`);
                 const blob = await response.blob();
                 const ext = blob.type.split('/')[1] || 'jpg';
                 const fileName = `pasted_${Date.now()}.${ext}`;
                 const file = new File([blob], fileName, { type: blob.type });
-
                 const compressed = await compressImage(file, 800, 800, 0.8);
                 const result = await uploadImageToQiniu(compressed, imgUploadPath, isAdmin, (percent) => {
                     setUploadProgress(Math.round(percent));
                 });
-
                 const displayUrl = getProxiedImageUrl(result.originalUrl, { forceProxy: true });
                 const imgHtml = `<img src="${displayUrl}" data-original-src="${result.originalUrl}" alt="图片" style="width: 50%; max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0; display: block;" /><p><br /></p>`;
-
-                insertHtmlAtSelection(imgHtml);
+                editorRef.current?.focus();
+                document.execCommand('insertHTML', false, imgHtml);
+                updateState();
+                pushSnapshot(readCurrentHtml());
             } catch (err) {
                 console.error('网页图片上传失败:', err);
                 const displayUrl = getProxiedImageUrl(url, { forceProxy: true });
                 const imgHtml = `<img src="${displayUrl}" data-original-src="${url}" alt="图片" style="max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0; display: block;" /><p><br /></p>`;
-                insertHtmlAtSelection(imgHtml);
+                editorRef.current?.focus();
+                document.execCommand('insertHTML', false, imgHtml);
+                updateState();
+                pushSnapshot(readCurrentHtml());
             } finally {
                 setUploading(false);
                 setUploadProgress(0);
             }
-        }, []);
+        }, [imgUploadPath, isAdmin, pushSnapshot, readCurrentHtml]);
 
-        // ============ 从 base64 上传图片 ============
         const uploadBase64Image = useCallback(async (base64Url: string) => {
             try {
                 const response = await fetch(base64Url);
                 const blob = await response.blob();
-
                 const ext = blob.type.split('/')[1] || 'png';
                 const fileName = `paste_${Date.now()}.${ext}`;
                 const file = new File([blob], fileName, { type: blob.type });
-
                 await uploadAndInsertImage(file);
             } catch (err) {
                 console.error('base64 图片上传失败:', err);
             }
         }, [uploadAndInsertImage]);
 
-        // ============ 从 HTML 中提取图片 URL ============
         const extractImageUrls = (html: string): string[] => {
             const urls: string[] = [];
             const imgRegex = /<img[^>]+src=["']([^"']+)["']/gi;
             let match: RegExpExecArray | null;
-
             while ((match = imgRegex.exec(html)) !== null) {
                 const url = match[1];
-                if (url && !url.startsWith('data:') && /^https?:\/\//.test(url)) {
-                    urls.push(url);
-                }
+                if (url && !url.startsWith('data:') && /^https?:\/\//.test(url)) urls.push(url);
             }
-
             return urls;
         };
 
-        // ============ 粘贴处理 ============
+        // ============ 粘贴 ============
         const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
             const clipboardData = e.clipboardData;
             if (!clipboardData) return;
 
-            // 1. 检查图片文件
             const items = Array.from(clipboardData.items);
             const imageFiles: File[] = [];
-
             for (const item of items) {
                 if (item.type.startsWith('image/')) {
                     const file = item.getAsFile();
@@ -804,77 +801,61 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
 
             if (imageFiles.length > 0) {
                 e.preventDefault();
-
                 const text = clipboardData.getData('text/plain');
                 if (text && text.trim()) {
-                    restoreSelection();
+                    editorRef.current?.focus();
                     document.execCommand('insertText', false, text);
                 }
-
-                for (const file of imageFiles) {
-                    await uploadAndInsertImage(file);
-                }
+                for (const file of imageFiles) await uploadAndInsertImage(file);
                 return;
             }
 
-            // 2. 检查 HTML 中的图片
             const htmlContent = clipboardData.getData('text/html');
             if (htmlContent) {
-                // base64
                 const base64Regex = /src=["'](data:image\/[^"']+)["']/gi;
                 const base64Matches = [...htmlContent.matchAll(base64Regex)];
-
                 if (base64Matches.length > 0) {
                     e.preventDefault();
                     const text = clipboardData.getData('text/plain');
                     if (text && text.trim()) {
-                        restoreSelection();
+                        editorRef.current?.focus();
                         document.execCommand('insertText', false, text);
                     }
-                    for (const match of base64Matches) {
-                        await uploadBase64Image(match[1]);
-                    }
+                    for (const match of base64Matches) await uploadBase64Image(match[1]);
                     return;
                 }
 
-                // 普通 URL
                 const imgUrls = extractImageUrls(htmlContent);
                 if (imgUrls.length > 0) {
                     e.preventDefault();
                     const text = clipboardData.getData('text/plain');
                     if (text && text.trim()) {
-                        restoreSelection();
+                        editorRef.current?.focus();
                         document.execCommand('insertText', false, text);
                     }
-                    for (const url of imgUrls) {
-                        await uploadImageFromUrl(url);
-                    }
+                    for (const url of imgUrls) await uploadImageFromUrl(url);
                     return;
                 }
             }
 
-            // 3. 默认：纯文本
             e.preventDefault();
             const text = clipboardData.getData('text/plain');
-            restoreSelection();
             document.execCommand('insertText', false, text);
-        }, [uploadAndInsertImage, uploadImageFromUrl, uploadBase64Image, restoreSelection]);
+            updateState();
+            pushSnapshot(readCurrentHtml());
+        }, [uploadAndInsertImage, uploadImageFromUrl, uploadBase64Image, pushSnapshot, readCurrentHtml]);
 
-        // ============ 拖拽处理 ============
+        // ============ 拖拽 ============
         const handleDragEnter = (e: React.DragEvent) => {
             e.preventDefault();
             e.stopPropagation();
-            if (e.dataTransfer.types.includes('Files')) {
-                setIsDragging(true);
-            }
+            if (e.dataTransfer.types.includes('Files')) setIsDragging(true);
         };
 
         const handleDragLeave = (e: React.DragEvent) => {
             e.preventDefault();
             e.stopPropagation();
-            if (e.currentTarget === e.target) {
-                setIsDragging(false);
-            }
+            if (e.currentTarget === e.target) setIsDragging(false);
         };
 
         const handleDragOver = (e: React.DragEvent) => {
@@ -886,29 +867,20 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
             e.preventDefault();
             e.stopPropagation();
             setIsDragging(false);
-
-            const files = Array.from(e.dataTransfer.files).filter(f =>
-                f.type.startsWith('image/')
-            );
-
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
             if (files.length === 0) return;
-
-            for (const file of files) {
-                await uploadAndInsertImage(file);
-            }
+            for (const file of files) await uploadAndInsertImage(file);
         };
 
-        // ============ 上传文件选择 ============
+        // ============ 文件选择 ============
         const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
             const file = e.target.files?.[0];
             if (!file) return;
-
             await uploadAndInsertImage(file);
-
             if (fileInputRef.current) fileInputRef.current.value = '';
         };
 
-        // ============ 源码模式切换 ============
+        // ============ 源码模式 ============
         const toggleSource = () => {
             if (!showSource) {
                 const currentHtml = editorRef.current?.innerHTML || '';
@@ -920,8 +892,123 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                     if (editorRef.current) {
                         editorRef.current.innerHTML = sourceHtml;
                         updateState();
+                        pushSnapshot(sourceHtml);
                     }
                 });
+            }
+        };
+
+        // ============ 键盘：撤销/重做 + Del/Backspace 删图 ============
+        const getAdjacentImage = (range: Range, dir: 'before' | 'after'): HTMLImageElement | null => {
+            const container = range.startContainer;
+            const offset = range.startOffset;
+
+            const findImgInSiblings = (node: Node | null): HTMLImageElement | null => {
+                let cur = node;
+                while (cur) {
+                    if (cur.nodeType === Node.ELEMENT_NODE) {
+                        const el = cur as HTMLElement;
+                        if (el.tagName === 'IMG') return el as HTMLImageElement;
+                        if (el.textContent && el.textContent.trim() !== '') return null;
+                        const inner = el.querySelector('img');
+                        if (inner) return inner as HTMLImageElement;
+                    } else if (cur.nodeType === Node.TEXT_NODE) {
+                        if ((cur.textContent || '').trim() !== '') return null;
+                    }
+                    cur = dir === 'before' ? cur.previousSibling : cur.nextSibling;
+                }
+                return null;
+            };
+
+            if (container.nodeType === Node.ELEMENT_NODE) {
+                const parent = container as HTMLElement;
+                const children = Array.from(parent.childNodes);
+                if (dir === 'before' && offset > 0) {
+                    const prev = children[offset - 1] ?? null;
+                    if (prev && prev.nodeType === Node.ELEMENT_NODE && (prev as HTMLElement).tagName === 'IMG') {
+                        return prev as HTMLImageElement;
+                    }
+                    return findImgInSiblings(prev);
+                }
+                if (dir === 'after' && offset < children.length) {
+                    const next = children[offset] ?? null;
+                    if (next && next.nodeType === Node.ELEMENT_NODE && (next as HTMLElement).tagName === 'IMG') {
+                        return next as HTMLImageElement;
+                    }
+                    return findImgInSiblings(next);
+                }
+                return null;
+            }
+
+            if (container.nodeType === Node.TEXT_NODE) {
+                const text = container.textContent || '';
+                if (dir === 'before') {
+                    if (offset > 0 && text.slice(0, offset).trim() !== '') return null;
+                    if (offset === 0) return findImgInSiblings(container.previousSibling);
+                    return null;
+                } else {
+                    if (offset < text.length && text.slice(offset).trim() !== '') return null;
+                    if (offset === text.length) return findImgInSiblings(container.nextSibling);
+                    return null;
+                }
+            }
+            return null;
+        };
+
+        const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+            const mod = e.ctrlKey || e.metaKey;
+            if (mod && (e.key === 'z' || e.key === 'Z')) {
+                e.preventDefault();
+                if (e.shiftKey) redo();
+                else undo();
+                return;
+            }
+            if (mod && (e.key === 'y' || e.key === 'Y')) {
+                e.preventDefault();
+                redo();
+                return;
+            }
+
+            if (!editorRef.current || showSource) return;
+
+            // 有选中的图片
+            if (selectedImage && selectedImage.isConnected) {
+                if (e.key === 'Delete' || e.key === 'Backspace') {
+                    e.preventDefault();
+                    selectedImage.remove();
+                    setSelectedImage(null);
+                    setShowImageSizeMenu(false);
+                    updateState();
+                    pushSnapshot(readCurrentHtml());
+                    return;
+                }
+            }
+
+            const selection = window.getSelection();
+            if (!selection || selection.rangeCount === 0 || !selection.isCollapsed) return;
+            const range = selection.getRangeAt(0);
+            if (!editorRef.current.contains(range.startContainer)) return;
+
+            if (e.key === 'Backspace') {
+                const img = getAdjacentImage(range, 'before');
+                if (img) {
+                    e.preventDefault();
+                    img.remove();
+                    setSelectedImage(null);
+                    setShowImageSizeMenu(false);
+                    updateState();
+                    pushSnapshot(readCurrentHtml());
+                }
+            } else if (e.key === 'Delete') {
+                const img = getAdjacentImage(range, 'after');
+                if (img) {
+                    e.preventDefault();
+                    img.remove();
+                    setSelectedImage(null);
+                    setShowImageSizeMenu(false);
+                    updateState();
+                    pushSnapshot(readCurrentHtml());
+                }
             }
         };
 
@@ -929,7 +1016,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
         return (
             <div
                 className={cn(
-                    'border border-gray-300 rounded-lg flex flex-col', // ✅ 改成 flex 布局
+                    'border border-gray-300 rounded-lg flex flex-col',
                     'focus-within:ring-2 focus-within:ring-primary-500',
                     className
                 )}
@@ -945,7 +1032,6 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                 )}
 
                 {/* ==================== 工具栏 ==================== */}
-                {/* ✅ sticky top-0 z-20 flex-shrink-0 控制吸顶 */}
                 <div className="sticky top-0 z-20 flex items-center flex-wrap gap-0.5 px-2 py-1.5 bg-gray-50 border-b border-gray-200 rounded-t-lg flex-shrink-0">
                     {showSource ? (
                         <>
@@ -955,6 +1041,24 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                                 className="px-3 py-1.5 rounded text-xs bg-primary-600 text-white hover:bg-primary-700"
                             >
                                 ← 返回编辑
+                            </button>
+                            <button
+                                type="button"
+                                onClick={undo}
+                                disabled={!canUndo}
+                                className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                title="撤销 (Ctrl+Z)"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a4 4 0 010 8H9M3 10l4-4M3 10l4 4" /></svg>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={redo}
+                                disabled={!canRedo}
+                                className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                title="重做 (Ctrl+Shift+Z / Ctrl+Y)"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10H11a4 4 0 000 8h4M21 10l-4-4M21 10l-4 4" /></svg>
                             </button>
                             <span className="text-xs text-gray-500 ml-2">正在编辑 HTML 源码</span>
                         </>
@@ -1004,13 +1108,9 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
 
                             <div className="w-px h-5 bg-gray-300 mx-0.5" />
 
-                            {/* 加粗 */}
                             <button type="button" onClick={() => execCommand('bold')} className="w-7 h-7 rounded flex items-center justify-center text-sm font-bold hover:bg-gray-200 transition-colors" title="加粗">B</button>
-                            {/* 斜体 */}
                             <button type="button" onClick={() => execCommand('italic')} className="w-7 h-7 rounded flex items-center justify-center text-sm italic hover:bg-gray-200 transition-colors" title="斜体">I</button>
-                            {/* 下划线 */}
                             <button type="button" onClick={() => execCommand('underline')} className="w-7 h-7 rounded flex items-center justify-center text-sm underline hover:bg-gray-200 transition-colors" title="下划线">U</button>
-                            {/* 删除线 */}
                             <button type="button" onClick={() => execCommand('strikeThrough')} className="w-7 h-7 rounded flex items-center justify-center text-sm line-through hover:bg-gray-200 transition-colors" title="删除线">S</button>
 
                             <div className="w-px h-5 bg-gray-300 mx-0.5" />
@@ -1065,26 +1165,21 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
 
                             <div className="w-px h-5 bg-gray-300 mx-0.5" />
 
-                            {/* 对齐 */}
                             <button type="button" onClick={() => applyAlign('Left')} className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors" title="左对齐"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h10M4 18h14" /></svg></button>
                             <button type="button" onClick={() => applyAlign('Center')} className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors" title="居中对齐"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M7 12h10M5 18h14" /></svg></button>
                             <button type="button" onClick={() => applyAlign('Right')} className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors" title="右对齐"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M10 12h10M6 18h14" /></svg></button>
 
                             <div className="w-px h-5 bg-gray-300 mx-0.5" />
 
-                            {/* 列表 */}
                             <button type="button" onClick={() => execCommand('insertUnorderedList')} className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors" title="无序列表"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h.01M4 12h.01M4 18h.01M8 6h12M8 12h12M8 18h12" /></svg></button>
                             <button type="button" onClick={insertOrderedList} className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors" title="有序列表"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 6h13M7 12h13M7 18h13M3 6h.01M3 12h.01M3 18h.01" /></svg></button>
-                            {/* 引用 */}
                             <button type="button" onClick={() => execCommand('formatBlock', '<blockquote>')} className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors" title="引用"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg></button>
 
                             <div className="w-px h-5 bg-gray-300 mx-0.5" />
 
-                            {/* 链接 */}
                             <button type="button" onClick={openLinkDialog} className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors" title="插入链接"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg></button>
                             <button type="button" onClick={removeLink} className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors" title="移除链接"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg></button>
 
-                            {/* 代码块 */}
                             <button type="button" onClick={openCodeDialog} className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors" title="插入代码块"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg></button>
 
                             {/* 表格 */}
@@ -1114,7 +1209,6 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
 
                             <div className="w-px h-5 bg-gray-300 mx-0.5" />
 
-                            {/* 图片上传与网址 */}
                             {allowImage && (
                                 <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors disabled:opacity-50" title="上传图片">
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -1126,17 +1220,14 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                                 </button>
                             )}
 
-                            {/* 图片操作菜单 */}
                             {selectedImage && (
                                 <>
                                     <div className="w-px h-5 bg-gray-300 mx-0.5" />
-                                    {/* 替换图片 */}
                                     <button type="button" onClick={openReplaceImageDialog} className="h-7 px-2 rounded flex items-center justify-center space-x-1 text-xs hover:bg-gray-200 transition-colors" title="更换图片">
                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                                         <span>换图</span>
                                     </button>
 
-                                    {/* 图片尺寸 */}
                                     <div className="relative editor-dropdown">
                                         <button
                                             ref={imageDropdown.buttonRef}
@@ -1177,7 +1268,28 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
 
                             <div className="w-px h-5 bg-gray-300 mx-0.5" />
 
-                            {/* 源码模式 */}
+                            {/* 撤销/重做 */}
+                            <button
+                                type="button"
+                                onClick={undo}
+                                disabled={!canUndo}
+                                className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                title="撤销 (Ctrl+Z)"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a4 4 0 010 8H9M3 10l4-4M3 10l4 4" /></svg>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={redo}
+                                disabled={!canRedo}
+                                className="w-7 h-7 rounded flex items-center justify-center hover:bg-gray-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                title="重做 (Ctrl+Shift+Z / Ctrl+Y)"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10H11a4 4 0 000 8h4M21 10l-4-4M21 10l-4 4" /></svg>
+                            </button>
+
+                            <div className="w-px h-5 bg-gray-300 mx-0.5" />
+
                             <button type="button" onClick={toggleSource} className="h-7 px-2 rounded flex items-center justify-center space-x-1 text-xs hover:bg-gray-200 transition-colors" title="源码模式">
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
                                 <span>源码</span>
@@ -1201,7 +1313,20 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                 {showSource ? (
                     <textarea
                         value={sourceHtml}
-                        onChange={(e) => setSourceHtml(e.target.value)}
+                        onChange={(e) => {
+                            setSourceHtml(e.target.value);
+                            scheduleSnapshot();
+                        }}
+                        onKeyDown={(e) => {
+                            const mod = e.ctrlKey || e.metaKey;
+                            if (mod && (e.key === 'z' || e.key === 'Z')) {
+                                e.preventDefault();
+                                e.shiftKey ? redo() : undo();
+                            } else if (mod && (e.key === 'y' || e.key === 'Y')) {
+                                e.preventDefault();
+                                redo();
+                            }
+                        }}
                         className="w-full flex-1 p-4 text-sm font-mono bg-gray-900 text-green-400 focus:outline-none resize-none"
                         style={{ minHeight }}
                     />
@@ -1210,10 +1335,14 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                         ref={editorRef}
                         contentEditable
                         suppressContentEditableWarning
-                        onInput={updateState}
+                        onInput={() => {
+                            updateState();
+                            scheduleSnapshot();
+                        }}
                         onClick={handleEditorClick}
                         onBlur={onBlur}
                         onPaste={handlePaste}
+                        onKeyDown={handleKeyDown}
                         onDragEnter={handleDragEnter}
                         onDragLeave={handleDragLeave}
                         onDragOver={handleDragOver}
@@ -1224,7 +1353,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                             'relative',
                             isDragging && 'ring-2 ring-primary-400 bg-primary-50/50'
                         )}
-                        style={{ minHeight, maxHeight }} // ✅ 限制最大高度产生滚动条
+                        style={{ minHeight, maxHeight }}
                     />
                 )}
 
@@ -1324,7 +1453,6 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                                         className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                                     />
                                 </div>
-                                {/* 预览 */}
                                 {dialogValue && validateImageUrl(dialogValue).valid && (
                                     <div>
                                         <label className="block text-xs text-gray-500 mb-1">预览</label>
@@ -1350,7 +1478,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(
                     </div>
                 )}
 
-                {/* ✅ 替换图片弹窗 */}
+                {/* ==================== 替换图片弹窗 ==================== */}
                 {showReplaceImageDialog && (
                     <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50">
                         <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
