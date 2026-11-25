@@ -79,7 +79,7 @@ export default function BaiduPushLogsPage() {
         ...item,
         id: item.id ?? item.articleId ?? item.fs_id,
         title: (item.title ?? item.name ?? item.server_filename.substring(0, item.server_filename.lastIndexOf("."))) ||"未命名",
-        category: item.Category.name || item.kind || "",
+        category: (item.Category?.name ?? item.kind) || "",
       }));
       setPickList(formattedData);
       setPickTotal(res.total);
@@ -123,6 +123,7 @@ export default function BaiduPushLogsPage() {
   };
 
   const toggleSelect = (id: number | undefined) => {
+    debugger;
     if (id === undefined) return;
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
