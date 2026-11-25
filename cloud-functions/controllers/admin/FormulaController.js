@@ -24,7 +24,7 @@ async function list(req, res) {
 async function listForPush(req, res) {
     try {
         const { page = 1, limit = 10, keyword = '' } = req.query;
-        const where = { isdir: 0, status: 1 }; // 过滤目录和状态
+        const where = { isdir: 0, status: 1, kind: { [Op.in]: ['选股公式', '指标公式'] } }; // 过滤目录和状态
         if (keyword) where.server_filename = { [Op.like]: `%${keyword}%` };
 
         const { count, rows } = await Formula.findAndCountAll({
