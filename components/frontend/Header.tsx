@@ -470,67 +470,7 @@ export default function Header() {
                                 {/* 用户区 */}
                                 {isLoggedIn ? (
                                     <>
-                                        {/*<div className="flex items-center gap-3 px-4 py-3 mb-1 bg-gray-50 rounded-lg">
-                                            <SafeImage
-                                                src={user?.avatar || '/img/avatar-default-member.png'}
-                                                alt={user?.nickname || user?.username || '用户'}
-                                                className="w-9 h-9 rounded-full object-cover flex-shrink-0"
-                                            />
-                                            <div className="min-w-0 flex-1">
-                                                <div className="text-sm font-semibold text-gray-800 truncate">
-                                                    {user?.nickname || user?.username}
-                                                </div>
-                                                <div className="text-xs text-gray-500 truncate">
-                                                    {user?.email || ''}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <Link
-                                            href="/member"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 transition-colors"
-                                        >
-                                            <span className="text-lg">👤</span>
-                                            <span>会员中心</span>
-                                        </Link>
-
-                                        <Link
-                                            href="/member/password"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 transition-colors"
-                                        >
-                                            <span className="text-lg">🔒</span>
-                                            <span>修改密码</span>
-                                        </Link>
-
-                                        <Link
-                                            href="/member/settings"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 transition-colors"
-                                        >
-                                            <span className="text-lg">⚙️</span>
-                                            <span>个人设置</span>
-                                        </Link>
-
-                                        {user?.role === 'super' && (
-                                            <Link
-                                                href="/admin"
-                                                onClick={() => setIsMobileMenuOpen(false)}
-                                                className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100 transition-colors"
-                                            >
-                                                <span className="text-lg">🛠️</span>
-                                                <span>管理后台</span>
-                                            </Link>
-                                        )}
-
-                                        <button
-                                            onClick={handleLogout}
-                                            className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-red-600 hover:bg-red-50 transition-colors"
-                                        >
-                                            <span className="text-lg">🚪</span>
-                                            <span>取消登录</span>
-                                        </button>*/}
+                                        
                                     </>
                                 ) : (
                                     <>
